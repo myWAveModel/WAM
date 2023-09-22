@@ -1,0 +1,60 @@
+#!/bin/bash
+#++
+#
+# compile
+#
+. .dirset
+# export FC=$(nf-config --fc)
+# export FFLAGS=$(nf-config --fflags)
+# export fflags=$(nf-config --fflags)
+# export LIBS=$(nf-config --flibs)
+export FC=mpifort
+export MPIHOME=/sw/spack-levante/openmpi-4.1.2-yfwe6t
+export FFLAGS="-I/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/include"
+export fflags="-I/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/include"
+export LIBS="-L/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib -lnetcdff -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib -L/sw/spack-levante/netcdf-c-4.8.1-2k3cmu/lib -Wl,-rpath,/sw/spack-levante/netcdf-c-4.8.1-2k3cmu/lib -L/sw/spack-levante/hdf5-1.12.1-tvymb5/lib -Wl,-rpath,/sw/spack-levante/gcc-11.2.0-7jcqrc/lib64 -Wl,-rpath,/sw/spack-levante/hdf5-1.12.1-tvymb5/lib -Wl,-rpath,/sw/spack-levante/netcdf-c-4.8.1-2k3cmu/lib -lnetcdf -lhdf5_hl -lhdf5 -lnetcdf"
+
+#cv=$(echo $NETCDFHOME|sed 's,.*netcdf/\([3-9]\).*,\1,')
+#if [ $cv == 3 ];then
+#  export NETCDFLIB=netcdf
+#else
+#  export NETCDFLIB=netcdff
+#  fi
+(cd ../src/mod
+ ln -sf wam_oasis_inactive_module.f90 wam_oasis_module.f90)
+./make_modules1
+./make_modules2
+(cd ../src/preproc
+ ln -sf read_topography_arno.f90 read_topography.f90)
+./make_preproc
+./make_chief
+./make_print
+./make_netcdf
+#./make_netcdf_rad
+#
+# create binaries
+#
+./build_preproc
+(cd ../abs;mv preproc preproc-arno)
+(cd ../src/preproc
+ ln -sf read_topography_getm.f90 read_topography.f90)
+rm -f ../obj/read_topography.o
+./make_preproc
+./build_preproc
+(cd ../abs;mv preproc preproc-getm
+ ln -f preproc-arno preproc)
+./build_wam
+./build_pgrid
+./build_pspec
+./build_ptime
+./build_ptime_S
+#./build_prad
+#./build_prad_time
+./build_pnetcdf
+#./build_pnetcdf_rad
+./build_pre_u10
+./build_bsfile
+(cd ../src/mod
+ ln -sf wam_oasis_active_module.f90 wam_oasis_module.f90)
+rm -f ../obj/wam_oasis_module.o
+#

@@ -1,0 +1,23 @@
+# This is a typical input file for OASIS3-MCT, using NetCDF 
+# format for restart input files. OASIS3-MCT reads in this file 
+# at run time. Don't hesitate to ask precisions or make 
+# suggestions (oasishelp@cerfacs.fr)
+#
+# Any line beginning with # is ignored. Blank lines are not allowed
+####################################################################
+ $NFIELDS 
+0
+############################################
+ $NBMODEL 
+1 WAM
+############################################
+ $RUNTIME 
+2851200
+############################################
+ $NLOGPRT 
+1 1
+############################################
+ $STRINGS
+#####
+ $END
+############################################

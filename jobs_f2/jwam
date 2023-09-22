@@ -1,0 +1,48 @@
+#!/bin/bash
+#
+#==>  WAM model run
+#
+#     Arno Behrens (May 2019)
+#
+#SBATCH --job-name=WAM_N2
+#SBATCH --partition=short.p
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=2
+##SBATCH --exclusive
+#SBATCH --time=00:30:00
+#SBATCH --mail-type=FAIL
+##SBATCH --account=cluster
+#SBATCH --output=wam.o%j
+#SBATCH --error=wam.e%j
+#
+# module load compilers/intel/2019.4.243
+# module load intelmpi/2019.4.243
+# module load netcdf
+
+# module load intel/oneapi-2022
+module load netcdf/4.6.1-openmpi-1.10.3
+module load openmpi/1.10.3-intel-2017
+#
+set +k
+cdir=/home/bulatsa/mricker/SeaReCap
+work=/work/bulatsa/mricker/SeaReCap
+#
+cd ${work}/tempsg
+#cp ${cdir}/const/OBS* .
+cp ${cdir}/const/Fine_2/JAN/WAM_User .
+cp ${work}/work/Grid_info_fine_2_GRID .
+cp ${cdir}/const/WIND_INPUT.DAT .
+cp ${cdir}/const/ICE_INPUT.DAT .
+cp ${cdir}/const/CURRENT_INPUT.DAT .
+cp ${cdir}/const/TOPO_INPUT.DAT .
+cp ${cdir}/const/OBS* .
+cp ${work}/coarse/JAN/C02* .
+#
+cp ${cdir}/abs/wam wam.exe
+srun --mpi=pmi2 ./wam.exe
+#
+cp logfile.0 ${cdir}/dayfiles/wam_prot_fine_2
+rm wam.exe WAM_User Grid_info_fine_2_GRID WIND_INPUT.DAT
+rm OBS* ICE_INPUT.DAT CURRENT_INPUT.DAT TOPO_INPUT.DAT C*
+mv BLS* MAP* OUT* ../fine_2
+#

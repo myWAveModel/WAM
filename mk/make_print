@@ -1,0 +1,27 @@
+#!/bin/sh
+set -ex
+. ${0%/*}/.dirset
+path_o=${PRODADMDIR}/obj
+path_f=${PRODADMDIR}/src/print
+
+#modfile="print_grid_file print_radiation_file print_spectra_file \
+#print_time read_grid_file read_grid_user read_radiation_file \
+#read_radiation_user read_spectra_file read_spectra_user \
+#read_time_user ingrid print_scr_file read_scr_file \
+#read_scr_user print_rad_time"
+#
+modfile="print_grid_file print_spectra_file \
+print_time read_grid_file read_grid_user \
+read_spectra_file read_spectra_user \
+read_time_user ingrid print_scr_file read_scr_file \
+read_scr_user read_time_user_S print_time_S"
+
+cd $path_o
+
+for code in $modfile
+do
+   rm -f ${code}.f90 ${code}.o
+   cp ${path_f}/${code}.f90 ${path_o}/${code}.f90
+   $FC ${fflags} -c ${code}.f90 -L/usr/lib64
+   rm -f ${code}.f90
+done
