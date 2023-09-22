@@ -1,2 +1,2 @@
 # WAM
-Official repository for the third-generation spectral WAve Model WAM
+Official repository of the third-generation spectral WAve Model WAM
