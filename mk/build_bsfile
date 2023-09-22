@@ -1,0 +1,15 @@
+#!/bin/sh
+set -ex
+. ${0%/*}/.dirset
+path_o=${PRODADMDIR}/obj
+path_f=${PRODADMDIR}/src/box
+
+modfile="incdate bsfile"
+
+cd $path_o
+
+cp ${path_f}/bsfile.f90 ${path_o}
+cp ${path_f}/incdate.f90 ${path_o}
+f95 bsfile.f90 incdate.f90 -o bsfile
+rm -f bsfile.f90 incdate.f90
+mv bsfile ../abs

@@ -1,0 +1,51 @@
+#!/bin/bash
+#
+#==>  WAM post-processing pnetcdf
+#
+#     Arno Behrens (March January 2016)
+#
+#SBATCH --job-name=pnetcdf
+#SBATCH --partition=compute
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=00:05:00
+#SBATCH --mail-type=FAIL
+#SBATCH --account=gg0028
+#SBATCH --output=pnetcdf.o%j
+#SBATCH --error=pnetcdf.e%j
+#
+# module load compilers/intel/2019.4.243
+# module load intelmpi/2019.4.243
+# module load netcdf
+
+# module load intel/oneapi-2022
+# module load netcdf/4.6.1-openmpi-1.10.3
+# module load openmpi/1.10.3-intel-2017
+#
+module purge
+module load nco/5.0.6-gcc-11.2.0
+module load ncview/2.1.8-gcc-11.2.0
+module load openmpi/4.1.2-intel-2021.5.0
+module load intel-oneapi-compilers/2022.0.1-gcc-11.2.0
+module load netcdf-fortran/4.5.3-intel-oneapi-mpi-2021.5.0-intel-2021.5.0
+module load netcdf-c/4.8.1-intel-oneapi-mpi-2021.5.0-intel-2021.5.0
+#
+set -k
+WAMDIR=/home/g/g260098/WAM_OASIS
+WORK=/work/gg0028/g260098/WAM_OASIS
+cd ${WORK}/tempsg
+#
+cp ${WAMDIR}/const/Coarse_Grid/JAN/nlnetcdf NETCDF_User
+cp ${WAMDIR}/abs/pnetcdf pnetcdf.exe
+#
+srun ./pnetcdf.exe
+#
+mv pnetcdf_prot ${WAMDIR}/dayfiles/pnetcdf_prot_coarse_JAN
+mv WAVE* ../coarse/JAN
+rm NETCDF_User pnetcdf.exe
+#
+# ===================================================================
+#  NETCDF FILES HAVE BEEN CREATED AND SAVED.
+#  END OF JOB PNETCDF.
+# ===================================================================
+#

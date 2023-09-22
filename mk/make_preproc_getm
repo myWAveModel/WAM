@@ -1,0 +1,21 @@
+#!/bin/sh
+set -ex
+. ${0%/*}/.dirset
+path_o=${PRODADMDIR}/obj
+path_f=${PRODADMDIR}/src/preproc
+NETCDF=/home/ksd/behrens/wam_assi/NETCDF
+
+modfile="preproc read_topography read_preproc_user"
+
+cd $path_o
+cp ${NETCDF}/netcdf.inc .
+cp ${NETCDF}/netcdf.mod .
+cp ${NETCDF}/typesizes.mod .
+
+for code in $modfile
+do
+   rm -f ${code}.f90 ${code}.o
+   cp ${path_f}/${code}.f90 ${path_o}/${code}.f90
+   $FC  -c ${code}.f90 -L/user/lib64
+   rm -f ${code}.f90
+done

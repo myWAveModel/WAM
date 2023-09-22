@@ -1,0 +1,46 @@
+#!/bin/bash
+# Kompilierung von WAM mit ifort mit mpi
+#ccccccccccccccccccccccccccccccccccccccc
+#	cd in das Verzeichnis von wk.make
+#	./wk.make [first]
+#FFLAGS="$FFLAGS -traceback -check bounds"
+#FFLAGS="$FFLAGS -traceback -O3"
+FFLAGS="$FFLAGS -traceback"
+module purge; module load defaults ncview nco grads/2.0.2 intel mxm bullxmpi_mlx; ulimit -s 2097152
+export NETCDFHOME=/sw/rhel6-x64/netcdf/netcdf_fortran-4.4.3-intel14
+nfc=$NETCDFHOME/bin/nf-config
+#export NETCDF=$($nfc --fflags)
+#export NETCDF="$NETCDF $($nfc --flibs)"
+export LC_ALL=C
+module list
+export FC=$($nfc --fc)
+FC=mpif90
+export FFLAGS="$FFLAGS $($nfc --fflags)"
+export LIBS="$($nfc --flibs)"
+
+
+echo export PRODADMDIR=$PWD>mk/.dirset
+mkdir -p abs obj
+#OASISLIB=/work/gg0028/g260099/oasis3-mct/oasis3-mct_comp/lib
+OASISLIB=/work/gg0028/g260099/REDO/WAVEFLOW/oasis3-mct/oasis3-mct_MISTRAL/lib
+if [ -d $OASISLIB ];then
+  export FFLAGS="$FFLAGS -I ${OASISLIB%/*}/build/lib/psmile.MPI1"
+  export LIBS="$LIBS -L$OASISLIB -lpsmile.MPI1 -lmct -lmpeu -lscrip"
+else
+  export OASISLIB=
+  fi
+if [ "$1" == first ];then
+  cd mk
+  ./create_binaries
+else
+  if [ "$1" == off ];then
+    (cd src/mod;ln -sf wam_oasis_inactive_module wam_oasis_module)
+    shift
+  else
+    (cd src/mod;ln -sf wam_oasis_active_module wam_oasis_module)
+    fi
+  cd obj
+#  make --debug=b ../abs/wam
+  #FCFLAGS=-O3 make --debug=b ${1-../abs/wam}
+  make --debug=b ${1-../abs/wam}
+  fi

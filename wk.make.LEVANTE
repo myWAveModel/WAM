@@ -1,0 +1,48 @@
+#!/bin/bash
+# Kompilierung von WAM mit ifort mit mpi
+#ccccccccccccccccccccccccccccccccccccccc
+#	cd in das Verzeichnis von wk.make
+#	./wk.make [first]
+#FFLAGS="$FFLAGS -traceback -check bounds"
+#FFLAGS="$FFLAGS -traceback -O3"
+FFLAGS="-heap-arrays 64 -fp-model precise" #"-heap-arrays 64 -g -traceback -check bounds"
+FFLAGS="$FFLAGS"
+# module load openmpi/4.1.2-intel-2021.5.0
+export NETCDFHOME=/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g
+nfc=$NETCDFHOME/bin/nf-config
+#export NETCDF=$($nfc --fflags)
+#export NETCDF="$NETCDF $($nfc --flibs)"
+export LC_ALL=C
+module list
+export FC=mpifort
+export MPIHOME=/sw/spack-levante/openmpi-4.1.2-yfwe6t
+export FFLAGS="$FFLAGS -I/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/include"
+export LIBS="-L/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib -lnetcdff -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib -L/sw/spack-levante/netcdf-c-4.8.1-2k3cmu/lib -Wl,-rpath,/sw/spack-levante/netcdf-c-4.8.1-2k3cmu/lib -L/sw/spack-levante/hdf5-1.12.1-tvymb5/lib -Wl,-rpath,/sw/spack-levante/gcc-11.2.0-7jcqrc/lib64 -Wl,-rpath,/sw/spack-levante/hdf5-1.12.1-tvymb5/lib -Wl,-rpath,/sw/spack-levante/netcdf-c-4.8.1-2k3cmu/lib -lnetcdf -lhdf5_hl -lhdf5 -lnetcdf"
+
+
+echo export PRODADMDIR=$PWD>mk/.dirset
+mkdir -p abs obj
+OASISLIB=/work/bg1315/g260099/LEVANTE_DUMMYS/oasis3-mct/oasis3-mct_LEVANTE/lib
+if [ -d $OASISLIB ];then
+  export FFLAGS="$FFLAGS -I ${OASISLIB%/*}/build/lib/psmile.MPI1"
+  export LIBS="$LIBS -L$OASISLIB -lpsmile.MPI1 -lmct -lmpeu -lscrip"
+else
+  export OASISLIB=
+fi
+if [ "$1" == first ];then
+  echo 'FIRST'
+  cd mk
+  ./create_binaries
+else
+  if [ "$1" == off ];then
+    (cd src/mod;ln -sf wam_oasis_inactive_module wam_oasis_module)
+    shift
+  else
+    echo $OASISLIB
+    (cd src/mod;ln -sf wam_oasis_active_module wam_oasis_module)
+  fi
+  cd obj
+#  make --debug=b ../abs/wam
+  #FCFLAGS=-O3 make --debug=b ${1-../abs/wam}
+  make --debug=b ${1-../abs/wam}
+fi

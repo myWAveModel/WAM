@@ -1,0 +1,78 @@
+#!/bin/bash
+#
+#==>  WAM model run
+#
+#     Arno Behrens (May 2019)
+#
+#SBATCH --job-name=TS_Wave
+#SBATCH --partition=compute
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=2
+##SBATCH --exclusive
+#SBATCH --time=00:30:00
+#SBATCH --mail-type=FAIL
+#SBATCH --account=gg0028
+#SBATCH --output=wam.o%j
+#SBATCH --error=wam.e%j
+#
+# module load compilers/intel/2019.4.243
+# module load intelmpi/2019.4.243
+# module load netcdf
+
+# module load intel/oneapi-2022
+# module load netcdf/4.6.1-openmpi-1.10.3
+# module load openmpi/1.10.3-intel-2017
+#
+module purge
+module load nco/5.0.6-gcc-11.2.0
+module load ncview/2.1.8-gcc-11.2.0
+module load openmpi/4.1.2-intel-2021.5.0
+module load intel-oneapi-compilers/2022.0.1-gcc-11.2.0
+module load netcdf-fortran/4.5.3-intel-oneapi-mpi-2021.5.0-intel-2021.5.0
+module load netcdf-c/4.8.1-intel-oneapi-mpi-2021.5.0-intel-2021.5.0
+#
+ulimit -s unlimited
+ulimit -c 0
+#
+export FORT_BUFFERED=true
+export decfort_dump_flag=true
+export OMPI_MCA_pml="ucx"
+export OMPI_MCA_btl=self
+export OMPI_MCA_osc="pt2pt"
+export UCX_IB_ADDR_TYPE=ib_global
+# for most runs one may or may not want to disable HCOLL
+export OMPI_MCA_coll="^ml,hcoll"
+export OMPI_MCA_coll_hcoll_enable="0"
+export HCOLL_ENABLE_MCAST_ALL="0"
+export HCOLL_MAIN_IB=mlx5_0:1
+export UCX_NET_DEVICES=mlx5_0:1
+export UCX_TLS=mm,knem,cma,dc_mlx5,dc_x,self
+export UCX_UNIFIED_MODE=y
+export HDF5_USE_FILE_LOCKING=FALSE
+export OMPI_MCA_io="romio321"
+export UCX_HANDLE_ERRORS=bt
+export I_MPI_PMI_LIBRARY=/usr/lib64/libpmi.so
+export LD_LIBRARY_PATH=/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib:/sw/spack-levante/netcdf-c-4.8.1-2k3cmu/lib:/sw/spack-levante/hdf5-1.12.1-tvymb5/lib:$LD_LIBRARY_PATH
+#
+set +k
+cdir=/home/g/g260098/WAM_OASIS
+work=/work/gg0028/g260098/WAM_OASIS
+#
+cd ${work}/tempsg
+#cp ${cdir}/const/OBS* .
+cp ${cdir}/const/Coarse_Grid/JAN/WAM_User .
+cp ${work}/work/Grid_info_COARSE_GRID .
+cp ${cdir}/const/WIND_INPUT.DAT .
+cp ${cdir}/const/ICE_INPUT.DAT .
+cp ${cdir}/const/CURRENT_INPUT.DAT .
+cp ${cdir}/const/TOPO_INPUT.DAT .
+cp ${cdir}/const/OBS* .
+#
+cp ${cdir}/abs/wam wam.exe
+srun -l --cpu_bind=core --hint=nomultithread --distribution=block:cyclic ./wam.exe
+#
+cp WAMLOGS/logfile.0 ${cdir}/dayfiles/wam_prot_coarse_JAN
+rm wam.exe WAM_User Grid_info_COARSE_GRID WIND_INPUT.DAT
+rm OBS* ICE_INPUT.DAT CURRENT_INPUT.DAT TOPO_INPUT.DAT
+mv BLS* MAP* OUT* C* ../coarse/JAN
+#

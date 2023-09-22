@@ -1,0 +1,20 @@
+#!/bin/sh
+set -ex
+. ${0%/*}/.dirset
+path_o=${PRODADMDIR}/obj
+path_f=${PRODADMDIR}/src/print
+
+modfile="wam_netcdf_module make_netcdf"
+
+cd $path_o
+cp ${NETCDFHOME}/include/netcdf.inc .
+cp ${NETCDFHOME}/include/netcdf.mod .
+cp ${NETCDFHOME}/include/typesizes.mod .
+
+for code in $modfile
+do
+   rm -f ${code}.f90 ${code}.o
+   cp ${path_f}/${code}.f90 ${path_o}/${code}.f90
+   $FC ${fflags} -c ${code}.f90
+   rm -f ${code}.f90
+done
