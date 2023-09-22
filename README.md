@@ -1,4 +1,4 @@
 # WAM
 Official repository for the third-generation spectral WAve Model WAM
 
-This is a version of WAM with integrated OASIS coupler but can also be used as stand-alone.
+In this branch of WAM the OASIS coupler is integrated but can also be used as stand-alone.
