@@ -1,0 +1,7 @@
+&nlwamin
+filein='/storage/routine-ksd/Black_Sea_operational/const/WAM_User',
+fileut='WAM_User_new',
+cdatea='20170110000000',
+cdatee='20170111000000',
+lbounf=.false.
+/end

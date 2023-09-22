@@ -1,0 +1,5 @@
+&nlwind
+path1 = '/storage/behrens/Black_Sea_operational/workdir/wind_ascii/'
+path2 = '/storage/behrens/Black_Sea_operational/workdir/wind_final/'
+cstart = '20160805000000'
+/end
