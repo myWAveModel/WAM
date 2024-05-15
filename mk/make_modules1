@@ -3,10 +3,6 @@ set -ex
 . ${0%/*}/.dirset
 path_o=${PRODADMDIR}/obj
 path_f=${PRODADMDIR}/src/mod
-     
-module load compilers/intel/2020.1.217
-module load intelmpi/2020.1.217
-module load netcdf
 
 modfile="wam_file_module wam_mpi_module wam_model_module \
    wam_output_parameter_module wam_coordinate_module wam_general_module \
@@ -22,6 +18,6 @@ for code in $modfile
 do
    rm -f ${code}.f90 ${code}.o
    cp ${path_f}/${code}.f90 ${path_o}/${code}.f90
-   mpiifort -c ${code}.f90
+   ${FC} ${FFLAGS} -c ${code}.f90 ${LDOPT}
    rm -f ${code}.f90
 done

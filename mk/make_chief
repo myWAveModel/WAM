@@ -3,10 +3,6 @@ set -ex
 . ${0%/*}/.dirset
 path_o=${PRODADMDIR}/obj
 path_f=${PRODADMDIR}/src/chief
-
-module load compilers/intel/2020.1.217
-module load intelmpi/2020.1.217
-module load netcdf
    
 modfile="chief wavemdl initmdl read_wam_user print_wam_status read_wind_input \
 read_current_input wamodel read_boundary_input read_ice_input jafu \
@@ -18,6 +14,6 @@ for code in $modfile
 do
    rm -f ${code}.f90 ${code}.o
    cp ${path_f}/${code}.f90 ${path_o}/${code}.f90
-   mpiifort -c ${code}.f90
+   ${FC} ${FFLAGS} -c ${code}.f90 ${LDOPT}
    rm -f ${code}.f90
 done

@@ -12,4 +12,4 @@ read_ice_input.o jafu.o wam_mpi_comp_module.o wam_assi_set_up_module.o \
 wam_assi_module.o wam_coordinate_module.o readsat.o wam_output_parameter_module.o
 
 chief:
-	mpiifort $(OBJECTS) -o chief
+	${FC} ${FFLAGS} $(OBJECTS) -o chief ${LDOPT}

@@ -3,4 +3,4 @@ wam_coordinate_module.o wam_output_parameter_module.o \
 wam_print_user_module.o print_grid_file.o read_grid_file.o read_grid_user.o
 
 pgrid:
-	mpiifort $(OBJECTS) -o pgrid
+	${FC} ${FFLAGS} $(OBJECTS) -o pgrid ${LDOPT}
