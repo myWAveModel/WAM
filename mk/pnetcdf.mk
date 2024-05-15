@@ -8,5 +8,4 @@ make_netcdf.o wam_flux_module.o wam_output_parameter_module.o wam_jonswap_module
 wam_radiation_module.o wam_swell_module.o wam_propagation_module.o
 
 pnetcdf:
-	mpiifort $(OBJECTS) -o pnetcdf -I/project/opt/software/netcdf/4.7.0/intel/include/  \
-        -L/project/opt/software/netcdf/4.7.0/intel/lib/ -lnetcdf -lnetcdff
+	${FC} ${FFLAGS} $(OBJECTS) -o pnetcdf ${LDOPT}

@@ -4,10 +4,6 @@ set -ex
 path_o=${PRODADMDIR}/obj
 path_f=${PRODADMDIR}/src/print
 
-module load compilers/intel/2020.1.217
-module load intelmpi/2020.1.217
-module load netcdf
-
 modfile="print_grid_file print_spectra_file \
 print_time read_grid_file read_grid_user \
 read_spectra_file read_spectra_user \
@@ -19,6 +15,6 @@ for code in $modfile
 do
    rm -f ${code}.f90 ${code}.o
    cp ${path_f}/${code}.f90 ${path_o}/${code}.f90
-   mpiifort -c ${code}.f90
+   ${FC} ${FFLAGS} -c ${code}.f90 ${LDOPT}
    rm -f ${code}.f90
 done

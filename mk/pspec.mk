@@ -3,4 +3,4 @@ wam_print_user_module.o print_spectra_file.o read_spectra_file.o \
 read_spectra_user.o wam_coordinate_module.o wam_output_parameter_module.o 
 
 pspec:
-	mpiifort $(OBJECTS) -o pspec
+	${FC} ${FFLAGS} $(OBJECTS) -o pspec ${LDOPT}

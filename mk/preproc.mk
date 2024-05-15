@@ -5,4 +5,4 @@ preproc_user_module.o wam_nest_module.o wam_output_set_up_module.o \
 preproc.o read_topography.o read_preproc_user.o wam_mpi_comp_module.o wam_coordinate_module.o
 
 preproc:
-	mpiifort $(OBJECTS) -o preproc
+	${FC} ${FFLAGS} $(OBJECTS) -o preproc ${LDOPT}
