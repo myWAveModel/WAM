@@ -27,6 +27,7 @@ character (len=14), save :: fsd
 
 real*8, allocatable, dimension (:) :: lat
 real*8, allocatable, dimension (:) :: lon
+integer, save :: shuf = 1 ! RH: NetCDF-4 fix?
 
 public wknco, wkncw, wkncc, pf, nx, ny, idelint
 
@@ -537,7 +538,8 @@ IF (ncid(0)<0) THEN
    WRITE(tda,'("0000-00-00 (",2(i2.2,":"),i2.2,")")')i/3600,MOD(i/60,60),MOD(i,60)
    tua="seconds since "//sd(1:4)//"-"//sd(5:6)//"-"//sd(7:8)//" "//sd(9:10)//":"//sd(11:12)//":"//sd(13:14)
 
-   CALL Pf(NF90_CREATE(name,ior(NF90_CLOBBER,NF90_SHARE),ncid(0)))
+   !CALL Pf(NF90_CREATE(name,    ior(NF90_CLOBBER,NF90_SHARE)              ,ncid(0)))
+   CALL Pf(NF90_CREATE(name,ior(ior(NF90_CLOBBER,NF90_SHARE),NF90_NETCDF4),ncid(0))) ! RH: NetCDF-4 fix?
    CALL Pf(NF90_DEF_DIM(ncid(0),'time',NF90_UNLIMITED,diid(1)))
    CALL Pf(NF90_DEF_DIM(ncid(0),'lat',ny,diid(2)))
    CALL Pf(NF90_DEF_DIM(ncid(0),'lon',nx,diid(3)))
@@ -555,6 +557,8 @@ IF (ncid(0)<0) THEN
    DO i=1,nf
       IF (flg(i)>0) THEN
          CALL Pf(NF90_DEF_VAR(ncid(0),vl(1,i),ty(i),diid(did),ncid(i)))
+         CALL Pf(NF90_DEF_VAR_CHUNKING(ncid(0),ncid(i),0,[nx,ny,1]))   ! RH: NetCDF-4 fix?
+         CALL Pf(NF90_DEF_VAR_DEFLATE(ncid(0),ncid(i),shuf,shuf,shuf)) ! RH: NetCDF-4 fix?
          CALL Pf(NF90_PUT_ATT(ncid(0),ncid(i),'_FillValue',fw(i)))
          call pf(nf90_put_att(ncid(0),ncid(i),'long_name',vl(3,i)))
          call pf(nf90_put_att(ncid(0),ncid(i),'standard_name',vl(2,i)))
