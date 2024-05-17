@@ -9,4 +9,4 @@ make_netcdf.o wam_source_output_module.o wam_output_parameter_module.o wam_radia
 wam_propagation_module.o wam_oasis_module.o
 
 pnetcdf:
-	$(FC)  $(OBJECTS) -o pnetcdf $(LIBS)
+	${FC} ${FFLAGS} $(OBJECTS) -o pnetcdf ${LDOPT}

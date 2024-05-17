@@ -4,4 +4,4 @@ preproc_user_module.o wam_nest_module.o read_boundary_input.o wam_output_set_up_
 preproc.o read_topography.o read_preproc_user.o wam_mpi_comp_module.o wam_special_module.o
 
 preproc:
-	$FC  $(OBJECTS) -o preproc -L/usr/lib64
+	${FC} ${FFLAGS} $(OBJECTS) -o preproc ${LDOPT}

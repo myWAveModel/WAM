@@ -8,5 +8,4 @@ read_current_input.o read_ice_input.o wam_topo_module.o read_topo_input.o jafu.o
 make_rad_netcdf.o wam_oasis_module.o wam_source_output_module.o dtsec.o
 
 pnetcdf_rad:
-	$(FC) $(OBJECTS) -o pnetcdf_rad $(OASISLIB)     \
-        -I$(NETCDFHOME)/include -L$(NETCDFHOME)/lib -lnetcdf -lnetcdff
+	${FC} ${FFLAGS} $(OBJECTS) -o pnetcdf_rad ${LDOPT}

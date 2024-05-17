@@ -12,4 +12,4 @@ read_ice_input.o jafu.o wam_mpi_comp_module.o wam_assi_set_up_module.o wam_assi_
 wam_coordinate_module.o readsat.o wam_source_output_module.o wam_oasis_module.o
 
 chief:
-	$(FC) $(fflags) $(OBJECTS) -o chief $(LIBS)
+	${FC} ${FFLAGS} $(OBJECTS) -o chief ${LDOPT}

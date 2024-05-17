@@ -3,5 +3,5 @@ wam_print_user_module.o print_scr_file.o read_scr_file.o \
 read_scr_user.o
 
 psource:
-	$(FC)  $(OBJECTS) -o psource $(OASISLIB)
+	${FC} ${FFLAGS} $(OBJECTS) -o psource ${LDOPT}
 

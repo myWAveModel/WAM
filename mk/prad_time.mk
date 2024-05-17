@@ -4,4 +4,4 @@ wam_print_user_module.o print_rad_time.o read_time_user.o read_grid_file.o \
 wam_oasis_module.o wam_coordinate_module.o
 
 prad_time:
-	$(FC) $(OBJECTS) -o prad_time $(OASISLIB)
+	${FC} ${FFLAGS} $(OBJECTS) -o prad_time ${LDOPT}

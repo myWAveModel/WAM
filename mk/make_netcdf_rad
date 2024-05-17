@@ -12,6 +12,6 @@ for code in $modfile
 do
    rm -f ${code}.f90 ${code}.o
    cp ${path_f}/${code}.f90 ${path_o}/${code}.f90
-   $FC -c ${code}.f90 -I$NETCDFHOME/include -L$NETCDFHOME/lib -lnetcdf -lnetcdff
+   ${FC} ${FFLAGS} -c ${code}.f90 ${LDOPT}
    rm -f ${code}.f90
 done
