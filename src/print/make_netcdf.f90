@@ -74,7 +74,7 @@ IMPLICIT NONE
 !*    LOCAL VARIABLE
 
 LOGICAL            :: IEOF=.false.
-character (len=14) :: ihh
+character (len=14) :: ihh, CDATEE_MAP !! ModR01: Bugfix correct final timeframes in NetCDF output
 character (len=17) :: xfile
 integer            :: i, ifail, tstep, ios
 LOGICAL,SAVE       :: FRSTIME = .TRUE.
@@ -134,6 +134,8 @@ IF (NOUTT.GT.0) THEN
    END DO
 END IF
 CDTINTT = '  '
+CDATEE_MAP=CDATEE                 !! ModR01: Bugfix correct timeframes in NetCDF output
+CALL INCDATE (CDATEE_MAP, IDFILE) !! Set pseudo end date for maximum MAP-file identifier
 
 ! ---------------------------------------------------------------------------- !
 !
@@ -146,6 +148,10 @@ FILES: DO
 !     2.1 FETCH FILE.
 !         -----------
 
+   IF (CDATEA.GT.CDTFILE) THEN            !! ModR01: Bugfix correct timeframes in NetCDF output
+           CALL INCDATE (CDTFILE, IDFILE) !! Increment to next file if start date is not contained.
+           CYCLE FILES
+   ENDIF
    CALL OPEN_FILE (IU06, IU01, FILE01, CDTFILE, 'OLD', IFAIL)
    IF (IFAIL.NE.0) STOP
 
@@ -247,7 +253,7 @@ FILES: DO
    END DO TIMES
 
    CALL INCDATE (CDTFILE, IDFILE)       !! INCREMENT DATE FOR THE NEXT FILE.
-   if (cdtfile>cdatee) exit files
+   if (cdtfile>cdatee_map) exit files   !! ModR01: Bugfix correct final timeframes in NetCDF output
    CLOSE (UNIT=IU01, STATUS='KEEP')     !! CLOSE OLD FILE
 END DO FILES
 
