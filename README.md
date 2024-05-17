@@ -33,10 +33,26 @@ WAM. If not, see <http://www.gnu.org/licenses/>
 
 2. Download the repository: https://github.com/mywave/WAM/
 
-3. Set the libraries paths and modules to be loaded for your SYSTEM in the 
+3. Link the compatible subroutines for the desired input data format in the 
+   source code directories src/chief and src/preproc:
+   ```
+   [chief]   $ ln -sf read_*_input*.f90    read_*_input.f90 
+   [preproc] $ ln -sf read_topography*.f90 read_topography.f90
+   ```
+   For the "SWAMP" test case:
+   ```
+   [chief]   $ ln -sf read_wind_input_arno.f90     read_wind_input.f90 
+   [chief]   $ ln -sf read_topo_input_arno.f90     read_topo_input.f90 
+   [chief]   $ ln -sf read_current_input_arno.f90  read_current_input.f90 
+   [chief]   $ ln -sf read_boundary_input_arno.f90 read_boundary_input.f90 
+   [chief]   $ ln -sf read_ice_input_arno.f90      read_ice_input.f90 
+   [preproc] $ ln -sf read_topography_arno.f90     read_topography.f90
+   ```
+
+4. Set the libraries paths and modules to be loaded for your SYSTEM in the 
    preamble of mk/create_binaries.
 
-4. Compile the executables from the directory mk:
+5. Compile the executables from the directory mk:
    ```
    [mk] $ rm ../abs/* ../obj/* 
    [mk] $ ./create_binaries SYSTEM
@@ -49,7 +65,7 @@ WAM. If not, see <http://www.gnu.org/licenses/>
    "first" does not specify any modules or libraries and should only be used for
    calls from super-scripts, which already set the SYSTEM environement.   
 
-5. DONE! The executables can be found in ./abs/
+6. DONE! The executables can be found in ./abs/
    * preproc: Pre-processor program to create domain/grid files
    * wam:     Main program running the wave model 
    * pnetcdf: Converter of binary wam output to NetCDF-format    

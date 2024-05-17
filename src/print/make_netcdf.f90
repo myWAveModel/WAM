@@ -65,6 +65,7 @@ USE WAM_PRINT_MODULE, ONLY: ITEST,                                             &
 &                           CDTINTT, NOUTT, COUTT,                             &
 &                           NOUT_P, PFLAG_P, CFLAG_P
 
+use wam_file_module,            only: iu06
 IMPLICIT NONE
 
 ! ---------------------------------------------------------------------------- !
@@ -72,12 +73,11 @@ IMPLICIT NONE
 !*    LOCAL VARIABLE
 
 LOGICAL            :: IEOF=.false.
-character (len=14) :: ihh
+character (len=14) :: ihh, CDATEE_MAP !! ModR03: Bugfix correct final timeframes in NetCDF output
 character (len=17) :: xfile
 integer            :: i, ifail, tstep, ios
 LOGICAL,SAVE       :: FRSTIME = .TRUE.
 integer            :: iu05 = 55
-integer            :: iu06 = 6
 character (len=80) :: file05 = 'NETCDF_User'
 character (len=80) :: file06 = 'pnetcdf_prot'
 
@@ -133,6 +133,8 @@ IF (NOUTT.GT.0) THEN
    END DO
 END IF
 CDTINTT = '  '
+CDATEE_MAP=CDATEE                 !! ModR03: Bugfix correct timeframes in NetCDF output
+CALL INCDATE (CDATEE_MAP, IDFILE) !! Set pseudo end date for maximum MAP-file identifier
 
 ! ---------------------------------------------------------------------------- !
 !
@@ -145,6 +147,10 @@ FILES: DO
 !     2.1 FETCH FILE.
 !         -----------
 
+   IF (CDATEA.GT.CDTFILE) THEN            !! ModR03: Bugfix correct timeframes in NetCDF output
+           CALL INCDATE (CDTFILE, IDFILE) !! Increment to next file if start date is not contained.
+           CYCLE FILES
+   ENDIF
    CALL OPEN_FILE (IU06, IU01, FILE01, CDTFILE, 'OLD', IFAIL)
    IF (IFAIL.NE.0) STOP
 
@@ -211,6 +217,8 @@ FILES: DO
          write (iu06,*) ' +++'
          write (iu06,*) ' +++ NetCDF file has been opened - name is: ', trim(xfile)
          write (iu06,*) ' +++'
+	 if(xdella.eq.0)xdella=(amonop-amosop)/(ny-1) !! ModR03: Set lat increment if not given
+	 if(xdello.eq.0)xdello=(amoeap-amowep)/(nx-1) !! ModR03: Set lon increment if not given
          call wknco (xfile, cdatea, cflag_p, amowep, amosop, xdella, xdello)
          write (iu06,*) ' +++ idelint, nx, ny, amosop, amowep, xdella, xdello : ',  &
 &                             idelint, nx, ny, amosop, amowep, xdella, xdello
@@ -244,7 +252,7 @@ FILES: DO
    END DO TIMES
 
    CALL INCDATE (CDTFILE, IDFILE)       !! INCREMENT DATE FOR THE NEXT FILE.
-   if (cdtfile>cdatee) exit files
+   if (cdtfile>cdatee_map) exit files   !! ModR03: Bugfix correct final timeframes in NetCDF output
    CLOSE (UNIT=IU01, STATUS='KEEP')     !! CLOSE OLD FILE
 END DO FILES
 
