@@ -19,7 +19,7 @@ if [ "$1" == strand ]; then
         echo export PRODADMDIR=$(dirname $(pwd)) > .dirset
 
 
-if [ "$1" == strand-oneAPI ]; then
+elif [ "$1" == strand-oneAPI ]; then
         #### STRAND - oneAPI ####
         module purge
         module load compilers/intel/oneAPI/2021.2.0
