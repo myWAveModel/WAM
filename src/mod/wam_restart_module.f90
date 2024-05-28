@@ -257,7 +257,7 @@ else                           !! ascii code
       if (irank==i_out_restart) then
          read (iu17,*) rfl(1:nsea,:,:)
       else
-         read (iu17) (rfl(1:nsea,1,1),ifail=1,ml*kl)
+         read (iu17,*) (rfl(1:nsea,1,1),ifail=1,ml*kl)
       endif
    ELSE
       read (iu17,*) rfl(IJ2NEWIJ(1:nsea),1,1)
@@ -269,7 +269,7 @@ else                           !! ascii code
       if (irank==i_out_restart) then
          read (iu17,*) rfl(IJ2NEWIJ(1:nsea),:,:)
       else
-         read (iu17) (rfl(1:nsea,1,1),ifail=1,ml*kl)
+         read (iu17,*) (rfl(1:nsea,1,1),ifail=1,ml*kl)
       endif
    END IF
    CALL mpi_scatter_fl(i_out_restart,131,fl3,rfl)
