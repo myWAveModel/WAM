@@ -88,6 +88,12 @@ Günther, H., Hasselmann, S., Janssen, P.A.E.M. (1992). The WAM Model cycle 4. W
 An extensive physical and technical description of the WAM derivative ECWAM of ECmWF:
 ECMWF. (2019). IFS Documentation CY46R1. ECMWF. https://doi.org/10.21957/21g1hoiuo.
 
+A book about WAM and wave modelling in general:
+Komen, G. J., Cavaleri, L., Donelan, M., Hasselmann, K., Hasselmann, S., & Janssen, P. A. E. M. (1994). Dynamics and Modelling of Ocean Waves. Cambridge University Press. https://doi.org/10.1017/CBO9780511628955
+
+Educational material including WAM:
+Janssen, P.A.E.M. (2002). The wave model. ECMWF. https://www.ecmwf.int/en/elibrary/79883-wave-model
+
 ################################################################################  
 Version 7
 
