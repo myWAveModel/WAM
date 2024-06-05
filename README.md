@@ -85,7 +85,7 @@ The WAMDI Group. (1988). The WAM Model—A Third Generation Ocean Wave Predictio
 Technical report:
 Günther, H., Hasselmann, S., Janssen, P.A.E.M. (1992). The WAM Model cycle 4. World Data Center for Climate (WDCC) at DKRZ. https://doi.org/10.2312/WDCC/DKRZ_Report_No04
 
-An extensive physical and technical description of the WAM derivative ECWAM of ECmWF:
+An extensive physical and technical description of the WAM derivative ECWAM of ECMWF:
 ECMWF. (2019). IFS Documentation CY46R1. ECMWF. https://doi.org/10.21957/21g1hoiuo.
 
 A book about WAM and wave modelling in general:
