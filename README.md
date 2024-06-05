@@ -79,7 +79,14 @@ TODO!!!
 ################################################################################
 ## Documentation
 
-A full documentation can be found at: ToDo!!!
+A physical description:
+The WAMDI Group. (1988). The WAM Model—A Third Generation Ocean Wave Prediction Model. Journal of Physical Oceanography, 18(12), 1775–1810. https://doi.org/10.1175/1520-0485(1988)018<1775:TWMTGO>2.0.CO;2
+
+Technical report:
+Günther, H., Hasselmann, S., Janssen, P.A.E.M. (1992). The WAM Model cycle 4. World Data Center for Climate (WDCC) at DKRZ. https://doi.org/10.2312/WDCC/DKRZ_Report_No04
+
+An extensive physical and technical description of the WAM derivative ECWAM of ECmWF:
+ECMWF. (2019). IFS Documentation CY46R1. ECMWF. https://doi.org/10.21957/21g1hoiuo.
 
 ################################################################################  
 Version 7
