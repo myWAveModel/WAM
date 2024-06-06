@@ -41,7 +41,7 @@ use wam_mpi_module,           only: petotal, irank, nstart, nend, nlen,        &
 &                                   i_out_b_spec, i_out_restart,               &
 &                                   noutp_ga, ijar_ga, ngou_ga,                &
 &                                   nbounc_ga, ijarc_ga, ngouc_ga,             &
-&                                   extime, comtime,                           &
+&                                   extime, comtime, localcomm,                & !! ModR04: Include OASIS (MPI_COMM_WORLD->localcomm)
 &                                   NGBTOPE, NTOPEMAX, NTOPELST, NTOPE, IJTOPE,&
 &                                   NGBFROMPE, NFROMPEMAX, NFROMPELST, NFROMPE,&
 &                                   NIJSTART, IJ2NEWIJ
@@ -1563,7 +1563,7 @@ DO ingb = 1, ngbfrompe
    iproc = nfrompelst(ingb)
    kcount = ml*kl*nfrompe(iproc)
    call MPI_irecv(zcombufr(1,ingb), kcount, MPI_REAL, iproc-1, KTAG,            &
-&                MPI_COMM_WORLD, ireq(ir), ierr)
+&                localcomm, ireq(ir), ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
    if (ierr(1)/=0) then
       write (iu06,*) ' +++ error: Sub. mpi_MPEXCHNG'
       write (iu06,*) ' +++ error: MPI_recv, ierr = ', ierr
@@ -1577,7 +1577,7 @@ DO ingb = 1, ngbtope
    iproc = ntopelst(ingb)
    kcount = ml*kl*ntope(iproc)
    call MPI_iSend(zcombufs(1,ingb), kcount, MPI_REAL, iproc-1, KTAG,             &
-&                MPI_COMM_WORLD, ireq(ir), ierr)
+&                localcomm, ireq(ir), ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
    if (ierr(1)/=0) then
       write (iu06,*) ' +++ error: Sub. mpi_MPEXCHNG'
       write (iu06,*) ' +++ error: MPI_send, ierr = ', ierr
@@ -1724,7 +1724,7 @@ DO ingb = 1, ngbfrompe
    iproc = nfrompelst(ingb)
    kcount = nfrompe(iproc)
    call MPI_irecv(zcombufr(1,ingb), kcount, MPI_REAL, iproc-1, 0,             &
-&                MPI_COMM_WORLD,ireq(ir), ierr)
+&                localcomm,ireq(ir), ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
    if (ierr(1)/=0) then
       write (iu06,*) ' +++ error: Sub. mpi_MPEXCHNG_V'
       write (iu06,*) ' +++ error: MPI_recv, ierr = ', ierr
@@ -1738,7 +1738,7 @@ DO ingb = 1, ngbtope
    iproc = ntopelst(ingb)
    kcount = ntope(iproc)
    call MPI_iSend(zcombufs(1,ingb), kcount, MPI_REAL, iproc-1, 0,             &
-&                MPI_COMM_WORLD,ireq(ir), ierr)
+&                localcomm,ireq(ir), ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
    if (ierr(1)/=0) then
       write (iu06,*) ' +++ error: Sub. mpi_MPEXCHNG_V'
       write (iu06,*) ' +++ error: MPI_send, ierr = ', ierr
@@ -1855,7 +1855,7 @@ else
   end do
 
   CALL MPI_Gatherv(field, nlen(irank), MPI_REAL, rfield, nlen, displ,          &
-                   MPI_REAL, irecv-1, MPI_COMM_WORLD, ierr)
+                   MPI_REAL, irecv-1, localcomm, ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
   IF (ierr/=0) THEN
     write (iu06,*) ' +++ error: SUB. mpi_gather_block'
     write (iu06,*) ' +++ error: MPI-task ',irank,' -> MPI_Gatherv ierr = ',ierr
@@ -1977,7 +1977,7 @@ else if (irank/=irecv) then
 !
    if(kcount>0)then
       call MPI_Send(zcombufs, kcount, MPI_REAL, irecv-1, itag,                 &
-&                MPI_COMM_WORLD, ierr)
+&                localcomm, ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
 
       if (ierr/=0) then
 	 write (iu06,*) ' +++ error: Sub. mpi_gather_bound'
@@ -2002,7 +2002,7 @@ else
       isc=isc+1
 
       call MPI_iRecv(zcombufr(1,ip), maxlength, MPI_REAL, ip-1, itag, &
-&                   MPI_COMM_WORLD, ireq(ip), ierr)
+&                   localcomm, ireq(ip), ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
       
       if (ierr/=0) then
          write (iu06,*) ' +++ error: Sub. mpi_gather_bound'
@@ -2159,7 +2159,7 @@ else if (irank/=irecv) then
 !
 !*    send contribution to receiving pe
 !
-   call MPI_send(zcombuf,len, MPI_REAL, irecv-1, itag, MPI_COMM_WORLD, ierr)
+   call MPI_send(zcombuf,len, MPI_REAL, irecv-1, itag, localcomm, ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
 
    if (ierr<0) then
       write (iu06,*) ' +++ error: Sub. mpi_gather_fl'
@@ -2194,7 +2194,7 @@ else
    
          len = nlen(ip)*kl*ml
    
-         CALL MPI_recv(zcombuf, len, MPI_REAL, ip-1, itag, MPI_COMM_WORLD,  &
+         CALL MPI_recv(zcombuf, len, MPI_REAL, ip-1, itag, localcomm,  &  !! ModR04: MPI_COMM_WORLD->localcomm
 &                      istatus, ierr)
          IF (ierr/=0) then
             write (iu06,*) ' +++ error: Sub. mpi_gather_fl'
@@ -2304,7 +2304,7 @@ else if (irank==isend) then
       enddo
    enddo
       
-   call MPI_Send(zcombuf, len, MPI_REAL, irecv-1, itag, MPI_COMM_WORLD, ierr)
+   call MPI_Send(zcombuf, len, MPI_REAL, irecv-1, itag, localcomm, ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
 
    if (ierr/=0) then
       write (iu06,*) ' +++ error: Sub. mpi_gather_grid'
@@ -2317,7 +2317,7 @@ else if (irank==irecv) then
 !     1.2 receive field from process isend on process irecv
 !         -------------------------------------------------
 
-   call MPI_recv(zcombuf, len, MPI_REAL, isend-1, itag, MPI_COMM_WORLD,        &
+   call MPI_recv(zcombuf, len, MPI_REAL, isend-1, itag, localcomm,        &  !! ModR04: MPI_COMM_WORLD->localcomm
 &                istatus, ierr)
     
    if (ierr/=0) then
@@ -2469,7 +2469,7 @@ else if (irank/=irecv .and. noutp_ga(irank).gt.0) then
 !     send buffer
 !
    call MPI_send(zcombuf, kcount, MPI_REAL, irecv-1, itag,            &
-&                MPI_COMM_WORLD, ierr)
+&                localcomm, ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
 
    if (ierr/=0) then
       write (iu06,*) ' +++ error : MPI_send, ierr = ', ierr
@@ -2486,7 +2486,7 @@ else if (irank==irecv) then
       if (ip==irecv .or. noutp_ga(ip).eq.0) cycle Process
 
       call MPI_recv(zcombuf, maxlength, MPI_REAL, ip-1, itag,           &
-&                   MPI_COMM_WORLD, istatus, ierr)
+&                   localcomm, istatus, ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
       if (ierr/=0) then
          write (iu06,*) ' +++ error: Sub. mpi_gather_spp'
          write (iu06,*) ' +++ error: MPI_recv, ierr = ', ierr
@@ -2602,7 +2602,7 @@ if (petotal/=1) then
       enddo
    enddo
 
-   call MPI_Bcast (zcombuf, len, MPI_real, isend-1, MPI_COMM_WORLD, ierr)
+   call MPI_Bcast (zcombuf, len, MPI_real, isend-1, localcomm, ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
 
    if (ierr/=0)  then
       write (iu06,*) ' +++ error: Sub. mpi_gather_oifl'
@@ -2694,7 +2694,7 @@ if (petotal/=1) then
       enddo
    enddo
 
-   call MPI_Bcast (zcombuf, len, MPI_logical, isend-1, MPI_COMM_WORLD, ierr)
+   call MPI_Bcast (zcombuf, len, MPI_logical, isend-1, localcomm, ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
 
    if (ierr/=0)  then
       write (iu06,*) ' +++ error: Sub. mpi_gather_oifl'
@@ -2773,7 +2773,7 @@ if (petotal/=1) then
    len = 1
    do isend=1,petotal
       zcombuf(1) = field (irank)
-      call MPI_Bcast (zcombuf, len, MPI_real, isend-1,MPI_COMM_WORLD, ierr)
+      call MPI_Bcast (zcombuf, len, MPI_real, isend-1,localcomm, ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
 
       if (ierr/=0)  then
          write (iu06,*) ' +++ error: Sub. mpi_gather_cfl'

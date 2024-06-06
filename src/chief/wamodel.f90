@@ -230,6 +230,14 @@ USE WAM_WIND_MODULE,          ONLY: &
 use wam_assi_module,          only: & 
 &       wamassi                       !! performs data assimilation
 
+USE WAM_OASIS_MODULE,         ONLY: & !! ModR04: Include OASIS
+        WAM_OASIS_CHECK_OUT,        & !! SETS PARAMETERFLAGS FOR NEXT OUTPUT
+        WAM_OASIS_REC_TOPO,         & !! GETS A NEW DEPTH FIELD FROM COUPLER
+	WAM_OASIS_REC_CURRENT,      & !! GETS A NEW CURRENT FIELD FROM COUPLER
+        WAM_OASIS_REC_ICE,          & !! GETS A NEW ICE FIELD FROM COUPLER
+        WAM_OASIS_REC_ATMO,         & !! GETS A NEW WIND FIELD FROM COUPLER
+	WAM_OASIS_REC_BOUNDARY,     & !! GETS BOUNDARY SPECTRA FROM COUPLER
+	WAM_OASIS_SEND_NEST	      !! SENDS BOUNDARY SPECTRA TO COUPLER
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     MODULE VARIABLES.                                                        !
@@ -262,6 +270,12 @@ use wam_grid_module,          only: one_point
 use wam_mpi_module,           only: nijs, nijl
 use wam_assi_set_up_module,   only: iassi, cdtass
 
+USE WAM_OASIS_MODULE,         ONLY: USE_OASIS, USE_OASIS_ELEV_IN,              & !! ModR04: Include OASIS
+				    USE_OASIS_CURR_IN, USE_OASIS_WIND_IN,      &
+				    use_oasis_bdy_in, use_oasis_nest_out,      &
+				    use_oasis_ice_in,			       &
+                                    USE_OASIS_FORCE_OUTPUT,USE_OASIS_FORCE_SOURCE
+
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     INTERFACE VARIABLES.                                                     !
@@ -276,7 +290,7 @@ IMPLICIT NONE
 
 INTEGER             :: KADV
 CHARACTER (LEN=14)  :: CDTSOE
-LOGICAL             :: NEW_DEPTH_OR_CURR
+LOGICAL             :: NEW_DEPTH_OR_CURR, NEW_TOPO, NEW_CURR !! ModR04
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -298,31 +312,47 @@ PROP: DO KADV = 1,NADV
 !     1.2 NEW DEPTH AND/OR CURRENT DATA.                                       !
 !         ------------------------------                                       !
 
-   NEW_DEPTH_OR_CURR = .FALSE.
-   IF (TOPO_RUN) THEN
+   NEW_TOPO = .FALSE.                                !! ModR04: Include OASIS !!
+   IF (use_oasis_elev_in) THEN
+      CALL Wam_oasis_rec_topo(CDTPRO,NEW_TOPO)
+      IF (NEW_TOPO) THEN
+	 IF (ITEST.GE.2) WRITE(IU06,*) '   SUB. WAMODEL: NEW DEPTH FIELD'
+      END IF
+   ELSE IF (TOPO_RUN) THEN
       IF (CDTPRO.GE.CD_TOPO_NEW) THEN
+         NEW_TOPO = .TRUE.
          CALL GET_TOPO (CD_TOPO_NEW)
-
-         NEW_DEPTH_OR_CURR = .TRUE.
          IF (ITEST.GE.2) THEN
             WRITE(IU06,*) '   SUB. WAMODEL: NEW DEPTH FIELD CDTA = ',CDTA
          END IF
-
-         CALL MAKE_SHALLOW_SNL (DEPTH(nijs:nijl))
-         IF (ITEST.GE.2) THEN
-            WRITE (IU06,*) '   SUB. WAMODEL: MAKE_SHALLOW_SNL DONE '
-         END IF
       END IF
    END IF
-   IF (CURRENT_RUN) THEN
+
+   IF (TOPO_RUN .AND. NEW_TOPO) THEN
+      CALL MAKE_SHALLOW_SNL (DEPTH(nijs:nijl))
+      IF (ITEST.GE.2) THEN
+         WRITE (IU06,*) '   SUB. WAMODEL: MAKE_SHALLOW_SNL DONE '
+      END IF
+   END IF
+
+   NEW_CURR = .FALSE. !!ModR04
+   IF (use_oasis_curr_in) THEN
+      call Wam_oasis_rec_current(CDTPRO,NEW_CURR)
+      IF (NEW_CURR) THEN
+	 IF (ITEST.GE.2) WRITE(IU06,*) '   SUB. WAMODEL: NEW CURRENT FIELD'
+      END IF
+   ELSE IF (CURRENT_RUN) THEN
       IF (CDTPRO.GE.CD_CURR_NEW) THEN
          CALL GET_CURRENT (CD_CURR_NEW)
-         NEW_DEPTH_OR_CURR = .TRUE.
+         NEW_CURR = .TRUE.
          IF (ITEST.GE.2) THEN
             WRITE(IU06,*) '   SUB. WAMODEL: NEW CURRENT FIELD CDCA = ',CDCA
          END IF
       END IF
    END IF
+
+   NEW_DEPTH_OR_CURR = NEW_TOPO .OR. NEW_CURR                   !! End ModR04 !!
+
    IF (NEW_DEPTH_OR_CURR) CALL PREPARE_PROPAGATION
 
 !     1.3 COMPUTE OF PROPAGATION.                                              !
@@ -337,9 +367,10 @@ PROP: DO KADV = 1,NADV
 
    CDTSOE = CDTSOU                  !! END DATE OF SOURCE INTEGRATION.
    CALL INCDATE (CDTSOE,IDELT)
+   CALL WAM_OASIS_CHECK_OUT         !! ModR04: Include OASIS
 
    PHYSICS: DO WHILE (CDTSOE.LE.CDTPRO)
-      LCFLX = CDTINTT.EQ.CDTSOE .AND. ANY(CFLAG_P (59:62))
+      LCFLX = CDTINTT.EQ.CDTSOE .AND. ANY(CFLAG_P (59:62)) .OR. use_oasis_force_source !! ModR04: Include OASIS
 
 
       IF (ITEST.GE.2) THEN
@@ -347,7 +378,9 @@ PROP: DO KADV = 1,NADV
 &                      'CDTSOU = ',CDTSOU
       END IF
 
-      IF (CDTSOE.GE.CDATEWO) THEN         !! NEW WINDS IF NEEDED
+      IF(use_oasis_wind_in)THEN                !! ModR04: Include OASIS
+         CALL Wam_oasis_rec_atmo               !! ModR04
+      ELSE IF (CDTSOE.GE.CDATEWO) THEN         !! NEW WINDS IF NEEDED
          CALL GET_WIND (CDATEWO)
       END IF
 
@@ -361,13 +394,15 @@ PROP: DO KADV = 1,NADV
 
    IF (ITEST.GE.2) then
       WRITE(IU06,*)  '   SUB. WAMODEL: SOURCE INTEGRATION FINISHED'
-      call flush1 (iu06)
-   endif
+      CALL FLUSH1 (IU06)
+   ENDIF
 
 !     1.5 INPUT OF BOUNDARY VALUES.                                            !
 !         -------------------------                                            !
 
-   IF (FINE) THEN
+   IF(use_oasis_bdy_in)THEN         !! ModR04: Include OASIS
+      CALL Wam_oasis_rec_boundary   !! ModR04
+   ELSE IF (FINE) THEN
       CALL BOUNDARY_INPUT
       IF (ITEST.GE.2) THEN
          WRITE(IU06,*) '   SUB. WAMODEL: BOUNDARY VALUES (FINE GRID) INSERTED'
@@ -384,6 +419,9 @@ PROP: DO KADV = 1,NADV
             WRITE(IU06,*) '   SUB. WAMODEL: NEW ICE FIELD '
          END IF
       END IF
+   END IF                                        !! ModR04
+   IF (USE_OASIS_ICE_IN) CALL Wam_oasis_rec_ice  !! ModR04: Include OASIS
+   IF (ICE_RUN.OR.USE_OASIS_ICE_IN) THEN         !! ModR04
       CALL PUT_ICE (FL3, 0.)
       IF (ITEST.GE.2) WRITE(IU06,*) '   SUB. WAMODEL: ICE INSERTED'
    END IF
@@ -419,6 +457,7 @@ PROP: DO KADV = 1,NADV
          END IF
       END IF
    END IF
+   if(use_oasis_nest_out)call wam_oasis_send_nest !! ModR04: Include OASIS
 
 !     1.8 MODEL OUTPUT TO DISK AND/OR PRINTED.                                 !
 !         ------------------------------------                                 !
@@ -432,7 +471,9 @@ PROP: DO KADV = 1,NADV
       END IF
       CALL UPDATE_OUTPUT_TIME                     !! UPDATE OUTPUT TIMES.
       IF (ITEST.GE.2) WRITE(IU06,*) '   SUB. WAMODEL: MODEL_OUTPUT_CONTROL DONE'
-      call flush1 (iu06)
+      CALL FLUSH1 (IU06)
+   ELSE IF (USE_OASIS_FORCE_OUTPUT) THEN    !! ModR04: Include OASIS
+      CALL MODEL_OUTPUT_CONTROL (fl3, 0, 0) !! ModR04
    END IF
 
 !     1.9 SAVE RECOVERY FILES WHEN TIME REACHES THE SAVE DATE.                 !

@@ -77,6 +77,7 @@ USE WAM_GENERAL_MODULE,   ONLY:  &
 use wam_mpi_comp_module,     only: &
 &       expand_string                !! prepares output of individual pu.
 
+use wam_oasis_module,     only: use_oasis,Wam_oasis_init_comp,Wam_oasis_terminate !! ModR04: Include OASIS
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     MODULE VARIABLES.                                                        !
@@ -85,7 +86,8 @@ use wam_mpi_comp_module,     only: &
 USE WAM_TIMOPT_MODULE, ONLY: CDATEE, CDTPRO
 USE WAM_FILE_MODULE,   ONLY: IU06, FILE06
 use wam_mpi_module,    only: pelocal, petotal, nprevious, nnext,               &
-&                            irank, extime, comtime
+&                            irank, extime, comtime, localcomm                  !! ModR04: Include OASIS
+USE WAM_GENERAL_MODULE,ONLY: ABORTCASE  !! ALSO TERMINATE MPI(1) OR OASIS(2)    !! ModR04: Include OASIS
 
 IMPLICIT NONE 
 INCLUDE 'mpif.h'
@@ -101,7 +103,14 @@ character (len=80), dimension (1) :: logfilename
 
 ! ---------------------------------------------------------------------------- !
 !
-call MPI_INIT (ierr)
+CALL Wam_oasis_init_comp   !! ModR04: Include OASIS
+IF(USE_OASIS)THEN
+  ABORTCASE=2
+ELSE
+  ABORTCASE=1
+  call MPI_INIT (ierr)
+  localcomm=MPI_COMM_WORLD
+ENDIF                      !! End ModR04
 TIME0 = MPI_WTIME()
 
 CDTPRO = ' '
@@ -112,8 +121,8 @@ CDATEE = '99999999999900'
 !*    1. Initialize MPI
 !        --------------
 
-CALL MPI_COMM_RANK (MPI_COMM_WORLD, pelocal, ierr)
-CALL MPI_COMM_SIZE (MPI_COMM_WORLD, petotal, ierr)
+CALL MPI_COMM_RANK (localcomm, pelocal, ierr) !! ModR04: MPI_COMM_WORLD -> localcomm
+CALL MPI_COMM_SIZE (localcomm, petotal, ierr) !! ModR04: MPI_COMM_WORLD -> localcomm
 
 irank = pelocal+1
 nprevious = irank-1
@@ -125,7 +134,7 @@ endif
 
 iu06 = 66
 IF (petotal.GT.1) THEN
-   logfilename(1) ='logfile.%p'
+   logfilename(1) ='WAMLOGS/logfile.%p'
    call expand_string (pelocal,petotal,0,0,logfilename,1)
    open (iu06, file=logfilename(1),status='unknown')
 ELSE
@@ -149,7 +158,11 @@ DO WHILE (CDTPRO<CDATEE)
 END DO
      
 TIME = MPI_WTIME()-TIME0
-call MPI_finalize (ierr)
+IF(use_oasis)THEN                !! ModR04: Include OASIS
+  CALL Wam_oasis_terminate(ierr)
+ELSE
+  call MPI_finalize (ierr)
+ENDIF                            !! End ModR04
 if (ierr==0) then
    write (iu06,*)
    write (iu06,*) ' +++ MPI successfully finalized ! '

@@ -150,9 +150,13 @@ CONTAINS
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
 SUBROUTINE PREPARE_START
+USE WAM_OASIS_MODULE,     ONLY: USE_OASIS_ELEV_IN,USE_OASIS_CURR_IN,	&  !! ModR04: Include OASIS
+                                use_oasis_ice_in,WAM_OASIS_REC_ICE,	&
+				USE_OASIS_WIND_IN,WAM_OASIS_REC_ATMO,	&
+				WAM_OASIS_REC_TOPO,WAM_OASIS_REC_CURRENT
 
 INTEGER :: LEN
-LOGICAL :: ERROR
+LOGICAL :: ERROR,gotfield  !! ModR04: new gotfield
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -218,6 +222,10 @@ END IF
 !     3. GENERATE START FIELDS OR READ RESTART FILE.                           !
 !        -------------------------------------------                           !
 
+IF(USE_OASIS_WIND_IN)CALL WAM_OASIS_REC_ATMO                      !! ModR04: Include OASIS
+IF(USE_OASIS_ELEV_IN)CALL WAM_OASIS_REC_TOPO(cdatea,gotfield)     !! ModR04
+IF(USE_OASIS_CURR_IN)CALL WAM_OASIS_REC_CURRENT(cdatea,gotfield)  !! ModR04
+
 IF (COLDSTART) THEN
    CALL PREPARE_COLDSTART
    IF (ITEST.GE.2) WRITE(IU06,*) '    SUB. PREPARE_START: PREPARE_COLDSTART DONE'
@@ -259,9 +267,12 @@ else
    write (iu06,*) ' +++ WAM runs without wind ready files'
 endif
    
-IF (ICE_RUN) THEN
-   CALL GET_ICE
-   IF (ITEST.GE.2) WRITE(IU06,*) '    SUB. PREPARE_START: GET_ICE DONE'
+IF (ICE_RUN.or.use_oasis_ice_in) THEN !! ModR04: Include OASIS
+   IF (ICE_RUN) THEN
+      CALL GET_ICE
+      IF (ITEST.GE.2) WRITE(IU06,*) '    SUB. PREPARE_START: GET_ICE DONE'
+   END IF
+   IF (use_oasis_ice_in) call Wam_oasis_rec_ice !! ModR04: Include OASIS
 
    CALL PUT_ICE (FL3, 0.)
    IF (ITEST.GE.2) WRITE(IU06,*) '    SUB. PREPARE_START: ICE INSERTED'
@@ -368,7 +379,7 @@ IF (IDELTI.LE.0 .OR. .NOT.TOPO_RUN) THEN
    IDELTI = 0
    IDELTO = 0
 ELSE
-   CD_TOPO_NEW = CDTPRO
+   IF (.NOT.USE_OASIS_ELEV_IN) CD_TOPO_NEW = CDTPRO       !! ModR04: Only without OASIS
    IF (IDELPRO.GT.IDELTO) THEN
       WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
       WRITE (IU06,*) ' +                                                  +'
@@ -385,10 +396,11 @@ ELSE
       WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
       IDELTO = IDELPRO
    END IF
-   IF (IDELPRO.LT.IDELTO) CALL INCDATE(CD_TOPO_NEW,IDELTO/2)
- END IF
+   IF (.NOT.USE_OASIS_ELEV_IN .AND. IDELPRO.LT.IDELTO) &  !! ModR04: Only without OASIS
+      CALL INCDATE(CD_TOPO_NEW,IDELTO/2)
+END IF
 IF (ITEST.GE.3) THEN
-   WRITE (IU06,*) '        NEXT DEPTH DATE IS  CD_TOTO_NEW = ', CD_TOPO_NEW
+   WRITE (IU06,*) '        NEXT DEPTH DATE IS  CD_TOPO_NEW = ', CD_TOPO_NEW
 END IF
 
 ! ---------------------------------------------------------------------------- !
@@ -402,7 +414,7 @@ IF (IDELCI.LE.0 .OR. .NOT.CURRENT_RUN) THEN
    IDELCI = 0
    IDELCO = 0
 ELSE
-   CD_CURR_NEW = CDTPRO
+   IF (.NOT.USE_OASIS_CURR_IN) CD_CURR_NEW = CDTPRO       !! ModR04: Only without OASIS
    IF (IDELPRO.GT.IDELCO) THEN
       WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
       WRITE (IU06,*) ' +                                                  +'
@@ -419,7 +431,8 @@ ELSE
       WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
       IDELCO = IDELPRO
    END IF
-   IF (IDELPRO.LT.IDELCO) CALL INCDATE(CD_CURR_NEW ,IDELCO/2)
+   IF (.NOT.USE_OASIS_CURR_IN .AND. IDELPRO.LT.IDELCO) &  !! ModR04: Only without OASIS
+      CALL INCDATE(CD_CURR_NEW ,IDELCO/2)
 END IF
 IF (ITEST.GE.3) THEN
    WRITE (IU06,*) '        NEXT CURRENT DATE IS CD_CURR_NEW = ', CD_CURR_NEW
@@ -431,6 +444,7 @@ END SUBROUTINE PREPARE_START
 
 SUBROUTINE READ_PREPROC_FILE
 
+USE WAM_OASIS_MODULE,     ONLY: USE_OASIS,WAM_OASIS_WRITE_GRID !! ModR04: Include OASIS
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !   READ_PREPROC_FILE -  READ OUTPUT FILE FROM PREPROC.                        !
@@ -653,6 +667,8 @@ READ (IU07) DELU
 
 CLOSE (UNIT=IU07, STATUS='KEEP')
 
+IF(USE_OASIS)CALL WAM_OASIS_WRITE_GRID  !! ModR04: Include OASIS
+
 END SUBROUTINE READ_PREPROC_FILE
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
@@ -663,6 +679,7 @@ END SUBROUTINE READ_PREPROC_FILE
 
 SUBROUTINE PREPARE_FIRST_DEPTH
 
+USE WAM_OASIS_MODULE,     ONLY: USE_OASIS_ELEV_IN  !! ModR04: Include OASIS
 INTEGER  :: LEN
 
 ! ---------------------------------------------------------------------------- !
@@ -673,6 +690,21 @@ INTEGER  :: LEN
 IF (.NOT.SHALLOW_RUN) THEN
    TOPO_RUN = .FALSE.
    CDTA = ' '
+   IF (USE_OASIS_ELEV_IN) THEN  !! ModR04: Include OASIS
+      WRITE (IU06,*) ' ****************************************************'
+      WRITE (IU06,*) ' *						       *'
+      WRITE (IU06,*) ' *	     FATAL ERROR SUB. PREPARE_FIRST_DEPTH.     *'
+      WRITE (IU06,*) ' *	     =====================================     *'
+      WRITE (IU06,*) ' *						       *'
+      WRITE (IU06,*) ' * OASIS TOPO IS REQUESTED FOR A DEEPWATER RUN      *'
+      WRITE (IU06,*) ' *						       *'
+      WRITE (IU06,*) ' * ADAPT THE OASIS namcouple FILE                   *'
+      WRITE (IU06,*) ' *						       *'
+      WRITE (IU06,*) ' *	    PROGRAM ABORTS  PROGRAM ABORTS	       *'
+      WRITE (IU06,*) ' *						       *'
+      WRITE (IU06,*) ' ****************************************************'
+      CALL ABORT1
+   END IF
    RETURN 
 END IF
 
@@ -684,7 +716,7 @@ END IF
 LEN = LEN_TRIM(FILE08)
 TOPO_RUN = .FALSE.
 IF (LEN.GT.0) INQUIRE (FILE=FILE08(1:LEN), EXIST=TOPO_RUN)
-IF (LEN.GT.0 .AND. .NOT.TOPO_RUN) THEN
+IF (LEN.GT.0 .AND. .NOT.TOPO_RUN .AND. .NOT.USE_OASIS_ELEV_IN) THEN  !! ModR04: Only without OASIS
    WRITE (IU06,*) ' ****************************************************'
    WRITE (IU06,*) ' *                                                  *'
    WRITE (IU06,*) ' *        FATAL ERROR SUB. PREPARE_FIRST_DEPTH.     *'
@@ -717,8 +749,21 @@ IF (.NOT.TOPO_RUN) THEN
       IF (ITEST.GE.3) THEN
          WRITE (IU06,*) '    SUB.PREPARE_FIRST_DEPTH:'
          WRITE (IU06,*) '        BASIC DEPTH FROM PREPROC'
-         WRITE (IU06,*) '        DEPTH IS STATIONARY'
+         IF (USE_OASIS_ELEV_IN) THEN  !! ModR04: Include OASIS
+	    WRITE (IU06,*) '	 DEPTH FROM OASIS COUPLER'
+	 ELSE
+            WRITE (IU06,*) '        DEPTH IS STATIONARY'
+         END IF
       END IF
+
+   ELSE IF (USE_OASIS_ELEV_IN) THEN  !! ModR04: Include OASIS
+
+      IF (ITEST.GE.3) THEN
+	 WRITE (IU06,*) '    SUB.PREPARE_FIRST_DEPTH:'
+	 WRITE (IU06,*) '	 BASIC DEPTH FROM RESTART FILE'
+         WRITE (IU06,*) '	 DEPTH FROM OASIS COUPLER'
+      END IF
+
    ELSE
 
 !     3.2 DEPTH IS DEFINED FROM RESTART: USED DEPTH FROM RESTART.                        !
@@ -745,21 +790,20 @@ IF (.NOT.TOPO_RUN) THEN
       END IF
    END IF
 
-   CALL FIND_DRY_POINTS
-   IF (ITEST.GE.3) THEN
-      WRITE (IU06,*) '    SUB. PREPARE_FIRST_DEPTH: FIND_DRY_POINTS DONE'
-   END IF
-   CALL PUT_DRY (FL3, 0.)
-   RETURN
+   !CALL FIND_DRY_POINTS  !! ModR04: Redundant Part? Done later anyways.
+   !IF (ITEST.GE.3) THEN
+   !   WRITE (IU06,*) '    SUB. PREPARE_FIRST_DEPTH: FIND_DRY_POINTS DONE'
+   !END IF
+   !CALL PUT_DRY (FL3, 0.)
+   !RETURN                !! ModR04: End redundant part
 
-END IF
+ELSE  !! ModR04: i.e. when TOPO_RUN = .TRUE.
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     4. SHALLOW WATER RUN: A TOPO FILE EXISTS.                                !
 !        --------------------------------------                                !
 
-IF (TOPO_RUN) THEN
    IF (COLDSTART) THEN
 
 !     4.1 COLD START: PREPARE FIRST DEPTH FIELD.                               !
@@ -835,6 +879,11 @@ IF (TOPO_RUN) THEN
 
 END IF
 
+IF (USE_OASIS_ELEV_IN) THEN  !! ModR04: Include OASIS
+   TOPO_RUN=.TRUE.
+   CDTA = CDATEA
+END IF
+
 CALL FIND_DRY_POINTS
 IF (ITEST.GE.3) THEN
    WRITE (IU06,*) '    SUB. PREPARE_FIRST_DEPTH: FIND_DRY_POINTS DONE'
@@ -847,6 +896,7 @@ END SUBROUTINE PREPARE_FIRST_DEPTH
 
 SUBROUTINE PREPARE_FIRST_CURRENT
 
+USE WAM_OASIS_MODULE,     ONLY: USE_OASIS_CURR_IN  !! ModR04: Include OASIS
 INTEGER  :: LEN
 
 ! ---------------------------------------------------------------------------- !
@@ -855,6 +905,27 @@ INTEGER  :: LEN
 !        ---------------------------------------                               !
 
 IF (.NOT. REFRACTION_C_RUN) THEN
+   IF (USE_OASIS_CURR_IN) THEN  !! ModR04: Include OASIS
+
+!     1. RUN WITHOUT CURRENT REFRACTION BUT WITH COUPLING: ABORT.
+
+      WRITE (IU06,*) ' ****************************************************'
+      WRITE (IU06,*) ' *						  *'
+      WRITE (IU06,*) ' *      FATAL ERROR SUB. PREPARE_FIRST_CURRENT.	  *'
+      WRITE (IU06,*) ' *      =======================================	  *'
+      WRITE (IU06,*) ' *						  *'
+      WRITE (IU06,*) ' * CURRENT ONLINE COUPLING IS REQUESTED BUT         *'
+      WRITE (IU06,*) ' * CURRENT REFRACTION IS NOT REQUESTED.		  *'
+      WRITE (IU06,*) ' *						  *'
+      WRITE (IU06,*) ' * SWITCH CURRENT REFRACTION ON IN THE USER INPUT   *'
+      WRITE (IU06,*) ' * OR DISABLE CURRENT COUPLING IN THE               *'
+      WRITE (IU06,*) ' * namcouple FILE					  *'
+      WRITE (IU06,*) ' *						  *'
+      WRITE (IU06,*) ' *       PROGRAM ABORTS  PROGRAM ABORTS		  *'
+      WRITE (IU06,*) ' *						  *'
+      WRITE (IU06,*) ' ****************************************************'
+      CALL ABORT1
+   END IF
    CURRENT_RUN = .FALSE.
    CDCA = ' '
    RETURN 
@@ -876,7 +947,7 @@ IF (LEN.GT.0) INQUIRE (FILE=FILE09(1:LEN), EXIST=CURRENT_RUN)
       
 IF (COLDSTART) THEN
 
-   IF (.NOT. CURRENT_RUN) THEN
+   IF (.NOT. CURRENT_RUN .AND. .NOT. USE_OASIS_CURR_IN) THEN  !! ModR04: Only without OASIS
 
 !     3.1 COLD START AND FILE DOES NOT EXIST: ABORT.                           !
 
@@ -890,14 +961,14 @@ IF (COLDSTART) THEN
       WRITE (IU06,*) ' * REFRACTION IS REQUESTED.                         *'
       WRITE (IU06,*) ' *    FILE NAME IS     FILE09 = ', TRIM(FILE09)
       WRITE (IU06,*) ' *                                                  *'
-      WRITE (IU06,*) ' * SWITCH CURRENT REFRACTION OF OR                  *'
+      WRITE (IU06,*) ' * SWITCH OFF CURRENT REFRACTION OR		  *'
       WRITE (IU06,*) ' * CORRECT FILE NAME IN THE USER INPUT.             *'
       WRITE (IU06,*) ' *                                                  *'
       WRITE (IU06,*) ' *       PROGRAM ABORTS  PROGRAM ABORTS             *'
       WRITE (IU06,*) ' *                                                  *'
       WRITE (IU06,*) ' ****************************************************'
       CALL ABORT1
-   ELSE
+   ELSE IF (CURRENT_RUN) THEN  !! ModR04: Include OASIS
 
 !     3.2 COLD START AND FILE EXISTS: DO FIRST CURRENT FIELD.                  !
 
@@ -909,117 +980,160 @@ IF (COLDSTART) THEN
          WRITE (IU06,*) '        FIRST CURRENT FIELD PROCESSED'
          WRITE (IU06,*) '        DATE IS ................... CDCA = ', CDCA
       END IF
-      RETURN
+      !RETURN !! ModR04: No return here when with OASIS?? 
+   ELSE       !! ModR04: Include OASIS
+
+!     3.3 OASIS: ZERO CURRENT FOR PREPARATION.                                 !
+
+      CURRENT_RUN = .TRUE.
+      U = 0.
+      V = 0.
+      CDCA = CDATEA
+      IF (ITEST.GE.3) THEN
+	 WRITE (IU06,*) '    SUB.PREPARE_FIRST_CURRENT:'
+	 WRITE (IU06,*) '	 SET FIRST CURRENT FIELD TO ZERO'
+      END IF
    END IF
-END IF
+!END IF
+ELSE !! ModR04: i.e., when HOTSTART
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     4. HOT START.                                                            !
 !        -----------                                                           !
 
-IF (.NOT. CURRENT_RUN) THEN
+   IF (.NOT. CURRENT_RUN) THEN
 
 !     4.1 HOT START AND FILE DOES NOT EXIST.                                   !
 
-   IF (CDCA.EQ.' ') THEN
+      IF (CDCA.EQ.' ' .AND. USE_OASIS_CURR_IN) THEN  !! ModR04: Include OASIS
+
+!     4.1.0 HOT START AND CURRENTS NOT IN RESTART BUT ONLINE COUPLNG: CONTINUE.!
+
+	 CURRENT_RUN = .TRUE.
+	 U = 0.
+	 V = 0.
+	 CDCA = CDATEA
+	 WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
+	 WRITE (IU06,*) ' +                                                  +'
+	 WRITE (IU06,*) ' +     WARNING ERROR SUB. PREPARE_FIRST_CURRENT.    +'
+	 WRITE (IU06,*) ' +     =========================================    +'
+	 WRITE (IU06,*) ' +                                                  +'
+	 WRITE (IU06,*) ' + A HOT START WITH CURRENT REFRACTION IS REQUESTED.+'
+	 WRITE (IU06,*) ' + NO CURRENT FIELD WAS FOUND IN THE RESTART FILE.  +'
+	 WRITE (IU06,*) ' + A CURRENT INPUT FILE IS NOT DEFINED IN THE USER  +'
+	 WRITE (IU06,*) ' + INPUT OR DOES NOT EXIST.                         +'
+	 WRITE (IU06,*) ' +                                                  +'
+	 WRITE (IU06,*) ' +               MODEL CONTINUES ONLINE COUPLING    +'
+	 WRITE (IU06,*) ' +                                                  +'
+	 WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
+	 IF (ITEST.GE.3) THEN
+	    WRITE (IU06,*) '    SUB.PREPARE_FIRST_CURRENT:'
+	    WRITE (IU06,*) '	 SET FIRST CURRENT FIELD TO ZERO'
+         END IF
+      ELSE IF (CDCA.EQ.' ') THEN
 
 !     4.1.1 HOT START AND CURRENTS NOT IN RESTART: ABORT.                      !
   
-      WRITE (IU06,*) ' ****************************************************'
-      WRITE (IU06,*) ' *                                                  *'
-      WRITE (IU06,*) ' *      FATAL ERROR SUB. PREPARE_FIRST_CURRENT.     *'
-      WRITE (IU06,*) ' *      =======================================     *'
-      WRITE (IU06,*) ' *                                                  *'
-      WRITE (IU06,*) ' * A HOT START WITH CURRENT REFRACTION IS REQUESTED.*'
-      WRITE (IU06,*) ' * A CURRENT INPUT FILE IS NOT DEFINED IN THE USER  *'
-      WRITE (IU06,*) ' * INPUT OR DOES NOT EXIST AND A CURRENT FIELD DOES *'
-      WRITE (IU06,*) ' * NOT EXIST IN THE RESTART FILE.                   *'
-      WRITE (IU06,*) ' *    FILE NAME IS     FILE09 = ', TRIM(FILE09)
-      WRITE (IU06,*) ' *                                                  *'
-      WRITE (IU06,*) ' *       PROGRAM ABORTS  PROGRAM ABORTS             *'
-      WRITE (IU06,*) ' *                                                  *'
-      WRITE (IU06,*) ' ****************************************************'
-      CALL ABORT1   
-   ELSE 
+         WRITE (IU06,*) ' ****************************************************'
+         WRITE (IU06,*) ' *                                                  *'
+         WRITE (IU06,*) ' *      FATAL ERROR SUB. PREPARE_FIRST_CURRENT.     *'
+         WRITE (IU06,*) ' *      =======================================     *'
+         WRITE (IU06,*) ' *                                                  *'
+         WRITE (IU06,*) ' * A HOT START WITH CURRENT REFRACTION IS REQUESTED.*'
+         WRITE (IU06,*) ' * A CURRENT INPUT FILE IS NOT DEFINED IN THE USER  *'
+         WRITE (IU06,*) ' * INPUT OR DOES NOT EXIST AND A CURRENT FIELD DOES *'
+         WRITE (IU06,*) ' * NOT EXIST IN THE RESTART FILE.                   *'
+         WRITE (IU06,*) ' *    FILE NAME IS     FILE09 = ', TRIM(FILE09)
+         WRITE (IU06,*) ' *                                                  *'
+         WRITE (IU06,*) ' *       PROGRAM ABORTS  PROGRAM ABORTS             *'
+         WRITE (IU06,*) ' *                                                  *'
+         WRITE (IU06,*) ' ****************************************************'
+         CALL ABORT1   
+      ELSE 
 
 !     4.1.2 HOT START AND CURRENTS ARE IN RESTART: CONTINUE.                     !
 
-      WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
-      WRITE (IU06,*) ' +                                                  +'
-      WRITE (IU06,*) ' +     WARNING ERROR SUB. PREPARE_FIRST_CURRENT.    +'
-      WRITE (IU06,*) ' +     =========================================    +'
-      WRITE (IU06,*) ' +                                                  +'
-      WRITE (IU06,*) ' + A HOT START WITH CURRENT REFRACTION IS REQUESTED.+'
-      WRITE (IU06,*) ' + A CURRENT INPUT FILE IS NOT DEFINED IN THE USER  +'
-      WRITE (IU06,*) ' + INPUT OR DOES NOT EXIST.                         +'
-      WRITE (IU06,*) ' + A CURRENT FIELD WAS FOUND IN THE RESTART FILE.   +'
-      WRITE (IU06,*) ' +                                                  +'
-      WRITE (IU06,*) ' +               MODEL CONTINUES                    +'
-      WRITE (IU06,*) ' +     USING CURRENT FIELD FROM RESTART FILE.       +'
-      WRITE (IU06,*) ' +           CURRENTS ARE STATIONARY                +'
-      WRITE (IU06,*) ' +                                                  +'
-      WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
-      IDELCI = 0
-      IF (ITEST.GE.3) THEN
-         WRITE (IU06,*) '  '
-         WRITE (IU06,*) '    SUB. PREPARE_FIRST_CURRENT:'
-         WRITE (IU06,*) '        FIRST CURRENT FIELD FROM RESTART'
-         WRITE (IU06,*) '        DATE IS ................... CDCA = ', CDCA
+         WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
+         WRITE (IU06,*) ' +                                                  +'
+         WRITE (IU06,*) ' +     WARNING ERROR SUB. PREPARE_FIRST_CURRENT.    +'
+         WRITE (IU06,*) ' +     =========================================    +'
+         WRITE (IU06,*) ' +                                                  +'
+         WRITE (IU06,*) ' + A HOT START WITH CURRENT REFRACTION IS REQUESTED.+'
+         WRITE (IU06,*) ' + A CURRENT INPUT FILE IS NOT DEFINED IN THE USER  +'
+         WRITE (IU06,*) ' + INPUT OR DOES NOT EXIST.                         +'
+         WRITE (IU06,*) ' + A CURRENT FIELD WAS FOUND IN THE RESTART FILE.   +'
+         WRITE (IU06,*) ' +                                                  +'
+         WRITE (IU06,*) ' +               MODEL CONTINUES                    +'
+         WRITE (IU06,*) ' +     USING CURRENT FIELD FROM RESTART FILE.       +'
+         WRITE (IU06,*) ' +           CURRENTS ARE STATIONARY                +'
+         WRITE (IU06,*) ' +                                                  +'
+         WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
+         IDELCI = 0
+         IF (ITEST.GE.3) THEN
+            WRITE (IU06,*) '  '
+            WRITE (IU06,*) '    SUB. PREPARE_FIRST_CURRENT:'
+            WRITE (IU06,*) '        FIRST CURRENT FIELD FROM RESTART'
+            WRITE (IU06,*) '        DATE IS ................... CDCA = ', CDCA
+         END IF
+         RETURN
       END IF
-      RETURN
-   END IF
-END IF
+   !END IF
+   ELSE !! ModR04: i.e., when CURRENT_RUN
 
 !     4.2 HOT START AND FILE EXISTS.                                       !
 
-IF (CDCA.EQ.' ') THEN
+      IF (CDCA.EQ.' ') THEN
 
 !     4.1.1 HOT START, CURRENTS ARE NOT IN RESTART: FIRST FIELD FROM FILE. !
 
-   WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
-   WRITE (IU06,*) ' +                                                  +'
-   WRITE (IU06,*) ' +     WARNING ERROR SUB. PREPARE_FIRST_CURRENT.    +'
-   WRITE (IU06,*) ' +     =========================================    +'
-   WRITE (IU06,*) ' +                                                  +'
-   WRITE (IU06,*) ' + A HOT START WITH CURRENT REFRACTION IS REQUESTED.+'
-   WRITE (IU06,*) ' + THE FIRST CURRENT FIELD DOES NOT EXIST IN THE    +'
-   WRITE (IU06,*) ' + RESTART FILE.                                    +'
-   WRITE (IU06,*) ' +                                                  +'
-   WRITE (IU06,*) ' +               MODEL CONTINUES                    +'
-   WRITE (IU06,*) ' + USING FIRST CURRENT FIELD FROM CURRENT INPUT FILE+'
-   WRITE (IU06,*) ' +                                                  +'
-   WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
-END IF   
+         WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
+         WRITE (IU06,*) ' +                                                  +'
+         WRITE (IU06,*) ' +     WARNING ERROR SUB. PREPARE_FIRST_CURRENT.    +'
+         WRITE (IU06,*) ' +     =========================================    +'
+         WRITE (IU06,*) ' +                                                  +'
+         WRITE (IU06,*) ' + A HOT START WITH CURRENT REFRACTION IS REQUESTED.+'
+         WRITE (IU06,*) ' + THE FIRST CURRENT FIELD DOES NOT EXIST IN THE    +'
+         WRITE (IU06,*) ' + RESTART FILE.                                    +'
+         WRITE (IU06,*) ' +                                                  +'
+         WRITE (IU06,*) ' +               MODEL CONTINUES                    +'
+         WRITE (IU06,*) ' + USING FIRST CURRENT FIELD FROM CURRENT INPUT FILE+'
+         WRITE (IU06,*) ' +                                                  +'
+         WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
+      END IF   
 
 !     4.1.1 HOT START, CURRENTS ARE IN RESTART: CHECK FILE DATE. !
 
-IF (CDCA.NE.' ' .AND. CDCA.NE.CDATEA) THEN
-   WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
-   WRITE (IU06,*) ' +                                                  +'
-   WRITE (IU06,*) ' +     WARNING ERROR SUB. PREPARE_FIRST_CURRENT.    +'
-   WRITE (IU06,*) ' +     =========================================    +'
-   WRITE (IU06,*) ' +                                                  +'
-   WRITE (IU06,*) ' + A HOT START WITH CURRENT REFRACTION IS REQUESTED.+'
-   WRITE (IU06,*) ' + THE DATE OF CURRENT FIELD IN THE RESTART FILE    +'
-   WRITE (IU06,*) ' + IS NOT THE START DATE, BECAUSE THE PREVIOUS RUN  +'
-   WRITE (IU06,*) ' + WAS WITH STATIONARY CURRENTS.                    +'
-   WRITE (IU06,*) ' + CURRENT DATE FROM RESTART IS CDCA = ', CDCA
-   WRITE (IU06,*) ' +                                                  +'
-   WRITE (IU06,*) ' +               MODEL CONTINUES                    +'
-   WRITE (IU06,*) ' + USING FIRST CURRENT FIELD FROM CURRENT INPUT FILE+'
-   WRITE (IU06,*) ' +                                                  +'
-   WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
-END IF
+      IF (CDCA.NE.' ' .AND. CDCA.NE.CDATEA) THEN
+         WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
+         WRITE (IU06,*) ' +                                                  +'
+         WRITE (IU06,*) ' +     WARNING ERROR SUB. PREPARE_FIRST_CURRENT.    +'
+         WRITE (IU06,*) ' +     =========================================    +'
+         WRITE (IU06,*) ' +                                                  +'
+         WRITE (IU06,*) ' + A HOT START WITH CURRENT REFRACTION IS REQUESTED.+'
+         WRITE (IU06,*) ' + THE DATE OF CURRENT FIELD IN THE RESTART FILE    +'
+         WRITE (IU06,*) ' + IS NOT THE START DATE, BECAUSE THE PREVIOUS RUN  +'
+         WRITE (IU06,*) ' + WAS WITH STATIONARY CURRENTS.                    +'
+         WRITE (IU06,*) ' + CURRENT DATE FROM RESTART IS CDCA = ', CDCA
+         WRITE (IU06,*) ' +                                                  +'
+         WRITE (IU06,*) ' +               MODEL CONTINUES                    +'
+         WRITE (IU06,*) ' + USING FIRST CURRENT FIELD FROM CURRENT INPUT FILE+'
+         WRITE (IU06,*) ' +                                                  +'
+         WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
+      END IF
 
-CDCA = CDATEA
-CALL WAM_CURRENT (U, V, CDCA)
-IF (ITEST.GE.3) THEN
-   WRITE (IU06,*) '  '
-   WRITE (IU06,*) '    SUB. PREPARE_FIRST_CURRENT: WAM_CURRENT DONE'
-   WRITE (IU06,*) '        FIRST CURRENT FIELD PROCESSED'
-   WRITE (IU06,*) '        DATE IS ................... CDCA = ', CDCA
-END IF
+      CDCA = CDATEA
+      CALL WAM_CURRENT (U, V, CDCA)
+      IF (ITEST.GE.3) THEN
+         WRITE (IU06,*) '  '
+         WRITE (IU06,*) '    SUB. PREPARE_FIRST_CURRENT: WAM_CURRENT DONE'
+         WRITE (IU06,*) '        FIRST CURRENT FIELD PROCESSED'
+         WRITE (IU06,*) '        DATE IS ................... CDCA = ', CDCA
+      END IF
+
+   END IF !! Hotstart: No Current_run VS Current_run 
+
+END IF !! Coldstart VS Hotstart
 
 END SUBROUTINE PREPARE_FIRST_CURRENT
 

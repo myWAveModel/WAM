@@ -22,10 +22,11 @@ use wam_general_module,   only:  &
 ! ---------------------------------------------------------------------------- !
 !
 use wam_file_module,  only: iu06, wpath, area
-use wam_mpi_module,   only: irank
+use wam_mpi_module,   only: irank,localcomm         !! ModR04: MPI_COMM_WORLD->localcomm
+USE MPI,	      ONLY: mpi_barrier,mpi_logical !! ModR04
  
 implicit none
-include 'mpif.h'
+!include 'mpif.h'                                   !! ModR04
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
@@ -130,11 +131,11 @@ if (ytrans_in /= '   ') then
 
 !! ==> Synchronize the processes again      !!
     
-   call mpi_barrier (mpi_comm_world, ierr)
+   call mpi_barrier (localcomm, ierr)       !! ModR04: MPI_COMM_WORLD->localcomm
 
 !!  ==> Distribute lzexist to all nodes     !!
  
-   call mpi_bcast (lzexist,1,mpi_logical,0,mpi_comm_world, ierr)
+   call mpi_bcast (lzexist,1,mpi_logical,0,localcomm, ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
 
    if (.not. lzexist) then
       yerrmsg  = ' *** ERROR:  ready-file not available'

@@ -66,6 +66,10 @@ USE WAM_CURRENT_MODULE,    ONLY: &
 
 USE WAM_FILE_MODULE,       ONLY: IU06, ITEST
 USE WAM_TIMOPT_MODULE,     ONLY: TOPO_RUN, CURRENT_RUN
+USE WAM_OASIS_MODULE,      ONLY: use_oasis_elev_in,use_oasis_curr_in,		& !! ModR04: Include OASIS
+				 use_oasis_wind_in,				&
+				 use_oasis_bdy_in,Wam_oasis_rec_boundary,	&
+				 use_oasis_nest_out,wam_oasis_send_nest
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -95,13 +99,23 @@ END IF
 !     2.1  REFORMAT WINDS TO MODEL GRID.                                       !
 !          -----------------------------                                       !
 
-CALL PREPARE_WIND
-IF (ITEST.GE.1) WRITE(IU06,*) ' SUB. WAVEMDL: PREPARE_WIND DONE'
+IF(use_oasis_wind_in) THEN                           !! ModR04: Include OASIS !!
+   WRITE(IU06,*) ' SUB. WAVEMDL: Oasis run'
+   WRITE(IU06,*) '      wind fields:'
+   WRITE(IU06,*) '      no further preparation needed'
+ELSE
+   CALL PREPARE_WIND
+   IF (ITEST.GE.1) WRITE(IU06,*) ' SUB. WAVEMDL: PREPARE_WIND DONE'
+END IF
 
 !     2.2  REFORMAT TOPO DATA TO MODEL GRID.                                   !
 !          ---------------------------------                                   !
 
-IF (TOPO_RUN) THEN
+IF(use_oasis_elev_in) THEN                           !! ModR04: Include OASIS !!
+   WRITE(IU06,*) ' SUB. WAVEMDL: Oasis run'
+   WRITE(IU06,*) '      depth fields:'
+   WRITE(IU06,*) '      no further preparation needed'
+ELSE IF (TOPO_RUN) THEN
    CALL PREPARE_TOPO
    IF (ITEST.GE.1) WRITE(IU06,*) ' SUB. WAVEMDL: PREPARE_TOPO DONE'
 END IF
@@ -109,10 +123,17 @@ END IF
 !     2.3  REFORMAT CURRENTS DATA TO MODEL GRID.                               !
 !          -------------------------------------                               !
 
-IF (CURRENT_RUN) THEN
+IF(use_oasis_curr_in) THEN                           !! ModR04: Include OASIS !!
+   WRITE(IU06,*) ' SUB. WAVEMDL: Oasis run'
+   WRITE(IU06,*) '      current fields:'
+   WRITE(IU06,*) '      no further preparation needed'
+ELSE IF (CURRENT_RUN) THEN
    CALL PREPARE_CURRENT
    IF (ITEST.GE.1) WRITE(IU06,*) ' SUB. WAVEMDL: PREPARE_CURRENT DONE'
 END IF
+
+IF(use_oasis_nest_out)CALL wam_oasis_send_nest       !! ModR04: Include OASIS !!
+IF(use_oasis_bdy_in)CALL Wam_oasis_rec_boundary      !! ModR04: Include OASIS !!
 
 !     2.4  INTEGRATE THE WAVE SPECTRA FORWARD IN TIME.                         !
 !          -------------------------------------------                         !

@@ -155,6 +155,7 @@ SUBROUTINE PREPARE_COLDSTART
 !                                                                              !
 !     LOCAL VARIABLES.                                                         !
 !     ----------------                                                         !
+USE WAM_OASIS_MODULE,	ONLY:	USE_OASIS_WIND_IN !! ModR04: Include OASIS
 
 REAL, PARAMETER :: ZDP=2./PI
 
@@ -173,8 +174,10 @@ CDCA    = ' '     !! CURRENTS
 !     2. PREPARE FIRST WINDFIELD.                                              !
 !        ------------------------                                              !
 
-CDA = CDATEA
-CALL WAM_WIND (u10, udir, CDA)
+IF(.not.USE_OASIS_WIND_IN)THEN !! ModR04: Include OASIS
+   CDA = CDATEA
+   CALL WAM_WIND (u10, udir, CDA)
+END IF
 
 IF (ITEST.GE.3) THEN
       WRITE (IU06,*) '      SUB. PREPARE_COLDSTART: WAM_WIND DONE'
