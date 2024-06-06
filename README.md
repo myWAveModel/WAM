@@ -176,27 +176,27 @@ scripts for the Strand and Levante HPC environements:
 ################################################################################  
 ## Documentation
 
-* A physical description:__
+* A physical description:  
   The WAMDI Group. (1988). The WAM Model -- A Third Generation Ocean Wave
   Prediction Model. Journal of Physical Oceanography, 18(12), 1775–1810. 
-  <https://doi.org/10.1175/1520-0485(1988)018<1775:TWMTGO>2.0.CO;2>
+  https://doi.org/10.1175/1520-0485(1988)018<1775:TWMTGO>2.0.CO;2
 
-* Technical report:__
+* Technical report:  
   Günther, H., Hasselmann, S., Janssen, P.A.E.M. (1992). The WAM Model cycle 4. 
   World Data Center for Climate (WDCC) at DKRZ. 
   <https://doi.org/10.2312/WDCC/DKRZ_Report_No04>
 
 * An extensive physical and technical description of the WAM derivative ECWAM of 
-  ECMWF:__
+  ECMWF:  
   ECMWF. (2019). IFS Documentation CY46R1. ECMWF. 
   <https://doi.org/10.21957/21g1hoiuo>
 
-* A book about WAM and wave modelling in general:__
+* A book about WAM and wave modelling in general:  
   Komen, G.J., Cavaleri, L., Donelan, M., Hasselmann, K., Hasselmann, S., & 
   Janssen, P.A.E.M. (1994). Dynamics and Modelling of Ocean Waves. Cambridge 
   University Press. <https://doi.org/10.1017/CBO9780511628955>
 
-* Educational material including WAM:__
+* Educational material including WAM:  
   Janssen, P.A.E.M. (2002). The wave model. ECMWF. 
   <https://www.ecmwf.int/en/elibrary/79883-wave-model>
 
