@@ -90,6 +90,13 @@ REAL, PARAMETER :: C4MAX = 1.         !! MAXIMUM VALUE ALLOWED FOR KURTOSIS.
 
 ! ---------------------------------------------------------------------------- !
 !
+!    3a. SWITCH FOR ABORT.             !! ModR04: Include OASIS
+!       -----------------
+
+INTEGER, SAVE   :: ABORTCASE = 0       !! 1 MPI, 2 OASIS
+
+! ---------------------------------------------------------------------------- !
+!
 !    4. PARAMETERS FOR SDISSIP_ARD ARDHUIN et al. 2010
 !       ----------------------------------------------
 !     Br:
@@ -291,7 +298,13 @@ DO I=1,99
    INQUIRE (UNIT=I, EXIST=DA)
    IF (DA) CLOSE (UNIT=I)
 END DO
-   call MPI_finalize (i)
+
+SELECT CASE(ABORTCASE) !! ModR04: Include OASIS
+   CASE(1)
+       CALL MPI_finalize (i)
+   CASE(2)
+       CALL Wam_oasis_abort
+END SELECT
 
 STOP 1
 END SUBROUTINE ABORT1

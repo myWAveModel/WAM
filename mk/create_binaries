@@ -42,23 +42,15 @@ elif [ "$1" == levante ]; then
         module load openmpi/4.1.2-intel-2021.5.0
         module load netcdf-c/4.8.1-openmpi-4.1.2-intel-2021.5.0
         module load netcdf-fortran/4.5.3-openmpi-4.1.2-intel-2021.5.0
-        #module load netcdf-fortran/4.5.3-intel-2021.5.0
-        #module load netcdf-c/4.8.1-intel-2021.5.0
 
         export FC=mpifort
         export FFLAGS="-heap-arrays 64 -fp-model precise" #"-heap-arrays 64 -g -traceback -check bounds"
         #export MPIIN="-I/sw/spack-levante/openmpi-4.1.2-yfwe6t/include"
         export NCDFIN="-I/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/include"
         export NCDFLIB="-L/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib"
-        #export NCDFIN="-I/sw/spack-levante/netcdf-fortran-4.5.3-pvmcx6/include"                                                           # with module netcdf-fortran/4.5.3-intel-2021.5.0
-        #export NCDFLIB="-L/sw/spack-levante/netcdf-fortran-4.5.3-pvmcx6/lib -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-pvmcx6/lib" # with module netcdf-fortran/4.5.3-intel-2021.5.0
         export NCDFFLAGS="-lnetcdff"
-        #export NCDFIN=$(nf-config --fflags)
-        #export NCDFLIB=$(nf-config --flibs)
-        #export LIBS="-L/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib -lnetcdff -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib -L/sw/spack-levante/netcdf-c-4.8.1-2k3cmu/lib -Wl,-rpath,/sw/spack-levante/netcdf-c-4.8.1-2k3cmu/lib -L/sw/spack-levante/hdf5-1.12.1-tvymb5/lib -Wl,-rpath,/sw/spack-levante/gcc-11.2.0-7jcqrc/lib64 -Wl,-rpath,/sw/spack-levante/hdf5-1.12.1-tvymb5/lib -Wl,-rpath,/sw/spack-levante/netcdf-c-4.8.1-2k3cmu/lib -lnetcdf -lhdf5_hl -lhdf5 -lnetcdf"
 
         export LDOPT="${NCDFIN} ${NCDFLIB} ${NCDFFLAGS}"
-        #export LDOPT="${MPIIN} ${NCDFIN} ${LIBS}"
 
         echo export PRODADMDIR=$(dirname $(pwd)) > .dirset
 
@@ -68,21 +60,19 @@ elif [ "$1" == levante-oneAPI ]; then
         module purge
         module load intel-oneapi-compilers/2022.0.1-gcc-11.2.0
         module load intel-oneapi-mpi/2021.5.0-intel-2021.5.0
-        #module load netcdf-c/4.8.1-intel-2021.5.0
-        #module load netcdf-fortran/4.5.3-intel-2021.5.0
         module load netcdf-c/4.8.1-intel-oneapi-mpi-2021.5.0-intel-2021.5.0
         module load netcdf-fortran/4.5.3-intel-oneapi-mpi-2021.5.0-intel-2021.5.0
 
         export FC=mpiifort
         export FFLAGS="-heap-arrays 64 -fp-model precise" #"-heap-arrays 64 -g -traceback -check bounds"
-        #export NCDFIN="-I/sw/spack-levante/netcdf-fortran-4.5.3-pvmcx6/include"                                                           # with module netcdf-fortran/4.5.3-intel-2021.5.0
-        #export NCDFLIB="-L/sw/spack-levante/netcdf-fortran-4.5.3-pvmcx6/lib -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-pvmcx6/lib" # with module netcdf-fortran/4.5.3-intel-2021.5.0
         export NCDFIN="-I/sw/spack-levante/netcdf-fortran-4.5.3-r5r3ev/include"
         export NCDFLIB="-L/sw/spack-levante/netcdf-fortran-4.5.3-r5r3ev/lib -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-r5r3ev/lib"
         export NCDFFLAGS="-lnetcdff"
+        #export HDF5IN="-I/sw/spack-levante/hdf5-1.12.1-jmeuy3/include"
+        #export HDF5LIB="-L/sw/spack-levante/hdf5-1.12.1-jmeuy3/lib"
 
         export LDOPT="${NCDFIN} ${NCDFLIB} ${NCDFFLAGS}"
-
+        #export LDOPT="${NCDFIN} ${NCDFLIB} ${NCDFFLAGS} ${HDF5IN} ${HDF5LIB} ${HDFFLAGS}"
 
         echo export PRODADMDIR=$(dirname $(pwd)) > .dirset
 
@@ -101,6 +91,7 @@ fi
 # compile
 #
 echo '==== Compilation Started ==='
+(cd ../src/mod;     ln -sf wam_oasis_inactive_module.f90 wam_oasis_module.f90)
 ./make_modules1
 ./make_modules2
 ./make_preproc

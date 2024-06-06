@@ -40,7 +40,7 @@ USE WAM_TIMOPT_MODULE,  ONLY: IDELPRO, IDELT,                                  &
 USE WAM_FILE_MODULE,    ONLY: IU06, ITEST
 USE WAM_MODEL_MODULE,   ONLY: DEPTH, INDEP, U, V
 USE WAM_TABLES_MODULE,  ONLY: TCGOND, TFAK, TSIHKD, NDEPTH, DEPTHA, DEPTHD
-use wam_mpi_module,     only: petotal, irank, nijs, nijl, ninf, nsup
+use wam_mpi_module,     only: petotal, irank, nijs, nijl, ninf, nsup, localcomm !! ModR04: Include OASIS
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
@@ -707,7 +707,7 @@ DO I = 1, COUNTER
    F1(nijs:nijl,:,:) = F3(:,:,:)           !! COPY INPUT SPECTRA
      
    call mpi_exchng (f1(ninf:nsup,:,:))
-   call mpi_barrier (mpi_comm_world, ierr)
+   call mpi_barrier (localcomm, ierr)      !! ModR04: MPI_COMM_WORLD->localcomm
 
    F1(ninf-1,:,:) = 0.                     !! SPECTRUM AT LAND TO ZERO.
     
@@ -2127,9 +2127,7 @@ IF (COUNTER.NE.1) THEN
    COEF_LAT(:,:,:,:,:) = COEF_LAT(:,:,:,:,:) /REAL(COUNTER)
    COEF_LON(:,:,:,:)   = COEF_LON(:,:,:,:)   /REAL(COUNTER)
    IF (ALLOCATED(COEF_THETA)) COEF_THETA(:,:,:,:) = COEF_THETA(:,:,:,:) /REAL(COUNTER)
-   IF (ALLOCATED(COEF_SIGD)) THEN
-       COEF_SIGD(:,:,:,:) = COEF_SIGD(:,:,:,:) /REAL(COUNTER)
-   ENDIF
+   IF (ALLOCATED(COEF_SIGD))  COEF_SIGD(:,:,:,:)  = COEF_SIGD(:,:,:,:)  /REAL(COUNTER)
    COEF_SUM(:,:,:)     = 1. - (1.-COEF_SUM(:,:,:))/REAL(COUNTER)
 END IF
 

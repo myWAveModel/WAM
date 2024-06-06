@@ -74,7 +74,7 @@ CHARACTER (LEN=14)   :: CD_ICE_NEW  = ' ' !! PROPAGATION DATE FOR NEXT ICE FIELD
 INTEGER              :: N_ICE   = 0       !! NUMBER OF ICE POINTS ON PROCESS.
 INTEGER, ALLOCATABLE :: IJ_ICE(:)         !! INDEX OF ICE POINTS ON PROCESS.
 
-PUBLIC ICE_RUN, CD_ICE_NEW
+PUBLIC ICE_RUN, CD_ICE_NEW,N_ICE,IJ_ICE   !! ModR04: Include OASIS (N_ICE, IJ_ICE added for public)
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !

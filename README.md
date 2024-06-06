@@ -1,8 +1,9 @@
-# WAM
+# WAM (Cycle7)
+
 Official repository of the third-generation spectral WAve Model WAM
 
 This branch is the most recent offical stand-alone version of WAM.
-For previous versions please visit: https://github.com/mywave/WAM/
+For previous versions please visit: <https://github.com/mywave/WAM/>
 
 New in Cycle 7:
   - ST6 (BYDBR) physics (IPHYS = 2)
@@ -31,8 +32,11 @@ WAM. If not, see <http://www.gnu.org/licenses/>
 1. Install the following prerequisites of WAM on your system:
    * MPI
    * NetCDF
+   * OASIS 3 (if the OASIS coupling interface will be used)
 
-2. Download the repository: https://github.com/mywave/WAM/
+2. Download the repository: <https://github.com/mywave/WAM/tree/WAM_Cycle7>
+
+### OPTION A: via mk/create_binaries as stand-alone WAM 
 
 3. Link the compatible subroutines for the desired input data format in the 
    source code directories src/chief and src/preproc:
@@ -62,41 +66,142 @@ WAM. If not, see <http://www.gnu.org/licenses/>
    Currently supported systems are: 
    * strand[-oneAPI]
    * levante[-oneAPI]
-   * first
+   * first  
    "first" does not specify any modules or libraries and should only be used for
-   calls from super-scripts, which already set the SYSTEM environement.   
+   calls from super-scripts, which already set the SYSTEM environement.
 
-6. DONE! The executables can be found in ./abs/
-   * preproc: Pre-processor program to create domain/grid files
-   * wam:     Main program running the wave model 
-   * pnetcdf: Converter of binary wam output to NetCDF-format    
+6. DONE! The executables can be found in the directory abs.
+
+### OPTION B: via make.SYSTEM for coupled models
+
+3. Set the libraries paths and modules to be loaded for your SYSTEM in the 
+   preamble of make.SYSTEM (e.g. make.LEVANTE).
+
+4. Adjust the linking of read subroutines IN the file make.SYSTEM (e.g., 
+   make.LEVANTE). See step 3 of OPTION A for a linking example.
+
+5. Compile the executables by executing
+   ```
+   [WAM] $ ./make.SYSTEM clean 
+   [WAM] $ ./make.SYSTEM first
+   [WAM] $ ./make.SYSTEM
+   ```
+   Note that "./make.SYSTEM first" is equivalent to OPTION A "./create_binaries
+   SYSTEM" with according manually-linked subroutines. The final call of 
+   "./make.SYSTEM" rebulids the executable wam with activated OASIS coupling. 
+
+6. DONE! The executables can be found in the directory abs.
+
+After a successfull compilation abs should cointain the following executables 
+(binaries):
+   * preproc   : Pre-processing program to create domain/grid files
+   * wam       : Main program running the wave model 
+   * pnetcdf   : Converter of binary wam output to NetCDF-format
+   * pgrid     : !!! TODO !!!
+   * pspec     : !!! TODO !!!
+   * ptime[_S] : !!! TODO !!!
 
 ################################################################################
-## Execution
+## Execution (WAM stand-alone)
 
-TODO!!!
+Each program requires a corresponding parameter file (namelist) named *_User in 
+the chosen work directory for its execution. Examples *_User files (also used in 
+the "SWAMP" test case) can be found in the directories const or 
+SWAMPtest/input/config. 
 
-################################################################################
-## Documentation
+### Manual step-by-step execution 
 
-A physical description:
-The WAMDI Group. (1988). The WAM Model—A Third Generation Ocean Wave Prediction Model. Journal of Physical Oceanography, 18(12), 1775–1810. https://doi.org/10.1175/1520-0485(1988)018<1775:TWMTGO>2.0.CO;2
+1. Copy the executable(s) and the parameter file(s) to any work directory of 
+   your choice:
+   ```
+   [WRKDIR] $ cp -ra PATH/TO/WAM/abs/* ./*.exe
+   [WRKDIR] $ cp -ra PATH/TO/WAM/const/*_User ./*_User
+   ```
 
-Technical report:
-Günther, H., Hasselmann, S., Janssen, P.A.E.M. (1992). The WAM Model cycle 4. World Data Center for Climate (WDCC) at DKRZ. https://doi.org/10.2312/WDCC/DKRZ_Report_No04
+2. Set the general run parameters and the locations of input and output data 
+   files in the format chosen at compilation stage in *_User.
 
-An extensive physical and technical description of the WAM derivative ECWAM of ECMWF:
-ECMWF. (2019). IFS Documentation CY46R1. ECMWF. https://doi.org/10.21957/21g1hoiuo.
+3. Execute the pre-processing program preproc.exe (for now only as a singelton 
+   process), e.g.:
+   ```
+   [WRKDIR] $ ./preproc.exe
+   ```
 
-A book about WAM and wave modelling in general:
-Komen, G. J., Cavaleri, L., Donelan, M., Hasselmann, K., Hasselmann, S., & Janssen, P. A. E. M. (1994). Dynamics and Modelling of Ocean Waves. Cambridge University Press. https://doi.org/10.1017/CBO9780511628955
+4. Execute the main program wam.exe in the parallel enviroment of your choice, 
+   e.g.:
+   ```
+   [WRKDIR] $ mpirun -n 48 ./wam.exe
+   ```
 
-Educational material including WAM:
-Janssen, P.A.E.M. (2002). The wave model. ECMWF. https://www.ecmwf.int/en/elibrary/79883-wave-model
+5. Execute the post-processing program(s) (for now only as a singelton process), 
+   e.g.:
+   ```
+   [WRKDIR] $ ./pnetcdf.exe
+   [WRKDIR] $ ./pgrid.exe
+   [WRKDIR] $ ./pspec.exe
+   [WRKDIR] $ ./ptime[_S].exe
+   ```
+
+### Execution of the "SWAMP" test case:
+
+An example case including nested grids to test and validate your compilation is 
+provided in the directory SWAMPtest. It provides fully automated execution 
+scripts for the Strand and Levante HPC environements:
+
+0. Choose your environement. If not STRAND or LEVANTE, copy and modify your 
+   run_WAMall_SYSTEM.bash accordingly.
+
+1. Adjust in run_WAMall_SYSTEM.bash: The SLURM settings, the paths to your 
+   executables (WAMDIR=) and your storage directory (STOREDIR=), and the number 
+   of mpi processes used for wam (nproc=). Optionally, you can adjust whether 
+   pre-processing is switched on/off (preproc=['y'/'n']) and how many nested 
+   grids will be performed (nofnest=[0/1/2]) 
+
+2. Run
+   ```
+   [SWAMPtest] $ sbatch run_WAMall_SYSTEM.bash
+   ```
+
+3. Compare your output and grid (preproc output) directories:
+   ```
+   [SWAMPtest] $ diff -r[qs] ./grid ./ref_grid 
+   [SWAMPtest] $ diff -r[qs] ./output ./ref_output 
+   ```
+
+4. Preview the data (with ncview):
+   ```
+   [SWAMPtest] $ ncview [ref_]output/*/ST6/WAVE*.nc
+   ```
 
 ################################################################################  
-Version 7
+## Documentation
 
+* A physical description:__
+  The WAMDI Group. (1988). The WAM Model -- A Third Generation Ocean Wave
+  Prediction Model. Journal of Physical Oceanography, 18(12), 1775–1810. 
+  <https://doi.org/10.1175/1520-0485(1988)018<1775:TWMTGO>2.0.CO;2>
+
+* Technical report:__
+  Günther, H., Hasselmann, S., Janssen, P.A.E.M. (1992). The WAM Model cycle 4. 
+  World Data Center for Climate (WDCC) at DKRZ. 
+  <https://doi.org/10.2312/WDCC/DKRZ_Report_No04>
+
+* An extensive physical and technical description of the WAM derivative ECWAM of 
+  ECMWF:__
+  ECMWF. (2019). IFS Documentation CY46R1. ECMWF. 
+  <https://doi.org/10.21957/21g1hoiuo>
+
+* A book about WAM and wave modelling in general:__
+  Komen, G.J., Cavaleri, L., Donelan, M., Hasselmann, K., Hasselmann, S., & 
+  Janssen, P.A.E.M. (1994). Dynamics and Modelling of Ocean Waves. Cambridge 
+  University Press. <https://doi.org/10.1017/CBO9780511628955>
+
+* Educational material including WAM:__
+  Janssen, P.A.E.M. (2002). The wave model. ECMWF. 
+  <https://www.ecmwf.int/en/elibrary/79883-wave-model>
+
+################################################################################  
+Version 7.0.4  
 Marcel Ricker   (marcel DOT ricker AT hereon DOT de)  
 Robert Hartmann (robert DOT hartmann AT hereon DOT de)  
 15 May 2024

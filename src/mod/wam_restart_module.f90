@@ -40,7 +40,7 @@ use wam_grid_module,    only: nsea
 use wam_mpi_module,     only: irank, nijs, nijl, ninf, nsup, i_out_restart,    &
 &                             NGBTOPE, NTOPEMAX, NTOPELST, NTOPE, IJTOPE,      &
 &                             NGBFROMPE, NFROMPEMAX, NFROMPELST, NFROMPE,      &
-&                             NIJSTART,IJ2NEWIJ
+&                             NIJSTART,IJ2NEWIJ,localcomm  !! ModR04: Include OASIS
 use wam_special_module, only: ispec2d, ispecode
   
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
@@ -464,24 +464,24 @@ if (irank==i_out_restart) then
    allocate (ru10(1:nsea), rudir(1:nsea), rtauw(1:nsea))
 
    call mpi_gather_fl (i_out_restart,121,fl3,rfl)
-   CALL mpi_barrier(MPI_COMM_WORLD,ierr)
+   CALL mpi_barrier(localcomm,ierr)                    !! ModR04: MPI_COMM_WORLD->localcomm
    CALL mpi_gather_block(i_out_restart, u10, ru10)
-   CALL mpi_barrier(MPI_COMM_WORLD,ierr)
+   CALL mpi_barrier(localcomm,ierr)                    !! ModR04: MPI_COMM_WORLD->localcomm
    CALL mpi_gather_block(i_out_restart, udir, rudir)
-   CALL mpi_barrier(MPI_COMM_WORLD,ierr)
+   CALL mpi_barrier(localcomm,ierr)                    !! ModR04: MPI_COMM_WORLD->localcomm
    CALL mpi_gather_block(i_out_restart, tauw, rtauw)
-   CALL mpi_barrier(MPI_COMM_WORLD,ierr)
+   CALL mpi_barrier(localcomm,ierr)                    !! ModR04: MPI_COMM_WORLD->localcomm
    IF (CDTA.NE.' ') then
       allocate (rdepth(1:nsea))
       CALL mpi_gather_block(i_out_restart, depth(nijs:nijl), rdepth)
-      CALL mpi_barrier(MPI_COMM_WORLD,ierr)
+      CALL mpi_barrier(localcomm,ierr)                 !! ModR04: MPI_COMM_WORLD->localcomm
    end if
    IF (CDCA.NE.' ') then
       allocate (ru(1:nsea), rv(1:nsea))
       CALL mpi_gather_block(i_out_restart, u(nijs:nijl), ru)
-      CALL mpi_barrier(MPI_COMM_WORLD,ierr)
+      CALL mpi_barrier(localcomm,ierr)                 !! ModR04: MPI_COMM_WORLD->localcomm
       CALL mpi_gather_block(i_out_restart, v(nijs:nijl), rv)
-      CALL mpi_barrier(MPI_COMM_WORLD,ierr)
+      CALL mpi_barrier(localcomm,ierr)                 !! ModR04: MPI_COMM_WORLD->localcomm
    end if
    REWIND IU17
    if (ispecode==1) then                                   !! asci code
@@ -541,22 +541,22 @@ if (irank==i_out_restart) then
    if (allocated(rv)) deallocate(rv)
 else
    CALL mpi_gather_fl(i_out_restart,121,fl3)
-   CALL mpi_barrier(MPI_COMM_WORLD,ierr)
+   CALL mpi_barrier(localcomm,ierr)                    !! ModR04: MPI_COMM_WORLD->localcomm
    CALL mpi_gather_block(i_out_restart, u10)
-   CALL mpi_barrier(MPI_COMM_WORLD,ierr)
+   CALL mpi_barrier(localcomm,ierr)                    !! ModR04: MPI_COMM_WORLD->localcomm
    CALL mpi_gather_block(i_out_restart, udir)
-   CALL mpi_barrier(MPI_COMM_WORLD,ierr)
+   CALL mpi_barrier(localcomm,ierr)                    !! ModR04: MPI_COMM_WORLD->localcomm
    CALL mpi_gather_block(i_out_restart, tauw)
-   CALL mpi_barrier(MPI_COMM_WORLD,ierr)
+   CALL mpi_barrier(localcomm,ierr)                    !! ModR04: MPI_COMM_WORLD->localcomm
    IF (CDTA.NE.' ') then
       CALL mpi_gather_block(i_out_restart, depth(nijs:nijl))
-      CALL mpi_barrier(MPI_COMM_WORLD,ierr)
+      CALL mpi_barrier(localcomm,ierr)                 !! ModR04: MPI_COMM_WORLD->localcomm
    end if
    IF (CDCA.NE.' ') then
       CALL mpi_gather_block(i_out_restart, u(nijs:nijl))
-      CALL mpi_barrier(MPI_COMM_WORLD,ierr)
+      CALL mpi_barrier(localcomm,ierr)                 !! ModR04: MPI_COMM_WORLD->localcomm
       CALL mpi_gather_block(i_out_restart, v(nijs:nijl))
-      CALL mpi_barrier(MPI_COMM_WORLD,ierr)
+      CALL mpi_barrier(localcomm,ierr)                 !! ModR04: MPI_COMM_WORLD->localcomm
    end if
 endif
 

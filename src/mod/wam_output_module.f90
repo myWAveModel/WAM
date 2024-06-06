@@ -64,6 +64,8 @@ use wam_mpi_comp_module, only:   &
 use wam_special_module, only:    &
 &      create_ready_file_name
 
+USE WAM_OASIS_MODULE,  ONLY:     &  !! ModR04: Include OASIS
+&       Wam_oasis_send_output_parameter
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
 !     B. VARIABLES FROM OTHER MODULES.                                         !
@@ -107,7 +109,9 @@ USE WAM_TABLES_MODULE, ONLY: TFAK
 
 USE WAM_TOPO_MODULE,   ONLY: N_DRY
 
-use wam_mpi_module,    only: irank, nijs, nijl, ipfgtbl, i_out_par, i_out_spec
+use wam_mpi_module,    only: irank, nijs, nijl, ipfgtbl, i_out_par, i_out_spec, localcomm  !! ModR04: new localcomm
+
+USE WAM_OASIS_MODULE,  ONLY: use_oasis_force_output,OASIS_OUTPUT_FLAGS  !! ModR04: Include OASIS
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
@@ -220,6 +224,13 @@ INTEGER, INTENT(IN) :: IU25        !! SPECTRA UNIT NUMBER.
 REAL, ALLOCATABLE  :: FL1(:,:,:)  !! BLOCK OF SPECTRA.
 REAL, ALLOCATABLE  :: FL (:,:,:)  !! SWELL SPECTRA.
 
+IF (USE_OASIS_FORCE_OUTPUT) THEN  !! ModR04: Include OASIS
+   IF (iu20.eq.0)THEN
+      CFLAG_P=OASIS_OUTPUT_FLAGS(:,1)
+   ELSE
+      CFLAG_P=OASIS_OUTPUT_FLAGS(:,1).OR.CFLAG_P
+   ENDIF
+ENDIF
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     1. ALLOCATE PARAMETER ARRAYS.                                            !
@@ -253,6 +264,11 @@ ELSE
    CALL COMPUTE_OUTPUT_PARAMETER (FL3, FL)
    CALL WRITE_MODEL_OUTPUT (FL3, FL, IU20, IU25)
 END IF
+
+IF (use_oasis_force_output) THEN  !! ModR04: Include OASIS
+   CALL Wam_oasis_send_output_parameter(block)
+   CFLAG_P=OASIS_OUTPUT_FLAGS(:,2)
+ENDIF
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -864,7 +880,7 @@ DO IP = 1,NOUT_P
    else
       CALL mpi_gather_block(i_out_par, BLOCK(:,IP))
    end if
-   call mpi_barrier (mpi_comm_world, ierr)
+   call mpi_barrier (localcomm, ierr)  !! ModR04: MPI_COMM_WORLD -> localcomm
 
 !     2.1 INSERT ICE AND DRY POINT.                                            !
 !         -------------------------                                            !
@@ -990,7 +1006,7 @@ if (noutp>=1) then
    else
       call mpi_gather_spp (i_out_spec, itag, nspfld, NOUT_P, fl3, fl1, BLOCK)
    endif
-   call mpi_barrier (mpi_comm_world, ierr)
+   call mpi_barrier (localcomm, ierr) !! ModR04: MPI_COMM_WORLD -> localcomm
 endif
         
 if (irank==i_out_spec) then

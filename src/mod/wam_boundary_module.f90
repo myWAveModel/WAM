@@ -425,6 +425,7 @@ SUBROUTINE PREPARE_BOUNDARY
 !       NONE.                                                                  !
 !                                                                              !
 ! ---------------------------------------------------------------------------- !
+use wam_oasis_module,only:	use_oasis_bdy_in,use_oasis_nest_out !! ModR04: Include OASIS
 !                                                                              !
 !     LOCAL VARIABLES.                                                         !
 !     ----------------                                                         !
@@ -465,7 +466,7 @@ IF (FINE .AND. NBINP.LE.0) THEN
    FINE = .FALSE.
 END IF
 
-IF (.NOT. COARSE .AND. .NOT. FINE) RETURN
+IF (.not.(COARSE.or.FINE.or.use_oasis_bdy_in.or.use_oasis_nest_out)) RETURN  !! ModR04: Include OASIS
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -514,7 +515,8 @@ IF (COARSE) THEN
       WRITE (IU06,*) ' +                                            +'
       WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++'
    END IF
-
+END IF                                 !! ModR04
+IF (COARSE.or.use_oasis_nest_out) THEN !! ModR04: Include OASIS
    IF (petotal.gt.1) THEN
       IF (.not.L_DECOMP) THEN
          DO IC = 1, N_NEST
@@ -555,6 +557,8 @@ IF (COARSE) THEN
          end if
       END DO
    END IF
+END IF            !! ModR04
+IF (COARSE) THEN  !! ModR04: Include OASIS
 !     TIME COUNTER FOR NEXT OUTPUT.                                         !
 
    CDT_B_OUT = ' '
@@ -582,7 +586,7 @@ END IF
 !     3. ALLOCATE FINE GRID INPUT ARRAYS AND DO FIRST BOUNDAY INPUT.           !
 !        -----------------------------------------------------------           !
 
-IF (FINE) THEN
+IF (FINE .or. use_oasis_bdy_in) THEN  !! ModR04: Include OASIS
    IF (.NOT.ALLOCATED(XLON)  ) ALLOCATE (XLON(1:NBINP))
    IF (.NOT.ALLOCATED(XLAT)  ) ALLOCATE (XLAT(1:NBINP))
    IF (.NOT.ALLOCATED(F1)    ) ALLOCATE (F1(1:KL,1:ML,1:NBINP))
@@ -602,15 +606,17 @@ IF (FINE) THEN
    EMEANI(0) = 0.
    THQI(0)   = 0.
    
-   IDEL_BI_FILE = 0
-   CDT_BI_FILE = CDTPRO
-   CDATE2 = '99991231235959'
-   CALL READ_BOUNDARY_INPUT
-   DO WHILE (CDATE2.LT.CDTPRO)
-      CALL READ_BOUNDARY_INPUT
-   END DO
-   IF (ITEST.GT.3)  WRITE (IU06,*)                                            &
+   IF (FINE) THEN  !! ModR04
+     IDEL_BI_FILE = 0
+     CDT_BI_FILE = CDTPRO
+     CDATE2 = '99991231235959'
+     CALL READ_BOUNDARY_INPUT
+     DO WHILE (CDATE2.LT.CDTPRO)
+        CALL READ_BOUNDARY_INPUT
+     END DO
+     IF (ITEST.GT.3)  WRITE (IU06,*)                                            &
 &  '       SUB. PREPARE_BOUNDARY: FIRST BOUNDARY VALUES READ CDATE2 = ', CDATE2
+   ENDIF  !! ModR04
 
    IF (petotal.gt.1 .and. .not.L_DECOMP) THEN
       DO IJ = 1, NBOUNF

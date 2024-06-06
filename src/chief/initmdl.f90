@@ -101,6 +101,7 @@ use wam_mpi_comp_module,     only: &
 use wam_assi_set_up_module,  only: &
 &       prepare_assimilation         !! prepares the data assimilation
 
+use WAM_OASIS_MODULE,	only:	Wam_oasis_write_part !! ModR04: Include OASIS
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     MODULE VARIABLES.                                                        !
@@ -122,6 +123,8 @@ use wam_mpi_module,           only: ninf,nsup, nijs, nijl
 use wam_model_module,         only: fl3, DEPTH
 use wam_assi_set_up_module,   only: iassi
 
+use WAM_OASIS_MODULE,	only:	use_oasis,use_oasis_bdy_in,use_oasis_nest_out, & !! ModR04: Include OASIS
+				USE_OASIS_FORCE_OUTPUT
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     LOCAL VARIABLES.                                                         !
@@ -187,6 +190,7 @@ END IF
 
 call mpi_decomp
 if (itest>=2)  write (iu06,*) '   SUB. INITMDL: mpi_decomp: mpi_decomp'
+IF(use_oasis)CALL Wam_oasis_write_part                                         !! ModR04: Include OASIS
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -225,7 +229,7 @@ IF (ITEST.GE.2)  WRITE(IU06,*) '   SUB. INITMDL: PREPARE_OUTPUT DONE'
 !     7. PREPARE BOUNDARY VALUE HANDLING.                                      !
 !        --------------------------------                                      !
 
-IF (COARSE .OR. FINE) THEN
+IF (COARSE.OR.FINE.or.use_oasis_bdy_in.or.use_oasis_nest_out) THEN             !! ModR04: Include OASIS
    CALL PREPARE_BOUNDARY
    IF (ITEST.GE.2)  WRITE(IU06,*) '   SUB. INITMDL: PREPARE_BOUNDARY DONE'
 END IF
@@ -263,6 +267,8 @@ IF (CDTINTT.EQ.CDTPRO .OR. CDTSPT.EQ.CDTPRO) THEN
    END IF
    CALL UPDATE_OUTPUT_TIME                          !! UPDATE OUTPUT TIMES.
    IF (ITEST.GE.2) WRITE(IU06,*) '    SUB. INITMDL: MODEL_OUTPUT_CONTROL DONE'
+ELSE IF (USE_OASIS_FORCE_OUTPUT) THEN                                          !! ModR04: Include OASIS
+   CALL MODEL_OUTPUT_CONTROL (fl3, 0, 0)                                       !! ModR04: Include OASIS
 END IF
 
 ! ---------------------------------------------------------------------------- !

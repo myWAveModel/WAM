@@ -89,7 +89,8 @@ USE WAM_ASSI_SET_UP_MODULE, ONLY:   &
 ! ---------------------------------------------------------------------------- !
 
 USE WAM_FILE_MODULE,    ONLY: IU05, FILE05, IU06
-   
+USE WAM_OASIS_MODULE,   ONLY: USE_OASIS_ELEV_IN,USE_OASIS_CURR_IN  !! ModR04: Include OASIS
+
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
 !     C. MODULE VARIABLES.                                                     !
@@ -650,6 +651,23 @@ SUBROUTINE SET_WAM_USER_PARAMETER
 if (itest>5) then
    CALL PRINT_WAM_NAMELIST
 endif
+
+IF (USE_OASIS_ELEV_IN.OR.USE_OASIS_CURR_IN) THEN !! ModR04: Include OASIS
+   SHALLOW_RUN = USE_OASIS_ELEV_IN.OR.SHALLOW_RUN
+   REFRACTION_D_RUN = USE_OASIS_ELEV_IN.OR.REFRACTION_D_RUN
+   REFRACTION_C_RUN = USE_OASIS_CURR_IN.OR.REFRACTION_C_RUN
+   WRITE (IU06,*) '  '
+   WRITE (IU06,*) ' ------------------------------------------------- '
+   WRITE (IU06,*) '              WAM_USER_MODULE :'
+   WRITE (IU06,*) ' ------------------------------------------------- '
+   WRITE (IU06,*) ' This is an Oasis coupled run '
+   WRITE (IU06,*) ' -> depth or currents timesteps are taken from'
+   WRITE (IU06,*) '    Oasis namcouple-file'
+   WRITE (IU06,*) ' -> shallow water run      : ',SHALLOW_RUN
+   WRITE (IU06,*) ' -> depth refraction run   : ',REFRACTION_D_RUN
+   WRITE (IU06,*) ' -> current refraction run : ',REFRACTION_C_RUN
+   WRITE (IU06,*) '  '
+ENDIF
 
 ! ---------------------------------------------------------------------------- !
 
