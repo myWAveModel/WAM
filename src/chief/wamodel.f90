@@ -222,7 +222,12 @@ USE WAM_SOURCE_MODULE,        ONLY: &
 
 USE WAM_TOPO_MODULE,          ONLY: &
 &       PUT_DRY,                    & !! PUTS DRY INDICATOR INTO DATA FILED.
-&       GET_TOPO                      !! GETS A NEW DEPTH FIELD.
+&       GET_TOPO,                   & !! GETS A NEW DEPTH FIELD.
+&       SET_TOPO_HEADER,            & !! SETS TOPO HEADER !! ModR04
+&       FIND_DRY_POINTS               !! ModR04
+
+USE WAM_CURRENT_MODULE,       ONLY: & !! ModR04
+&       SET_CURRENT_HEADER            !! SETS CURRENT HEADER
 
 USE WAM_WIND_MODULE,          ONLY: &
 &       GET_WIND                      !! GETS A NEW WIND FIELD.
@@ -266,9 +271,13 @@ USE WAM_TIMOPT_MODULE,        ONLY: CDATEE, CDTPRO, CDTSOU, IDELPRO, IDELT,    &
 &                                   CDTA, TOPO_RUN, CD_TOPO_NEW,               &
 &                                   CDCA, CURRENT_RUN, CD_CURR_NEW, cdtstop,   &
 &                                   LCFLX
-use wam_grid_module,          only: one_point
+
 use wam_mpi_module,           only: nijs, nijl
 use wam_assi_set_up_module,   only: iassi, cdtass
+
+USE WAM_GRID_MODULE,          ONLY: ONE_POINT, DEPTH_B,                        & !! ModR04: Include OASIS
+                                    AMOWEP, AMOSOP, AMOEAP, AMONOP,            &
+				    XDELLO, XDELLA, NX, NY
 
 USE WAM_OASIS_MODULE,         ONLY: USE_OASIS, USE_OASIS_ELEV_IN,              & !! ModR04: Include OASIS
 				    USE_OASIS_CURR_IN, USE_OASIS_WIND_IN,      &
@@ -291,6 +300,8 @@ IMPLICIT NONE
 INTEGER             :: KADV
 CHARACTER (LEN=14)  :: CDTSOE
 LOGICAL             :: NEW_DEPTH_OR_CURR, NEW_TOPO, NEW_CURR !! ModR04
+LOGICAL, SAVE       :: FRST_T = .TRUE., FRST_C = .TRUE.      !! ModR04
+INTEGER             :: CODE = 0                              !! ModR04
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -317,6 +328,13 @@ PROP: DO KADV = 1,NADV
       CALL Wam_oasis_rec_topo(CDTPRO,NEW_TOPO)
       IF (NEW_TOPO) THEN
 	 IF (ITEST.GE.2) WRITE(IU06,*) '   SUB. WAMODEL: NEW DEPTH FIELD'
+         IF (FRST_T) THEN
+           CALL SET_TOPO_HEADER (AMOWEP, AMOSOP, AMOEAP, AMONOP, &
+                                 XDELLO, XDELLA, NX, NY,  CODE)
+ 	   FRST_T = .FALSE.
+         END IF
+         DEPTH = DEPTH + DEPTH_B  !! INPUT IS SURFACE ELEVATION OVER NN.
+         CALL FIND_DRY_POINTS
       END IF
    ELSE IF (TOPO_RUN) THEN
       IF (CDTPRO.GE.CD_TOPO_NEW) THEN
@@ -340,6 +358,11 @@ PROP: DO KADV = 1,NADV
       call Wam_oasis_rec_current(CDTPRO,NEW_CURR)
       IF (NEW_CURR) THEN
 	 IF (ITEST.GE.2) WRITE(IU06,*) '   SUB. WAMODEL: NEW CURRENT FIELD'
+	 IF (FRST_C) THEN
+            CALL SET_CURRENT_HEADER (AMOWEP, AMOSOP, AMOEAP, AMONOP, &
+                                     XDELLO, XDELLA, NX, NY,  CODE)
+ 	    FRST_C = .FALSE.
+	 END IF
       END IF
    ELSE IF (CURRENT_RUN) THEN
       IF (CDTPRO.GE.CD_CURR_NEW) THEN
