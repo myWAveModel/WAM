@@ -356,6 +356,7 @@ if (irank==i_out_b_spec) then
 
    IU = IU19-1
    DO I = 1, N_NEST
+     if (n_code(i)/=2) then                                                    !! ModR04: n_code=2 for coupler exchanged boundary values
       CALL TOTAL_ENERGY (FBC(1:NBOUNC(I),1:KL,1:ML,I), EMEANC(1:NBOUNC(I)))
       CALL FEMEAN (FBC(1:NBOUNC(I),1:KL,1:ML,I), EMEANC(1:NBOUNC(I)),          &
 &                  FM=FMEANC(1:NBOUNC(I)))
@@ -375,6 +376,7 @@ if (irank==i_out_b_spec) then
             WRITE(IU) FBC(IJ,1:KL,1:ML,I)
          END DO
       endif
+     endif                                                                     !! ModR04
    END DO
 endif
 

@@ -340,6 +340,8 @@ IF (COARSE) THEN
          WRITE (IU06,*) ' NUMBER OF POINTS IS: ',NBOUNC(L)
          if (n_code(l)==1) then
             write (iu06,*) ' BOUNDARY VALUES WRITTEN IN +++ ASCII +++ CODE'
+         else if (n_code(l)==2) then                                           !! ModR04: n_code=2 for coupler exchanged boundary values
+            write (iu06,*) ' BOUNDARY VALUES WRITTEN TO COUPLER IF REQUESTED'  !! ModR04
          else
             write (iu06,*) ' BOUNDARY VALUES WRITTEN IN +++ BINARY +++ CODE'
          endif
@@ -1142,7 +1144,7 @@ FINE: DO I = 1, NBOUNF
    M2 = 0
    IF (LAT_C(M1) .EQ. BLATF(I)) THEN
 
-!     1.3.1 NEAREST COARSE GP IS TO FAR AWAY.                                          !
+!     1.3.1 NEAREST COARSE GP IS TOO FAR AWAY.                                          !
 
       IF (ID1 .GT. ZDEL_C(M1)) CYCLE FINE
 
