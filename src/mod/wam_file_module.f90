@@ -105,6 +105,9 @@ CHARACTER (LEN=80) :: FILE25 = 'OUT'    !! FILE IDENTIFIER
 INTEGER            :: IU27 = 27         !! OUTPUT UNIT FOR RADIATION STRESS.
 CHARACTER*80       :: FILE27 = 'RAD'    !! FILE IDENTIFIER
 
+INTEGER            :: IU28 = 28         !! ModR05: OUTPUT UNIT FOR SOURCE OUTPUT.
+CHARACTER*80       :: FILE28 = 'SCR'    !! ModR05: FILE IDENTIFIER
+
 integer            :: iu67 = 67         !! ready file for output of integrated
                                         !! parameters
 character (len=128) :: wpath
@@ -646,6 +649,20 @@ IF (OPND) THEN
 ELSE
    WRITE(IU06,*) '  FILE IS NOT ASSIGNED.'
 END IF
+
+WRITE(IU06,*) '  '  !! ModR05: Include SRC-OUT
+WRITE(IU06,*) ' SOURCE OUTPUT FILE: '
+WRITE(IU06,*) '  '
+
+LENT = LEN_TRIM(FILE28)
+WRITE (IU06,'('' SOURCE FUNCTION OUTPUT FILE  UNIT:'',I3,'', ID .: '',A)')    &
+&                                                         IU28, FILE28(1:LENT)
+INQUIRE (UNIT=IU28, OPENED=OPND)
+IF (OPND) THEN
+   WRITE(IU06,*) '  FILE IS ASSIGNED.'
+ELSE
+   WRITE(IU06,*) '  FILE IS NOT ASSIGNED.'
+END IF              !! End ModR05
 
 WRITE(IU06,*) '  '
 WRITE(IU06,*) ' TEST OUTPUT LEVEL IS ..............: ', ITEST

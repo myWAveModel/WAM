@@ -95,6 +95,9 @@ USE WAM_RESTART_MODULE,      ONLY: &
 USE WAM_SOURCE_MODULE,       ONLY: & 
 &       PREPARE_SOURCE               !! PREPARES SOURCE FUNCTIONS.
 
+USE WAM_SOURCE_OUTPUT_MODULE,ONLY: & !! ModR05: Include SRC-OUT
+&       PREPARE_SOURCE_OUTPUT        !! PREPARES SOURCE FUNCTION OUTPUTS.
+
 use wam_mpi_comp_module,     only: &
 &       mpi_decomp
 
@@ -246,7 +249,17 @@ END IF
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
-!     9. PREPARE ASSIMILATION.                                                 !
+!     9. INITIALIZE SOURCE COMPUTATIONS AND OUTPUT.                            !! ModR05: Include SRC-OUT
+!        ------------------------------------------                            !
+
+CALL PREPARE_SOURCE_OUTPUT
+IF (ITEST.GE.2) THEN
+   WRITE (IU06,*) '    SUB. INITMDL: PREPARE_SOURCE_OUTPUT DONE '
+END IF
+
+! ---------------------------------------------------------------------------- !! End ModR05
+!                                                                              !
+!    10. PREPARE ASSIMILATION.                                                 !
 !        ---------------------                                                 !
 
 if (iassi==1) then

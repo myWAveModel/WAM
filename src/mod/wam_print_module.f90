@@ -25,7 +25,8 @@ USE WAM_GENERAL_MODULE, ONLY:  &   !! TERMINATES PROCESSING.
 USE WAM_FILE_MODULE,             ONLY: IU06, ITEST
 
 USE WAM_OUTPUT_PARAMETER_MODULE, ONLY:                                         &
-&            NOUT_P, TITL_P, SCAL_P, NOUT_S, TITL_S, DIR_FLAG
+&            NOUT_P, TITL_P, SCAL_P, NOUT_S, TITL_S, DIR_FLAG,		       &
+&	     NOUT_SCR, TITL_SCR !!, SCAL_SCR                                      !! ModR05: Include SRC-OUT 
 
 
 
@@ -73,6 +74,8 @@ CHARACTER (LEN=20), DIMENSION(:), ALLOCATABLE :: NAME(:)  !! OUTPUT SITE NAMES.
 
 LOGICAL, DIMENSION(NOUT_P) :: CFLAG_P         !! FILE PARAMETER OUTPUT FLAG.
 LOGICAL, DIMENSION(NOUT_P) :: PFLAG_P         !! FLAG OF DATA IN MODULE.
+LOGICAL, DIMENSION(NOUT_SCR) :: CFLAG_SCR     !! ModR05: SOURCE OUTPUT FLAG.
+LOGICAL, DIMENSION(NOUT_SCR) :: PFLAG_SCR     !! ModR05: FLAG OF DATA IN MODULE.
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -214,6 +217,11 @@ INTERFACE SET_PARAMETER_OUTPUT_FLAGS
 END INTERFACE
 PUBLIC SET_PARAMETER_OUTPUT_FLAGS
 
+INTERFACE SET_SCR_OUTPUT_FLAGS !! ModR05: Include SRC-OUT
+   MODULE PROCEDURE SET_SCR_OUTPUT_FLAGS
+END INTERFACE
+PUBLIC SET_SCR_OUTPUT_FLAGS
+
 INTERFACE SET_SPECTRA_OUTPUT_FLAGS
    MODULE PROCEDURE SET_SPECTRA_OUTPUT_FLAGS
 END INTERFACE
@@ -228,6 +236,11 @@ INTERFACE PRINT_TIME_USER
    MODULE PROCEDURE PRINT_TIME_USER
 END INTERFACE
 PUBLIC PRINT_TIME_USER
+
+INTERFACE PRINT_SCR_USER !! ModR05: Include SRC-OUT
+   MODULE PROCEDURE PRINT_SCR_USER
+END INTERFACE
+PUBLIC PRINT_SCR_USER
 
 INTERFACE PRINT_SPECTRA_USER
    MODULE PROCEDURE PRINT_SPECTRA_USER
@@ -465,6 +478,44 @@ END SUBROUTINE SET_PARAMETER_OUTPUT_FLAGS
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
+SUBROUTINE SET_SCR_OUTPUT_FLAGS (PF)                                           !! ModR05: Include SRC-OUT
+
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     INTERFACE VARIABLES.                                                     !
+!     --------------------                                                     !
+
+LOGICAL, INTENT(IN) :: PF(:)   !! PRINTER FLAGS.
+
+! ---------------------------------------------------------------------------- !
+
+IF (SIZE(PF).NE.NOUT_SCR) THEN
+   WRITE(IU06,*) '*  PROGRAM NEEDS ', NOUT_SCR,' FLAGS FOR SCR OUTPUT *'
+   WRITE(IU06,*) '*  NUMBER OF PRINTER FLAGS IS : ', SIZE(PF)
+   CALL ABORT1
+END IF
+
+CFLAG_SCR = PF
+
+IF (.NOT.ANY(CFLAG_SCR(:))) THEN
+   WRITE(IU06,*) '*****************************************************'
+   WRITE(IU06,*) '*                                                   *'
+   WRITE(IU06,*) '*   FATAL ERROR IN SUB. SET_SCR_OUTPUT_FLAGS        *'
+   WRITE(IU06,*) '*   ========================================        *'
+   WRITE(IU06,*) '*                                                   *'
+   WRITE(IU06,*) '*  ALL FLAGS FOR SCR OUTPUT ARE .FALSE.             *'
+   WRITE(IU06,*) '*  CORRECT USER INPUT                               *'
+   WRITE(IU06,*) '*                                                   *'
+   WRITE(IU06,*) '*          PROGRAM ABORTS.   PROGRAM ABORTS.        *'
+   WRITE(IU06,*) '*                                                   *'
+   WRITE(IU06,*) '*****************************************************'
+   CALL ABORT1
+END IF
+
+END SUBROUTINE SET_SCR_OUTPUT_FLAGS                                            !! End ModR05
+
+! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
+
 SUBROUTINE SET_SPECTRA_OUTPUT_FLAGS (PF)
 
 ! ---------------------------------------------------------------------------- !
@@ -548,6 +599,45 @@ END IF
 WRITE(IU06,*) '  '
 
 END SUBROUTINE PRINT_GRID_USER
+
+! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
+
+SUBROUTINE PRINT_SCR_USER                                                      !! ModR05: Include SRC-OUT
+
+INTEGER  :: I
+
+WRITE(IU06,'(''1'')')
+WRITE(IU06,*) ' USER INPUT PROG. PRINT_SCR_FILE:'
+WRITE(IU06,*) '  '
+IF (NOUTT.EQ.0) THEN
+   WRITE(IU06,*) ' START  DATE (FORMAT:YYYYMMDDHHMMSS) : ',CDATEA,             &
+&                ' END DATE :', CDATEE
+   WRITE(IU06,*) '  '
+   WRITE(IU06,*) ' OUTPUT EVERY ',IDELDO, ' SECONDS'
+ELSE
+   WRITE(IU06,*) ' GRIDS ARE PRINTED AT:'
+   DO I = 1, NOUTT
+      WRITE(IU06,'(5(1X,A14),/)') COUTT(I)
+   END DO
+END IF
+WRITE(IU06,*) '  '
+WRITE(IU06,*) ' INPUT FILE HANDLING:'
+WRITE(IU06,*) ' FILE ID IS ..................... ', FILE01
+WRITE(IU06,*) ' THE FIRST FILE DATE IS ......... ', CDTFILE
+IF (IDFILE.GT.0) THEN
+   WRITE(IU06,*) ' A NEW FILE WILL BE FETCHED EVERY ', IDFILE, ' SECONDS'
+ELSE
+   WRITE(IU06,*) ' A NEW FILE WILL NOT BE FETCHED'
+END IF
+WRITE(IU06,*) '  '
+WRITE(IU06,*) ' LIST OF OUTPUTS TO BE GENERATED:'
+WRITE(IU06,*) '  '
+DO I=1,NOUT_SCR
+   IF (CFLAG_SCR(I))  WRITE(IU06,'(1X,A50)') TITL_SCR(I)
+END DO
+WRITE(IU06,*) '  '
+
+END SUBROUTINE PRINT_SCR_USER                                                  !! End ModR05
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 

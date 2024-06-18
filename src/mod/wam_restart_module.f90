@@ -160,7 +160,7 @@ allocate (rfl(1:nsea,1:kl,1:ml))
 ios = 0
 if (unformatted) then
    READ (IU17,iostat=ios)  NSEA_R, CDTPRO, CDTSOU, CDA, CDTA, CDCA
-   if (ios/=0) then
+   if (ios/=0.or.nsea/=nsea_r) then !! RH: Bugfix for ASCII restart
       close (iu17, status='keep')
       unformatted = .false.
       write (iu06,*) ' UNFORMATTED READING FROM FILE ', trim(FILE17),         &
