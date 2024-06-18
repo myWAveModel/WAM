@@ -280,6 +280,46 @@ CHARACTER(LEN=60), DIMENSION(NOUT_S) :: TITL_S = (/                  &
 & ' SWELL SPECTRUM                                             ',    &   !!  3
 & ' DUMMY                                                      '/)       !!  4
 
-! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
+! ---------------------------------------------------------------------------- !! ModR05: Include SRC-OUT
+!                                                                              !
+!     6. NUMBER OF SOURCE PARAMETER.                                           !
+!        ---------------------------                                           !
+
+INTEGER, PARAMETER :: NOUT_SCR = 10
+
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     7. TITLE FOR SOURCE PARAMETER.                                           !
+!        ---------------------------                                           !
+
+CHARACTER(LEN=60), DIMENSION(NOUT_SCR) :: TITL_SCR = (/              &
+& ' WIND INPUT PHILLIPS SOURCE TERM ( M*M/S )                  ',    &   !!  1
+& ' WIND INPUT SOURCE TERM ( M*M/S )                           ',    &   !!  2
+& ' NON-LINEAR SOURCE TERM ( M*M/S )                           ',    &   !!  3
+& ' WHITE CAPPING DISSIPATION SOURCE TERM ( M*M/S )            ',    &   !!  4
+& ' BOTTOM FRICTION DISSIPATION SOURCE TERM ( M*M/S )          ',    &   !!  5
+& ' WAVE BREAKING DISSIPATION SOURCE TERM ( M*M/S )            ',    &   !!  6
+& ' FRACTION OF BREAKING                                       ',    &   !!  7
+& ' SIG. WAVE HEIGHT ( M )                                     ',    &   !!  8
+& ' PEAK WAVE DIRECTION ( DEG )                                ',    &   !!  9
+& ' MEAN WAVE LENGTH ( M )                                     '/)       !! 10
+
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     8. SCALING FACTORS FOR SOURCE PARAMETER.                                 !
+!        -------------------------------------                                 !
+
+REAL, PARAMETER, DIMENSION(NOUT_SCR) :: SCAL_SCR = (/                          &
+&                      100000.            ,    &   !!  1
+&                      100000.            ,    &   !!  2
+&                      100000.            ,    &   !!  3
+&                      100000.            ,    &   !!  4
+&                      100000.            ,    &   !!  5
+&                      100000.            ,    &   !!  6
+&                      100000.            ,    &   !!  7
+&                     1000000.            ,    &   !!  8
+&                      100000.            ,    &   !!  9
+&                      100000.            /)       !! 10
+! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !! End ModR05
 
 END MODULE WAM_OUTPUT_PARAMETER_MODULE

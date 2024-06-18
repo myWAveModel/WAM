@@ -22,7 +22,8 @@ USE WAM_PRINT_MODULE,         ONLY: &
 &       SET_INPUT_FILE,             & !! INTEGRATED DATA FILE (UNFORM. OUTPUT).
 &       SET_PARAMETER_OUTPUT_FLAGS, & 
 &       SET_SPECTRA_OUTPUT_FLAGS,   & 
-&       SET_INTERPOLATION
+&       SET_INTERPOLATION,          &
+&       SET_SCR_OUTPUT_FLAGS          !! ModR05: Include SRC-OUT
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
@@ -32,6 +33,9 @@ USE WAM_PRINT_MODULE,         ONLY: &
 
 USE WAM_FILE_MODULE,         ONLY: IU05, IU06
    
+USE WAM_OUTPUT_PARAMETER_MODULE,    ONLY:& !! ModR05: Include SRC-OUT
+&       NOUT_P,NOUT_S,NOUT_SCR
+
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
 !     C. MODULE VARIABLES.                                                     !
@@ -66,13 +70,15 @@ CHARACTER (LEN=1)  :: INPUT_FILE_TIMESTEP_UNIT
 
 ! ---------------------------------------------------------------------------- !
 
-INTEGER, PARAMETER         :: NOUT_P = 70
 LOGICAL, DIMENSION(NOUT_P) :: CFLAG_P         !! PARAMETER OUTPUT FLAG.
 
 ! ---------------------------------------------------------------------------- !
 
-INTEGER, PARAMETER         :: NOUT_S = 4
 LOGICAL, DIMENSION(NOUT_S) :: CFLAG_S         !! SPECTRA OUTPUT FLAG. 
+
+! ---------------------------------------------------------------------------- !
+
+LOGICAL, DIMENSION(NOUT_SCR) :: CFLAG_SCR     !! SOURCE OUTPUT FLAG. !! ModR05: Include SRC-OUT
 
 ! ---------------------------------------------------------------------------- !
 
@@ -94,7 +100,7 @@ NAMELIST /PRINT_NAMELIST/                                                      &
 &       INPUT_FILE_NAME,  INPUT_FILE_DATE, INPUT_FILE_UNIT,                    &
 &       INPUT_FILE_TIMESTEP,  INPUT_FILE_TIMESTEP_UNIT,                        &
 &       COUTT,                                                                 &
-&       CFLAG_P, CFLAG_S,                                                      &
+&       CFLAG_P, CFLAG_S, CFLAG_SCR,                                 	       & !! ModR05: Include CFLAG_SCR
 &       OUTLAT,   OUTLONG,   NAME,                                             &
 &       REGULAR
 
@@ -192,6 +198,8 @@ CFLAG_P     = .TRUE.  !! PARAMETER FILE OUTPUT FLAG.
 
 CFLAG_S     = .TRUE.  !! SPECTRA FILE OUTPUT FLAG.
 
+CFLAG_SCR   = .TRUE.  !! SOURCE FILE OUTPUT FLAG. !! ModR05: Include SRC-OUT
+
 OUTLAT      = ' '       !! LATITUDES OF OUTPUT SITES.
 OUTLONG     = ' '       !! LONGITUDES OF OUTPUT SITES.
 NAME        = ' '        !! OUTPUT SITES NAMES.
@@ -269,6 +277,7 @@ CALL SET_TEST_OPTION   (TEST=ITEST)
 
 CALL SET_PARAMETER_OUTPUT_FLAGS (PF=CFLAG_P)
 CALL SET_SPECTRA_OUTPUT_FLAGS   (PF=CFLAG_S)
+CALL SET_SCR_OUTPUT_FLAGS       (PF=CFLAG_SCR)  !! ModR05: Include SRC-OUT
 
 CALL SET_OUTPUT_SITES (LONG=OUTLONG, LAT=OUTLAT, NA=NAME)
 

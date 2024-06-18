@@ -82,14 +82,19 @@ USE WAM_ASSI_SET_UP_MODULE, ONLY:   &
 &       SET_ASSI_MAP_FILE,          & !! INTEGRATED DATA FILE (UNFORM. OUTPUT)
 &       SET_ASSI_SPECTRA_FILE         !! SPECTRA DATA FILE (UNFORM. OUTPUT)
 
+USE WAM_SOURCE_OUTPUT_MODULE, ONLY: & !! ModR05: Include SRC-OUT
+&       SET_SOURCE_OUTPUT_TIMES,    & !! SETS TIMES FOR SOURCE OUTPUT.
+&       SET_SOURCE_OUTPUT_FILE        !! SETS FILE FOR SOURCE OUTPUT.
+
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
 !     B. VARIABLES FROM OTHER MODULES.                                         !
 !                                                                              !
 ! ---------------------------------------------------------------------------- !
 
-USE WAM_FILE_MODULE,    ONLY: IU05, FILE05, IU06
-USE WAM_OASIS_MODULE,   ONLY: USE_OASIS_ELEV_IN,USE_OASIS_CURR_IN  !! ModR04: Include OASIS
+USE WAM_FILE_MODULE,             ONLY: IU05, FILE05, IU06
+USE WAM_OASIS_MODULE,            ONLY: USE_OASIS_ELEV_IN,USE_OASIS_CURR_IN     !! ModR04: Include OASIS
+USE WAM_OUTPUT_PARAMETER_MODULE, ONLY: NOUT_P,NOUT_S,NOUT_SCR                  !! ModR05: Include SRC-OUT
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
@@ -232,16 +237,28 @@ CHARACTER (LEN=14), DIMENSION(MOUTT) :: COUTT  !! SPECIFIED OUTPUT TIMES.
 
 ! ---------------------------------------------------------------------------- !
 
-INTEGER, PARAMETER         :: NOUT_P = 70
 LOGICAL, DIMENSION(NOUT_P) :: FFLAG_P         !! FILE PARAMETER OUTPUT FLAG.
 LOGICAL, DIMENSION(NOUT_P) :: PFLAG_P         !! PRINTER PARAMETER OUTPUT FLAG.
 logical :: orientation_of_directions          !! coming from or going to ?
 
 ! ---------------------------------------------------------------------------- !
 
-INTEGER, PARAMETER         :: NOUT_S = 4
 LOGICAL, DIMENSION(NOUT_S) :: FFLAG_S         !! FILE SPECTRA OUTPUT FLAG. 
 LOGICAL, DIMENSION(NOUT_S) :: PFLAG_S         !! PRINTER SPECTRA  OUTPUT FLAG.
+
+! ---------------------------------------------------------------------------- !! ModR05: Include SRC-OUT
+
+INTEGER            :: SOURCE_OUTPUT_TIMESTEP
+CHARACTER (LEN=1)  :: SOURCE_OUTPUT_TIMESTEP_UNIT
+INTEGER            :: SOURCE_FILE_TIMESTEP
+CHARACTER (LEN=1)  :: SOURCE_FILE_TIMESTEP_UNIT
+INTEGER            :: SOURCE_OUTPUT_FILE_UNIT
+CHARACTER (LEN=80) :: SOURCE_OUTPUT_FILE_NAME
+
+LOGICAL, DIMENSION(NOUT_SCR) :: FFLAG_SOURCE         !! FILE OUTPUT FLAG.
+LOGICAL, DIMENSION(NOUT_SCR) :: PFLAG_SOURCE         !! PRINTER OUTPUT FLAG.
+
+! ---------------------------------------------------------------------------- !! End ModR05
 
 INTEGER, PARAMETER         :: MOUTP   = 200
 CHARACTER(LEN=LEN_COOR), DIMENSION(MOUTP) :: OUTLAT
@@ -265,7 +282,7 @@ character (len=128) :: ready_file_directory, ready_outfile_directory
 character (len=  3) :: model_area
 integer             :: spectral_code
 integer             :: hours_2d_spectra
-!###############################################################
+
 ! ---------------------------------------------------------------------------- !
 
 integer             :: assimilation_flag
@@ -336,6 +353,10 @@ NAMELIST /WAM_NAMELIST/                                                        &
 &       COUTT,                                                                 &
 &       FFLAG_P,  PFLAG_P,  FFLAG_S,  PFLAG_S, orientation_of_directions,      &
 &       OUTLAT,   OUTLONG,   NAME,                                             &
+&       SOURCE_OUTPUT_TIMESTEP,     SOURCE_OUTPUT_TIMESTEP_UNIT,               &  !! ModR05: Include SRC-OUT
+&       SOURCE_FILE_TIMESTEP,       SOURCE_FILE_TIMESTEP_UNIT,                 &  !! ModR05
+&       SOURCE_OUTPUT_FILE_UNIT,    SOURCE_OUTPUT_FILE_NAME,                   &  !! ModR05
+&       FFLAG_SOURCE,               PFLAG_SOURCE,                              &  !! ModR05
 &       spectral_code,              hours_2d_spectra,                          &
 &       ready_file_flag,            ready_file_directory,   model_area,        &
 &       ready_outfile_flag,         ready_outfile_directory,                   &
@@ -544,7 +565,21 @@ OUTLAT      = ' '     !! LATITUDES OF OUTPUT SITES.
 OUTLONG     = ' '     !! LONGITUDES OF OUTPUT SITES.
 NAME        = ' '     !! OUTPUT SITES NAMES.
 
-! ---------------------------------------------------------------------------- !
+! ---------------------------------------------------------------------------- !! ModR05: Include SRC-OUT
+
+SOURCE_OUTPUT_TIMESTEP         = -1  !! > 0 : OUTPUT TIMESTEP OF SOURCE FUNCTIONS
+                                     !! = 0 : OUTPUT EVERY SOURE FUNCTION STEP
+                                     !! < 0 : NO OUTPUT
+SOURCE_OUTPUT_TIMESTEP_UNIT    = 'S'
+SOURCE_FILE_TIMESTEP           = 0   !! >  0 : FILE SAVE TIME STEP OF SOURCE.
+                                     !! <= 0 : SAVE FILE EVERY OUTPUT_FILE_SAVE_TIMESTEP
+SOURCE_FILE_TIMESTEP_UNIT      = 'S'
+SOURCE_OUTPUT_FILE_UNIT        = 28
+SOURCE_OUTPUT_FILE_NAME        = 'SCR'
+FFLAG_SOURCE                   = .TRUE.  !! SOURCE FILE OUTPUT FLAG.
+PFLAG_SOURCE                   = .FALSE. !! SOURCE PRINTER OUTPUT FLAG.
+
+! ---------------------------------------------------------------------------- !! End ModR05
 
 PREPROC_OUTPUT_FILE_UNIT = 7
 PREPROC_OUTPUT_FILE_NAME = 'Grid_info'
@@ -776,7 +811,20 @@ CALL SET_SPECTRA_OUTPUT_FLAGS (PF=PFLAG_S, FF=FFLAG_S)
 
 CALL SET_OUTPUT_SITES (LONG=OUTLONG, LAT=OUTLAT, NA=NAME)
 
-! ---------------------------------------------------------------------------- !
+! ---------------------------------------------------------------------------- !! ModR05: Include SRC-OUT
+
+CALL CHANGE_TO_SECONDS (SOURCE_OUTPUT_TIMESTEP,                                &
+&                       SOURCE_OUTPUT_TIMESTEP_UNIT)
+CALL SET_SOURCE_OUTPUT_TIMES (OUT_DEL=SOURCE_OUTPUT_TIMESTEP,                  &
+&                         PF=PFLAG_SOURCE, FF=FFLAG_SOURCE)
+
+CALL CHANGE_TO_SECONDS (SOURCE_FILE_TIMESTEP,                                  &
+&                       SOURCE_FILE_TIMESTEP_UNIT)
+CALL SET_SOURCE_OUTPUT_FILE (FILE_INC=SOURCE_FILE_TIMESTEP,                    &
+&                        NAME=SOURCE_OUTPUT_FILE_NAME,                         &
+&                        UNIT=SOURCE_OUTPUT_FILE_UNIT)
+
+! ---------------------------------------------------------------------------- !! End ModR05
 
 CALL SET_PREPROC_FILE (NAME=PREPROC_OUTPUT_FILE_NAME,                          &
 &                      UNIT=PREPROC_OUTPUT_FILE_UNIT)

@@ -109,4 +109,5 @@ echo '==== Building Binaries Started ==='
 ./build_ptime
 ./build_ptime_S
 ./build_pnetcdf
+./build_psource
 #

@@ -7,6 +7,7 @@ path_f=${PRODADMDIR}/src/print
 modfile="print_grid_file print_spectra_file \
 print_time read_grid_file read_grid_user \
 read_spectra_file read_spectra_user \
+read_scr_user print_scr_file read_scr_file \
 read_time_user read_time_user_S print_time_S"
 
 cd $path_o

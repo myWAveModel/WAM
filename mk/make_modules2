@@ -4,7 +4,7 @@ set -ex
 path_o=${PRODADMDIR}/obj
 path_f=${PRODADMDIR}/src/mod
 
-modfile="wam_topo_module wam_flux_module wam_source_module \
+modfile="wam_topo_module wam_flux_module wam_source_output_module wam_source_module \
 wam_propagation_module \
 wam_swell_module wam_radiation_module wam_output_module \
 preproc_module wam_coldstart_module \

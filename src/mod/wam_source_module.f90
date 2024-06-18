@@ -22,13 +22,14 @@ USE WAM_INTERFACE_MODULE, ONLY:  &
 &       TOTAL_ENERGY,            &  !! COMPUTATION OF TOTAL ENERGY.
 &       TM1_TM2_PERIODS,         &  !! COMPUTATION OF MEAN WAVENUMBER.
 &       WM1_WM2_WAVENUMBER,      &  !! COMPUTATION OF MEAN WAVENUMBER.
-&       PEAK_FREQ,               &  !! COMPUTATION OF PEAK FREQUENCY.
 &       TRANSF                      !! NARROW BAND LIMIT BENJAMIN-FEIR INDEX
                                     !! FOR THE FINITE DEPTH.
 USE WAM_GENERAL_MODULE, ONLY:    &
 &       AKI,                     &  !! WAVE NUMBER FROM FREQUENY AND DEPTH
 &       ABORT1                      !! TERMINATE PROCESSING.
 
+USE WAM_SOURCE_OUTPUT_MODULE, ONLY: & !! ModR05: Include SRC-OUT
+&       SAVE_SOURCE
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
 !     B. VARIABLES FROM OTHER MODULES.                                         !
@@ -1572,6 +1573,7 @@ REAL, PARAMETER  :: CONST = -2.0*0.038/G
 INTEGER :: M, K
 REAL    :: WAV(SIZE(F,1))
 REAL    :: SBO(SIZE(F,1))
+REAL    :: TEMP (SIZE(F,1),SIZE(F,2),SIZE(F,3)) !! ModR05: Include SRC-OUT
 
 ! ---------------------------------------------------------------------------- !
 
@@ -1581,10 +1583,13 @@ FRE: DO M = 1,SIZE(F,3)
     SBO = CONST*WAV/SINH(SBO)
 
     DIR: DO K = 1,SIZE(F,2)
+       TEMP(:,K,M) = SBO*F(:,K,M) !! ModR05: Include SRC-OUT
        SL(:,K,M) = SL(:,K,M) + SBO*F(:,K,M)
        FL(:,K,M) = FL(:,K,M) + SBO
    END DO DIR
 END DO FRE
+
+CALL SAVE_SOURCE (TEMP,5) !! ModR05: Include SRC-OUT
 
 END SUBROUTINE SBOTTOM
 
@@ -1648,11 +1653,12 @@ REAL, PARAMETER :: CONSS = -CDIS*ZPI
 
 
 INTEGER :: K, M,IJ
-REAL ::  FAC, SDISS
+REAL ::  FAC
 
 REAL, DIMENSION(SIZE(F,1)) :: TEMP1
 REAL, DIMENSION(SIZE(F,1)) :: SDS
 REAL, DIMENSION(SIZE(F,1)) :: CM
+REAL, DIMENSION(SIZE(F,1),SIZE(F,2),SIZE(F,3)) :: SDISS !! ModR05: Include SRC-OUT
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -1670,11 +1676,14 @@ IF (SHALLOW_RUN) THEN
       CM(:) = TFAK(INDEP(:),M)/FAC
 
       DIRS: DO K = 1,SIZE(F,2)
-         DO IJ = 1, SIZE(F,1)
-            SDISS = TEMP1(IJ)*F(IJ,K,M)
-            SL(IJ,K,M) = SL(IJ,K,M) + SDISS
-            FL(IJ,K,M) = FL(IJ,K,M) + TEMP1(IJ)
-         END DO
+         SDISS(:,K,M) = TEMP1(:)*F(:,K,M) !! ModR05: Include SRC-OUT
+         SL(:,K,M) = SL(:,K,M) + SDISS(:,K,M) !! ModR05
+         FL(:,K,M) = FL(:,K,M) + TEMP1(:)     !! ModR05
+         !DO IJ = 1, SIZE(F,1)
+         !   SDISS = TEMP1(IJ)*F(IJ,K,M)
+         !   SL(IJ,K,M) = SL(IJ,K,M) + SDISS
+         !   FL(IJ,K,M) = FL(IJ,K,M) + TEMP1(IJ)
+         !END DO
       END DO DIRS
    END DO FRES
 
@@ -1687,15 +1696,20 @@ ELSE
       CM(1)  = ZPI*FR(M)/G
 
       DIRD: DO K = 1,SIZE(F,2)
-         DO IJ = 1, SIZE(F,1)
-            SDISS = TEMP1(IJ)*F(IJ,K,M)
-            SL(IJ,K,M) = SL(IJ,K,M) + SDISS
-            FL(IJ,K,M) = FL(IJ,K,M) + TEMP1(IJ)
-         END DO
+         SDISS(:,K,M) = TEMP1(:)*F(:,K,M) !! ModR05: Include SRC-OUT
+         SL(:,K,M) = SL(:,K,M) + SDISS(:,K,M) !! ModR05
+         FL(:,K,M) = FL(:,K,M) + TEMP1(:)     !! ModR05
+         !DO IJ = 1, SIZE(F,1)
+         !   SDISS = TEMP1(IJ)*F(IJ,K,M)
+         !   SL(IJ,K,M) = SL(IJ,K,M) + SDISS
+         !   FL(IJ,K,M) = FL(IJ,K,M) + TEMP1(IJ)
+         !END DO
       END DO DIRD
    END DO FRED
 
 END IF
+
+CALL SAVE_SOURCE (SDISS,4) !! ModR05: Include SRC-OUT
 
 END SUBROUTINE SDISSIP
 
@@ -1950,14 +1964,19 @@ ENDIF
 
 
 ! ADD ALL CONTRIBUTIONS TO SOURCE TERM
-DO  M= 1, SIZE(F,3)
-  DO K= 1, SIZE(F,2)
-    DO IJ = 1,SIZE(F,1)
-      SL(IJ,K,M) = SL(IJ,K,M)+D(IJ,K,M)*F(IJ,K,M)
-      FL(IJ,K,M) = FL(IJ,K,M)+D(IJ,K,M)
-    ENDDO
-  ENDDO
-ENDDO
+!DO  M= 1, SIZE(F,3)
+!  DO K= 1, SIZE(F,2)
+!    DO IJ = 1,SIZE(F,1)
+!      SL(IJ,K,M) = SL(IJ,K,M)+D(IJ,K,M)*F(IJ,K,M)
+!      FL(IJ,K,M) = FL(IJ,K,M)+D(IJ,K,M)
+!    ENDDO
+!  ENDDO
+!ENDDO
+
+SL = SL + D*F !! ModR05
+FL = FL + D   !! ModR05
+
+CALL SAVE_SOURCE((D*F),4) !! ModR05: Include SRC-OUT
 
 END SUBROUTINE SDISSIP_ARD
 
@@ -2006,6 +2025,7 @@ REAL, PARAMETER :: ALPHA = 1.0
 INTEGER :: M, K
 REAL :: QB(SIZE(F,1)), BB(SIZE(F,1))
 REAL :: SBR(SIZE(F,1)),DSBR(SIZE(F,1))
+REAL :: TEMP (SIZE(F,1),SIZE(F,2),SIZE(F,3)) !! ModR05: Include SRC-OUT
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -2017,6 +2037,10 @@ BB = 8.*EMEAN/(GAMD*DEPTH)**2 !! (Hrms / Hmax)**2
 CALL CMPQB (BB, QB)           !! fraction of breaking waves
 
 QB = MIN(1.,QB)
+
+TEMP(:,1,1) = QB          !! ModR05: Include SRC-OUT
+CALL SAVE_SOURCE (TEMP,7) !! ModR05
+
 SBR = -ALPHA*2.*FMEAN
 
 WHERE (BB.LE.1.) SBR = SBR*QB/BB
@@ -2029,10 +2053,13 @@ ENDWHERE
 
 DO M = 1,SIZE(F,3)
   DO K = 1,SIZE(F,2)
+     TEMP(:,K,M) = SBR*F(:,K,M) !! ModR05: Include SRC-OUT
      SL(:,K,M) = SL(:,K,M) + SBR*F(:,K,M)
      FL(:,K,M) = FL(:,K,M) + DSBR
    END DO
 END DO
+
+CALL SAVE_SOURCE (TEMP,6) !! ModR05: Include SRC-OUT
 
 END SUBROUTINE SFBRK
 
@@ -2169,6 +2196,7 @@ LOGICAL, INTENT(OUT)   :: LLWS(:, :, :)  !! TRUE WHERE SINPUT IS POSITIVE.
 !     LOCAL VARIABLES.                                                         !
 !     ----------------                                                         !
 
+LOGICAL, SAVE :: FIRST = .TRUE. !! ModR05: Include SRC-OUT
 INTEGER, PARAMETER :: NSIN = 2
 INTEGER :: K, M, IJ, ISIN
 REAL  :: X, ZLOG, ZLOG2X, CONST3
@@ -2305,6 +2333,9 @@ FRE: DO M = 1,SIZE(F,3)
    END DO DIR
 END DO FRE
 
+IF (FIRST) CALL SAVE_SOURCE (SL,2) !! ModR05: Include SRC-OUT
+FIRST = .FALSE.                    !! ModR05
+
 END SUBROUTINE SINPUT
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
@@ -2395,6 +2426,8 @@ LOGICAL, INTENT(OUT)   :: LLWS(:, :, :)  !! TRUE WHERE SINPUT IS POSITIVE.
 !                                                                              !
 !     LOCAL VARIABLES.                                                         !
 !     ----------------   
+
+LOGICAL, SAVE :: FIRST = .TRUE. !! ModR05: Include SRC-OUT
 
 INTEGER :: IJ,K,M,IND,IGST
 
@@ -2734,12 +2767,14 @@ REAL, DIMENSION(SIZE(F,1),SIZE(F,2),NGST) :: COSLP, UFAC, DSTAB
 
       ENDDO ! END LOOP OVER FREQUENCIES
 
+IF (FIRST) CALL SAVE_SOURCE (SL,2) !! ModR05: Include SRC-OUT
+FIRST = .FALSE.                    !! ModR05
 
 END SUBROUTINE SINPUT_ARD
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
-SUBROUTINE SNONLIN (F, SL, FL, DEPTH, AKMEAN)
+SUBROUTINE SNONLIN (F, SH, FL, DEPTH, AKMEAN)  !! ModR05: SL -> SH
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -2785,7 +2820,7 @@ SUBROUTINE SNONLIN (F, SL, FL, DEPTH, AKMEAN)
 !     --------------------                                                     !
 
 REAL, INTENT(IN)    :: F (:,:,:)    !! SPECTRA.
-REAL, INTENT(INOUT) :: SL(:,:,:)    !! TOTAL SOURCE FUNCTION ARRAY.
+REAL, INTENT(INOUT) :: SH(:,:,:)    !! TOTAL SOURCE FUNCTION ARRAY. !! ModR05: SL -> SH
 REAL, INTENT(INOUT) :: FL(:,:,:)    !! DIAGONAL MATRIX OF FUNCTIONAL DERIVATIVE
 REAL, INTENT(IN)    :: DEPTH (:)    !! WATER DEPTH.
 REAL, INTENT(IN)    :: AKMEAN (:)   !! MEAN WAVE NUMBER.
@@ -2805,12 +2840,15 @@ REAL    :: FKLAMM, FKLAMM1, GW5, GW6, GW7, GW8, FKLAMMA, FKLAMMB, FKLAMM2
 REAL    :: FKLAMA2, FKLAMB2, FKLAM12, FKLAM22
 REAL    :: SAP, SAM, FIJ, FAD1, FAD2, FCEN
 
+REAL, DIMENSION(SIZE(F,1),SIZE(F,2),SIZE(F,3)) :: SL !! ModR05: New SL
 REAL, DIMENSION(SIZE(F,1)) :: FTEMP
 REAL, DIMENSION(SIZE(F,1)) :: ENHFR
 REAL, DIMENSION(SIZE(F,1)) :: AD
 REAL, DIMENSION(SIZE(F,1)) :: DELAD
 REAL, DIMENSION(SIZE(F,1)) :: DELAP
 REAL, DIMENSION(SIZE(F,1)) :: DELAM
+
+SL = 0. !! ModR05
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -3044,11 +3082,14 @@ FRE: DO MC = 1,MLSTHG
    ENDIF
 END DO FRE                  !! BRANCH BACK FOR NEXT FREQUENCY.
 
+SH = SL + SH                !! ModR05: Update SH with SL
+CALL SAVE_SOURCE(SL,3)      !! ModR05: Include SRC-OUT for SL
+
 END SUBROUTINE SNONLIN
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
-SUBROUTINE SOURCE_PHILLIPS (SL, USTAR, UDIR, DEPTH, INDEP)
+SUBROUTINE SOURCE_PHILLIPS (SH, USTAR, UDIR, DEPTH, INDEP) !! ModR05: SL -> SH
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -3075,7 +3116,7 @@ SUBROUTINE SOURCE_PHILLIPS (SL, USTAR, UDIR, DEPTH, INDEP)
 !
 !*    INTERFACE VARIABLE
 
-REAL,   INTENT(INOUT)        :: SL(:,:,:)  !! TOTAL SOURCE FUNCTION.
+REAL,   INTENT(INOUT)        :: SH(:,:,:)  !! TOTAL SOURCE FUNCTION. !! ModR05: SL -> SH
 REAL,   INTENT(IN)           :: USTAR(:)   !! FRICTION VELOCITY
 REAL,   INTENT(IN)           :: UDIR(:)    !! WIND DIRECTION
 REAL,   INTENT(IN)           :: DEPTH(:)   !! DEPTH
@@ -3088,8 +3129,11 @@ INTEGER, INTENT(IN)          :: INDEP(:)   !! DEPTH TABLE INDEX.
 INTEGER :: K, M, IJ
  
 REAL    :: CONST1
-REAL    :: TEMP(1:SIZE(SL,1)), FPM(1:SIZE(SL,1)), KD
-REAL    :: TPHOLD(1:SIZE(SL,1),1:SIZE(SL,2))
+REAL    :: TEMP(1:SIZE(SH,1)), FPM(1:SIZE(SH,1)), KD  !! ModR05: SL -> SH
+REAL    :: TPHOLD(1:SIZE(SH,1),1:SIZE(SH,2))          !! ModR05: SL -> SH
+REAL    :: SL(1:SIZE(SH,1),1:SIZE(SH,2),1:SIZE(SH,3)) !! ModR05: New SL
+
+SL = 0. !! ModR05
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -3156,6 +3200,9 @@ ELSE
    END DO
 
 END IF
+
+SH = SL + SH           !! ModR05: Udate SH with SL
+CALL SAVE_SOURCE(SL,1) !! ModR05: Include SRC-OUT
 
 END SUBROUTINE SOURCE_PHILLIPS
 
@@ -4745,6 +4792,8 @@ REAL,    INTENT(OUT)   :: FL(:, :, :)    !! DIAGONAL MATRIX OF FUNCTIONAL
 !     LOCAL VARIABLES.                                                         !
 !     ----------------   
 
+LOGICAL, SAVE :: FIRST = .TRUE. !! ModR05: Include SRC-OUT
+
 INTEGER                :: IJ, M
 INTEGER                :: IK, ITH, IKN(SIZE(F,3)), ITHN(SIZE(F,2))
 REAL                   :: COSU, SINU, UPROXY
@@ -4922,6 +4971,9 @@ INTEGER :: NSPEC ! NUMBER OF SPECTRAL BINS
       END DO
       ! END LOOP OVER LOC
 
+IF (FIRST) CALL SAVE_SOURCE (SL,2) !! ModR05: Include SRC-OUT
+FIRST = .FALSE.                    !! ModR05
+
 END SUBROUTINE SINPUT_ST6
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
@@ -4976,11 +5028,11 @@ INTEGER, PARAMETER   :: SDS6P2  = 4        ! ST6 PARAM
 LOGICAL, PARAMETER   :: SDS6ET  = .TRUE.   ! ST6 PARAM
 
 REAL              :: FREQ(SIZE(F,3))     ! frequencies [Hz]
-REAL              :: SIG(SIZE(F,3))     ! frequencies [RAD]
+REAL              :: SIG(SIZE(F,3))      ! frequencies [RAD]
 REAL              :: DFII(SIZE(F,3))     ! frequency bandwiths [Hz]
 REAL              :: ANAR(SIZE(F,3))     ! directional narrowness
-REAL              :: BNT          ! empirical constant for
-                                        ! wave breaking probability
+REAL              :: BNT                 ! empirical constant for
+                                         ! wave breaking probability
 REAL              :: EDENS (SIZE(F,3))   ! spectral density E(f)
 REAL              :: ETDENS(SIZE(F,3))   ! threshold spec. density ET(f)
 REAL              :: EXDENS(SIZE(F,3))   ! excess spectral density EX(f)
@@ -4990,9 +5042,9 @@ REAL              :: T2(SIZE(F,3))       ! forced dissipation term
 REAL              :: T12(SIZE(F,3))      ! = T1+T2 or combined dissipation
 REAL              :: ADF(SIZE(F,3)), XFAC, EDENSMAX ! temp. variables
 
-REAL, DIMENSION(SIZE(F,2)*SIZE(F,3))  :: S, D, A    
-REAL, DIMENSION(SIZE(F,2)*SIZE(F,3))   :: SIG2, CG2
-REAL, DIMENSION(SIZE(F,2),SIZE(F,3))  :: DDS
+REAL, DIMENSION(SIZE(F,2)*SIZE(F,3))           :: S, D, A    
+REAL, DIMENSION(SIZE(F,2)*SIZE(F,3))           :: SIG2, CG2
+REAL, DIMENSION(SIZE(F,1),SIZE(F,2),SIZE(F,3)) :: DDS       !! ModR05: Add dimesnion F1
 
 
 INTEGER :: NK    ! NUMBER OF FREQS, SAME AS ML 
@@ -5088,16 +5140,22 @@ INTEGER :: NSPEC ! NUMBER OF SPECTRAL BINS
 !/T6     270 FORMAT (' TEST W3SDS6 : ',A,'(',A,')',':',70E11.3)
 !/T6     271 FORMAT (' TEST W3SDS6 : Total SDS  =',E13.5)
 
-        DDS = RESHAPE(D,(/NTH,NK/))
-        DO IK = 1,NK
-         DO ITH = 1, NTH
-            SL(IJ,ITH,IK) = SL(IJ,ITH,IK) + DDS(ITH,IK)*F(IJ,ITH,IK)
-            FL(IJ,ITH,IK) = FL(IJ,ITH,IK) + DDS(ITH,IK)
-          END DO
-        END DO
+        DDS(IJ,:,:) = RESHAPE(D,(/NTH,NK/)) !! ModR05
+        !DDS = RESHAPE(D,(/NTH,NK/))
+        !DO IK = 1,NK
+        ! DO ITH = 1, NTH
+        !    SL(IJ,ITH,IK) = SL(IJ,ITH,IK) + DDS(ITH,IK)*F(IJ,ITH,IK)
+        !    FL(IJ,ITH,IK) = FL(IJ,ITH,IK) + DDS(ITH,IK)
+        !  END DO
+        !END DO
 
       END DO
       ! END LOOP OVER LOC
+      
+      SL = SL + DDS*F !! ModR05
+      FL = FL + DDS   !! ModR05
+
+CALL SAVE_SOURCE((DDS*F),4) !! ModR05: Include SRC-OUT 
 
 END SUBROUTINE SDISSIP_ST6
 

@@ -220,6 +220,9 @@ USE WAM_SOURCE_MODULE,        ONLY: &
 &       MAKE_SHALLOW_SNL              !! COMPUTE THE NONLINEAR TRANSFER FUNCTION
                                       !! COEFFICIENTS FOR SHALLOW WATER.
 
+USE WAM_SOURCE_OUTPUT_MODULE, ONLY: & !! ModR05: Include SRC-OUT
+        SOURCE_OUTPUT
+
 USE WAM_TOPO_MODULE,          ONLY: &
 &       PUT_DRY,                    & !! PUTS DRY INDICATOR INTO DATA FILED.
 &       GET_TOPO,                   & !! GETS A NEW DEPTH FIELD.
@@ -274,6 +277,8 @@ USE WAM_TIMOPT_MODULE,        ONLY: CDATEE, CDTPRO, CDTSOU, IDELPRO, IDELT,    &
 
 use wam_mpi_module,           only: nijs, nijl
 use wam_assi_set_up_module,   only: iassi, cdtass
+
+USE WAM_SOURCE_OUTPUT_MODULE, ONLY: CDT_SCR_OUT                                  !! ModR05: Include SRC-OUT
 
 USE WAM_GRID_MODULE,          ONLY: ONE_POINT, DEPTH_B,                        & !! ModR04: Include OASIS
                                     AMOWEP, AMOSOP, AMOEAP, AMONOP,            &
@@ -409,6 +414,20 @@ PROP: DO KADV = 1,NADV
 
       CALL IMPLSCH (FL3, U10, UDIR, TAUW, USTAR, Z0, ROAIRN, WSTAR,            &
 &                          DEPTH(NIJS:NIJL), INDEP(NIJS:NIJL))
+
+!     1.4a SOURCE OUTPUT.                                                      !! ModR05: Include SRC-OUT
+!          --------------                                                      !
+
+      WRITE (IU06,*) '    WAMODEL: IMPLSCH DONE'
+      FLUSH(IU06)
+      IF (CDTSOE.EQ.CDT_SCR_OUT) THEN
+	 CALL SOURCE_OUTPUT
+	 WRITE (IU06,*) '    WAMODEL: SOURCE_OUTPUT DONE'
+	 FLUSH(IU06)
+	 IF (ITEST.GE.2) THEN
+            WRITE (IU06,*) '   SUB. WAMODEL: SOURCE_OUTPUT DONE '
+	 END IF
+      END IF                                                                   !! End ModR05
 
       CDTSOU = CDTSOE                     !! UPDATE SOURCE TIME.
       CALL INCDATE (CDTSOE,IDELT)

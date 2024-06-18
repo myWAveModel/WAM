@@ -118,6 +118,27 @@ IF (ncid(0)<0) THEN
    vmin(5)  = 0.
    vmax(5)  = 0.1
 
+   vl(1, 6) = 'depth'
+   vl(2, 6) = 'water_depth'
+   vl(3, 6) = 'Water depth'
+   vl(4, 6) = 'm'
+   vmin( 6) = 0.
+   vmax( 6) = 1000.
+
+   vl(1, 7) = 'curs'
+   vl(2, 7) = 'current_speed'
+   vl(3, 7) = 'Current speed'
+   vl(4, 7) = 'm/s'
+   vmin( 7) = -2.
+   vmax( 7) =  2.
+
+   vl(1, 8) = 'curd'
+   vl(2, 8) = 'current_to_direction'
+   vl(3, 8) = 'Current direction'
+   vl(4, 8) = 'degree'
+   vmin( 8) = 0.
+   vmax( 8) = 360.
+
    vl(1, 9) = 'hs'
    vl(2, 9) = 'sea_surface_wave_significant_height'
    vl(3, 9) = 'Total significant wave height'
@@ -267,7 +288,7 @@ IF (ncid(0)<0) THEN
 
    vl(1,31) = 'ds_swell'
    vl(2,31) = 'sea_surface_swell_wave_directional_spread'
-   vl(3,31) = 'Swell directional spreed'
+   vl(3,31) = 'Swell directional spread'
    vl(4,31) = 'degree'
    vmin(31) = 0.
    vmax(31) = 120.

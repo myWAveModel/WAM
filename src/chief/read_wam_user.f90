@@ -455,7 +455,36 @@ END IF
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
-!    13. MODEL FILES.                                                          !
+!    13. SOURCE OUTPUT.                                                        !! ModR05: Include SRC-OUT
+!        --------------                                                        !
+
+CALL F_NEW_DATA
+
+IF (LINE( 2: 8).NE.' ') THEN
+   READ(LINE( 2: 8),'(I7)',IOSTAT=IOS) SOURCE_OUTPUT_TIMESTEP
+   IF (IOS.NE.0) CALL ERROR_MESSAGE('SOURCE_OUTPUT_TIMESTEP')
+   IF (LINE(10:10) .EQ.'H'.OR.LINE(10:10) .EQ.'h') SOURCE_OUTPUT_TIMESTEP_UNIT = 'H'
+   IF (LINE(10:10) .EQ.'M'.OR.LINE(10:10) .EQ.'m') SOURCE_OUTPUT_TIMESTEP_UNIT = 'M'
+END IF
+
+IF (LINE(13:19).NE.' ') THEN
+   READ(LINE(13:19),'(I7)',IOSTAT=IOS) SOURCE_FILE_TIMESTEP
+   IF (IOS.NE.0) CALL ERROR_MESSAGE('SOURCE_FILE_TIMESTEP')
+   IF (LINE(21:21) .EQ.'H'.OR.LINE(21:21) .EQ.'h') SOURCE_FILE_TIMESTEP_UNIT = 'H'
+   IF (LINE(21:21) .EQ.'M'.OR.LINE(21:21) .EQ.'m') SOURCE_FILE_TIMESTEP_UNIT = 'M'
+END IF
+
+DO I = 1,NOUT_SCR,2
+   CALL F_NEW_DATA
+   PFLAG_SOURCE(  I) = LINE( 2: 2).EQ.'T' .OR. LINE( 2: 2).EQ.'t'
+   FFLAG_SOURCE(  I) = .NOT. (LINE( 4: 4).EQ.'F' .OR. LINE( 4: 4).EQ.'f')
+   PFLAG_SOURCE(I+1) = LINE(40:40).EQ.'T' .OR. LINE(40:40).EQ.'t'
+   FFLAG_SOURCE(I+1) = .NOT. (LINE(42:42).EQ.'F' .OR. LINE(42:42).EQ.'f')
+END DO
+
+! ---------------------------------------------------------------------------- !! End ModR05
+!                                                                              !
+!    14. MODEL FILES.                                                          !
 !        ------------                                                          !
 
 CALL F_NEW_DATA
@@ -487,6 +516,9 @@ IF ( LINE(2:80).NE.' ') PARAMETER_OUTPUT_FILE_NAME = LINE(2:80)
 
 CALL F_NEW_DATA
 IF ( LINE(2:80).NE.' ') SPECTRA_OUTPUT_FILE_NAME = LINE(2:80)
+
+CALL F_NEW_DATA                                              !! ModR05: Include SRC-OUT
+IF ( LINE(2:80).NE.' ') SOURCE_OUTPUT_FILE_NAME = LINE(2:80) !! ModR05
  
 call f_new_data
 if ( line(2: 4)/=' ') model_area = line(2:4)

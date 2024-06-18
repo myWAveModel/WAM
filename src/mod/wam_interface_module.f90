@@ -75,6 +75,12 @@ INTERFACE MEANSQS                          !! COMPUTATES MEAN SQUARE SLOPE.
 END INTERFACE
 PUBLIC MEANSQS
 
+INTERFACE PEAK_DIRECTION                   !! COMPUTATES PEAK DIRECTION. !! ModR05: Include SRC-OUT
+   MODULE  PROCEDURE PEAK_DIRECTION_1      !! SCALAR VERSION
+   MODULE  PROCEDURE PEAK_DIRECTION_B      !! VECTOR VERSION
+END INTERFACE
+PUBLIC PEAK_DIRECTION
+
 INTERFACE PEAK_PERIOD                      !! COMPUTATES PEAK PERIOD.
    MODULE PROCEDURE PEAK_PERIOD_1          !! SCALAR VERSION
    MODULE PROCEDURE PEAK_PERIOD_B          !! VECTOR VERSION
@@ -735,6 +741,183 @@ ELSE                         !! DEEP WATER INTEGRATION.
 END IF
 
 END SUBROUTINE MEANSQS
+
+! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
+
+SUBROUTINE PEAK_DIRECTION_B (F, PEAKD) !! ModR05: Include SRC-OUT required PEAK_DIRECTION subroutines
+
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!    PEAK_DIRECTION_B - COMPUTATES PEAK DIRECTION (VECTOR VERSION).            !
+!                                                                              !
+!     H. GUNTHER      HZG            AUGUST 2011                               !
+!                                                                              !
+!     PURPOSE.                                                                 !
+!     --------                                                                 !
+!                                                                              !
+!       COMPUTE PEAK DIRECTION AT EACH GRID POINT.                             !
+!                                                                              !
+!     METHOD.                                                                  !
+!     -------                                                                  !
+!                                                                              !
+!       THE SPECTRA ARE INTEGRATED OVER THE FREUENCIES AND                     !
+!       THE DIRECTION IS DEFINED WHERE THE MAXIUM ENERGY IS.                   !
+!                                                                              !
+!     REFERENCE.                                                               !
+!     ----------                                                               !
+!                                                                              !
+!       NONE.                                                                  !
+!                                                                              !
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     INTERFACE VARIABLES.                                                     !
+!     --------------------                                                     !
+
+REAL,    INTENT(IN)            :: F(:,:,:)    !! BLOCK OF SPECTRA.
+REAL,    INTENT(OUT)           :: PEAKD(:)    !! PEAK DIRECTION.
+
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     LOCAL VARIABLES.                                                         !
+!     ----------------                                                         !
+
+INTEGER  :: IJ, K
+INTEGER  :: IPEAK(SIZE(F,1))
+REAL     :: EED1D(SIZE(F,1),SIZE(F,2))
+REAL*8   :: TEMP_DBL(1:SIZE(F,1))
+REAL     :: P1(1:SIZE(F,1)), P2(1:SIZE(F,1)), P3(1:SIZE(F,1))
+
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     1. INTEGRATE SPECTRA OVER FREQUENCIES.                                   !
+!        -----------------------------------                                   !
+
+DO K = 1,SIZE(F,2)
+   TEMP_DBL = MATMUL(DBLE(F(:,K,:)),DBLE(DFIM))
+   EED1D(:,K) = TEMP_DBL
+END DO
+
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     2. DEFINE PEAK INDEX.                                                    !
+!        ------------------                                                    !
+
+DO IJ = 1,SIZE(F,1)
+   IPEAK(IJ:IJ) = MAXLOC(EED1D(IJ,:))
+END DO
+
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     3. CALCULATE PEAK DIRECTION FROM PEAK INDEX.                             !
+!        -----------------------------------------                             !
+
+PEAKD(:) = TH(IPEAK(:))
+
+DO IJ = 1,SIZE(F,1)
+   IF (IPEAK(IJ).EQ.1) THEN
+      P1(IJ) = EED1D(IJ,SIZE(F,2))
+   ELSE
+      P1(IJ) = EED1D(IJ,IPEAK(IJ)-1)
+   END IF
+   P2(IJ) = EED1D(IJ,IPEAK(IJ))
+   IF (IPEAK(IJ).EQ.SIZE(F,2)) THEN
+      P3(IJ) = EED1D(IJ,1)
+   ELSE
+      P3(IJ) = EED1D(IJ,IPEAK(IJ)+1)
+   END IF
+END DO
+
+P2(:) = 2.*(P1(:)-2.*P2(:)+P3(:))
+WHERE (P2(:).NE.0.) PEAKD(:) = PEAKD(:) + DELTH*(P1(:)-P3(:))/P2(:)
+WHERE (PEAKD(:).LT.0. ) PEAKD(:) = PEAKD(:) + ZPI
+WHERE (PEAKD(:).GE.ZPI) PEAKD(:) = PEAKD(:) - ZPI
+
+END SUBROUTINE PEAK_DIRECTION_B
+
+! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
+
+SUBROUTINE PEAK_DIRECTION_1 (F, PEAKD) !! ModR05: Include SRC-OUT required PEAK_DIRECTION subroutines
+
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!    PEAK_PERIOD_1 - COMPUTATES PEAK DIRECTION (SCALAR VERSION).               !
+!                                                                              !
+!     H. GUNTHER      HZG            AUGUST 2011                               !
+!                                                                              !
+!     PURPOSE.                                                                 !
+!     --------                                                                 !
+!                                                                              !
+!       COMPUTE PEAK DIRECTION.                                                !
+!                                                                              !
+!     METHOD.                                                                  !
+!     -------                                                                  !
+!                                                                              !
+!       THE SPECTRUM IS INTEGRATED OVER THE FREUENCIES AND                     !
+!       THE DIRECTION IS DEFINED WHERE THE MAXIUM ENERGY IS.                   !
+!                                                                              !
+!     REFERENCE.                                                               !
+!     ----------                                                               !
+!                                                                              !
+!       NONE.                                                                  !
+!                                                                              !
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     INTERFACE VARIABLES.                                                     !
+!     --------------------                                                     !
+
+REAL,    INTENT(IN)            :: F(:,:)     !! SPECTRUM.
+REAL,    INTENT(OUT)           :: PEAKD      !! PEAK PERIOD.
+
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     LOCAL VARIABLES.                                                         !
+!     ----------------                                                         !
+
+INTEGER  :: IPEAK(1:1)
+REAL     :: EED1D(SIZE(F,1))
+REAL*8   :: TEMP_DBL(1:SIZE(F,1))
+REAL     :: P1,P2,P3
+
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     1. INTEGRATE SPECTRUM OVER FREQUENCIES.                                  !
+!        ------------------------------------                                  !
+
+TEMP_DBL(:) = MATMUL(DBLE(F(:,:)),DBLE(DFIM(:)))
+EED1D(:) = TEMP_DBL(:)
+
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     2. DEFINE PEAK INDEX.                                                    !
+!        ------------------                                                    !
+
+IPEAK(1:1) = MAXLOC(EED1D)
+
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     3. CALCULATE PEAK DIRECTION FROM PEAK INDEX.                             !
+!        -----------------------------------------                             !
+
+PEAKD = TH(IPEAK(1))
+
+IF (IPEAK(1).EQ.1) THEN
+   P1 = EED1D(SIZE(F,1))
+ELSE
+   P1 = EED1D(IPEAK(1)-1)
+END IF
+
+IF (IPEAK(1).EQ.SIZE(F,1)) THEN
+   P3 = EED1D(1)
+ELSE
+   P3 = EED1D(IPEAK(1)+1)
+END IF
+
+P2 = 2.*(P1-2.*EED1D(IPEAK(1))+P3)
+IF (P2.NE.0.) PEAKD = PEAKD + DELTH*(P1-P3)/P2
+IF (PEAKD.LT.0. ) PEAKD = PEAKD + ZPI
+IF (PEAKD.GE.ZPI) PEAKD = PEAKD - ZPI
+
+END SUBROUTINE PEAK_DIRECTION_1
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
@@ -2502,6 +2685,7 @@ ELSEWHERE                                                                       
    T1 = 1.                                                                               !! WAM-MAX
    T2 = 1.                                                                               !! WAM-MAX
 END WHERE                                                                                !! WAM-MAX
+
 !                                                                                        !! WAM-MAX
 ! ---------------------------------------------------------------------------- !         !! WAM-MAX
 !                                                                              !         !! WAM-MAX
