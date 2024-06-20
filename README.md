@@ -54,10 +54,16 @@ WAM. If not, see <http://www.gnu.org/licenses/>
    [preproc] $ ln -sf read_topography_arno.f90     read_topography.f90
    ```
 
-4. Set the libraries paths and modules to be loaded for your SYSTEM in the 
+4. Set the library paths and modules to be loaded for your SYSTEM in the 
    preamble of mk/create_binaries.
 
-5. Compile the executables from the directory mk:
+5. Ensure executable permission is set for mk/create_binaries, mk/build_*, and 
+   mk/make_* files.
+   ```
+   [mk] $ chmod -u+x create_binaries build_* make_* 
+   ```
+
+6. Compile the executables from the directory mk:
    ```
    [mk] $ rm ../abs/* ../obj/* 
    [mk] $ ./create_binaries SYSTEM
@@ -70,17 +76,23 @@ WAM. If not, see <http://www.gnu.org/licenses/>
    "first" does not specify any modules or libraries and should only be used for
    calls from super-scripts, which already set the SYSTEM environement.
 
-6. DONE! The executables can be found in the directory abs.
+7. DONE! The executables can be found in the directory abs.
 
 ### OPTION B: via make.SYSTEM for coupled models
 
-3. Set the libraries paths and modules to be loaded for your SYSTEM in the 
+3. Set the library paths and modules to be loaded for your SYSTEM in the 
    preamble of make.SYSTEM (e.g. make.LEVANTE).
 
 4. Adjust the linking of read subroutines IN the file make.SYSTEM (e.g., 
    make.LEVANTE). See step 3 of OPTION A for a linking example.
 
-5. Compile the executables by executing
+5. Ensure executable permission is set for make.SYSTEM, mk/create_binaries, 
+   mk/build_*, and mk/make_* files.
+   ```
+   [WAM] $ chmod -u+x make.SYSTEM mk/create_binaries mk/build_* mk/make_* 
+   ```
+
+6. Compile the executables by executing
    ```
    [WAM] $ ./make.SYSTEM clean 
    [WAM] $ ./make.SYSTEM first
@@ -90,7 +102,7 @@ WAM. If not, see <http://www.gnu.org/licenses/>
    SYSTEM" with according manually-linked subroutines. The final call of 
    "./make.SYSTEM" rebulids the executable wam with activated OASIS coupling. 
 
-6. DONE! The executables can be found in the directory abs.
+7. DONE! The executables can be found in the directory abs.
 
 After a successfull compilation abs should cointain the following executables 
 (binaries):
@@ -100,6 +112,7 @@ After a successfull compilation abs should cointain the following executables
    * pgrid     : !!! TODO !!!
    * pspec     : !!! TODO !!!
    * ptime[_S] : !!! TODO !!!
+   * psource   : !!! TODO !!!
 
 ################################################################################
 ## Execution (WAM stand-alone)
@@ -114,8 +127,8 @@ SWAMPtest/input/config.
 1. Copy the executable(s) and the parameter file(s) to any work directory of 
    your choice:
    ```
-   [WRKDIR] $ cp -ra PATH/TO/WAM/abs/* ./*.exe
-   [WRKDIR] $ cp -ra PATH/TO/WAM/const/*_User ./*_User
+   [WRKDIR] $ cp -ra PATH/TO/WAM/abs/BINNAME ./BINNAME.exe
+   [WRKDIR] $ cp -ra PATH/TO/WAM/const/BINNAME_User ./BINNAME_User
    ```
 
 2. Set the general run parameters and the locations of input and output data 
