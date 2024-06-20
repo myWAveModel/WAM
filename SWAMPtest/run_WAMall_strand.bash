@@ -9,9 +9,15 @@
 #SBATCH --error=WAMnested_o%j.log
 ##SBATCH --exclusive                  # To be enabled when run on more than one node
 #
-module purge
+
+#### STRAND - Intel 2020 ####
+#module purge
 #module load compilers/intel/2020.1.217
 #module load intelmpi/2020.1.217
+#module load netcdf
+
+#### STRAND - oneAPI ####
+module purge
 module load compilers/intel/oneAPI/2021.2.0
 module load netcdf
 
