@@ -87,6 +87,8 @@ else
         exit
 fi
 
+if [ ! -d ../obj ]; then mkdir -p ../obj; fi
+if [ ! -d ../abs ]; then mkdir -p ../abs; fi
 #
 # compile
 #
