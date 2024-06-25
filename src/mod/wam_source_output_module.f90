@@ -53,7 +53,8 @@ USE WAM_TIMOPT_MODULE,  ONLY: CDATEE, CDTPRO, CDTSOU, IDELT, COLDSTART,        &
 use wam_mpi_module,           only: petotal, irank, nstart, nend,              &
 &                                   klentop, klenbot, mpmaxlength,             &
 &                                   nnext, nprevious, ninf, nsup,              &
-&                                   extime, comtime, ijs=>nijs, ijl=>nijl
+&                                   extime, comtime, ijs=>nijs, ijl=>nijl,     &
+&                                   localcomm
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
@@ -513,24 +514,16 @@ END SUBROUTINE PREPARE_SOURCE_OUTPUT
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
-SUBROUTINE SOURCE_OUTPUT
+SUBROUTINE SOURCE_OUTPUT  !! ModR05: Bugfix in usage of MPI_GATHER_BLOCK
 
-REAL     :: GRID(NX,NY)
-INTEGER  :: irecv
-
-REAL     :: TOTAL(SIZE(SOURCE_ARRAY,1))
-
-! ---------------------------------------------------------------------------- !
-!                                                                              !
-!     1. WRITE OUTPUT.                                                         !
-!        -------------                                                         !
-
-irecv = petotal         !! output will be written by the last pe
+INTEGER                          :: irecv, ierr
+REAL,ALLOCATABLE, DIMENSION(:,:) :: GRID         !! GRIDDED PARAMETER FIELD.
+REAL,ALLOCATABLE, DIMENSION(:,:) :: SOURCE_TOTAL !! FULL PARAMETER FIELD.
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
-!     2.1 GATHER PARAMETER BLOCKS ON ONE PROCESSOR.                            !
-!         -----------------------------------------                            !
+!     1. WRITE INTEGRATED PARAMETER TO FILE HEADER.                            !
+!        ------------------------------------------                            !
 
 irecv = petotal         !! output will be written by the last pe
 
@@ -542,28 +535,56 @@ IF (irank==irecv) then
    END IF
 END IF
 
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     2. WRITE OUTPUT FIELD ON ONE PROCESSOR.                             !
+!        -----------------------------------------                             !
+
+IF (irank==irecv) THEN
+   ALLOCATE (SOURCE_TOTAL(1:NSEA,1:N_OUT))
+   ALLOCATE (GRID(1:NX,1:NY))
+END IF
+
 DO I = 1, N_OUT
    IF (.NOT.CFLAG(I)) CYCLE
-   call mpi_gather_block (irecv, SOURCE_ARRAY(ijs:ijl,I), SOURCE_ARRAY(:,I))
+
+!     2.1 GATHER PARAMETER BLOCKS ON ONE PROCESSOR.                            !
+!         -----------------------------------------                            !
+   IF (irank==irecv) THEN
+      call mpi_gather_block (irecv, SOURCE_ARRAY(ijs:ijl,I), SOURCE_TOTAL(:,I))
+   ELSE
+      call mpi_gather_block (irecv, SOURCE_ARRAY(ijs:ijl,I))
+   ENDIF
+   call mpi_barrier (localcomm, ierr)
+
    IF (irank==irecv) then
-      GRID = UNPACK (SOURCE_ARRAY(:,I), L_S_MASK, ZMISS)
+
+!     2.2 MAKE GRID FIELD.                                                     !
+!        -----------------                                                     !
+      GRID = UNPACK (SOURCE_TOTAL(:,I), L_S_MASK, ZMISS)
+
+!     2.3 WRITE OUTPUT.                                                        !
+!         -------------                                                        !
       IF (FFLAG(I)) WRITE (IU28) GRID
       IF (PFLAG(I)) CALL PRINT_ARRAY (IU06, CDT_SOURCE, TITL(I), GRID,         &
 &                       AMOWEP, AMOSOP, AMOEAP, AMONOP, SCAL(I))
    END IF
 END DO
 
+IF (ALLOCATED(SOURCE_TOTAL)) DEALLOCATE(SOURCE_TOTAL)
+IF (ALLOCATED(GRID)        ) DEALLOCATE(GRID)
+
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
-!     2. UP-DATE OUTPUT TIME.                                                  !
+!     3. UP-DATE OUTPUT TIME.                                                  !
 !        --------------------                                                  !
 
 CALL INCDATE (CDT_SCR_OUT, DEL_SOURCE_OUT)
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
-!    3. SAVE OUTPUT FILE.                                                      !
-!        ----------------                                                      !
+!     4. SAVE OUTPUT FILE.                                                     !
+!        -----------------                                                     !
 
 IF (CDTFIL.EQ.CDTPRO) CALL SAVE_SOURCE_FILE
 
