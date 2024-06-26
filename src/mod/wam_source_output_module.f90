@@ -42,7 +42,7 @@ USE WAM_GENERAL_MODULE, ONLY: ZPI, DEG
 USE WAM_FILE_MODULE,    ONLY: IU06, ITEST, IU28, FILE28
 USE WAM_FRE_DIR_MODULE, ONLY: DFIM
 USE WAM_GRID_MODULE,    ONLY: NX, NY, NSEA, AMOWEP, AMOSOP, AMOEAP, AMONOP,    &
-&                             L_S_MASK
+&                             L_S_MASK, IXLG, KXLT
 USE WAM_MODEL_MODULE,   ONLY: INDEP
 USE WAM_OUTPUT_SET_UP_MODULE, ONLY: IDEL_OUT
 
@@ -67,7 +67,7 @@ include 'mpif.h'
 PRIVATE
 
 CHARACTER (LEN=14) , PARAMETER :: ZERO = ' '
-INTEGER :: I
+INTEGER :: I,J
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -561,7 +561,11 @@ DO I = 1, N_OUT
 
 !     2.2 MAKE GRID FIELD.                                                     !
 !        -----------------                                                     !
-      GRID = UNPACK (SOURCE_TOTAL(:,I), L_S_MASK, ZMISS)
+      !GRID = UNPACK (SOURCE_TOTAL(:,I), L_S_MASK, ZMISS) !!! RH: unpack NOT MPI-stable !!!
+      GRID(:,:) = ZMISS
+      DO J = 1, NSEA
+         GRID(IXLG(J),KXLT(J)) = SOURCE_TOTAL(J,I)
+      END DO
 
 !     2.3 WRITE OUTPUT.                                                        !
 !         -------------                                                        !
