@@ -22,7 +22,7 @@ CHIEF	= wam_file_module.o wam_general_module.o wam_timopt_module.o wam_fre_dir_m
 	wam_special_module.o read_topo_input.o chief.o wavemdl.o initmdl.o read_wam_user.o \
 	print_wam_status.o read_wind_input.o read_current_input.o wamodel.o read_boundary_input.o \
 	read_ice_input.o jafu.o wam_mpi_comp_module.o wam_assi_set_up_module.o wam_assi_module.o \
-	wam_coordinate_module.o readsat.o wam_oasis_module.o
+	wam_coordinate_module.o readsat.o wam_source_output_module.o wam_oasis_module.o
 
 PGRID	= wam_general_module.o wam_print_module.o wam_file_module.o \
 	wam_coordinate_module.o wam_oasis_inactive_module.o \
@@ -37,7 +37,7 @@ PNETCDF = wam_mpi_module.o wam_file_module.o wam_general_module.o wam_timopt_mod
 	wam_output_parameter_module.o wam_radiation_module.o wam_propagation_module.o \
 	wam_output_set_up_module.o wam_mpi_comp_module.o wam_netcdf_module.o wam_coordinate_module.o \
 	read_current_input.o read_ice_input.o wam_topo_module.o read_topo_input.o jafu.o \
-	make_netcdf.o wam_oasis_inactive_module.o dtsec.o
+	make_netcdf.o wam_source_output_module.o wam_oasis_inactive_module.o dtsec.o
 
 PNETCDF_RAD = wam_mpi_module.o wam_file_module.o wam_general_module.o wam_timopt_module.o \
 	wam_model_module.o wam_flux_module.o wam_source_module.o wam_fre_dir_module.o \
@@ -46,7 +46,7 @@ PNETCDF_RAD = wam_mpi_module.o wam_file_module.o wam_general_module.o wam_timopt
 	wam_ice_module.o wam_swell_module.o wam_output_module.o wam_print_module.o \
 	wam_output_set_up_module.o wam_mpi_comp_module.o wam_rad_netcdf_module.o wam_coordinate_module.o \
 	read_current_input.o read_ice_input.o wam_topo_module.o read_topo_input.o jafu.o \
-	make_rad_netcdf.o wam_oasis_inactive_module.o dtsec.o
+	make_rad_netcdf.o wam_oasis_inactive_module.o wam_source_output_module.o dtsec.o
 
 PRAD	= wam_general_module.o wam_print_module.o wam_file_module.o \
 	wam_print_user_module.o print_radiation_file.o read_radiation_file.o \
@@ -142,7 +142,7 @@ initmdl.o initmdl.mod: initmdl.f90 wam_assi_set_up_module.mod \
 	wam_mpi_module.mod wam_nest_module.mod wam_oasis_module.mod wam_output_module.mod \
 	wam_output_set_up_module.mod wam_propagation_module.mod \
 	wam_radiation_module.mod wam_restart_module.mod wam_source_module.mod \
-	wam_timopt_module.mod
+	wam_source_output_module.mod wam_timopt_module.mod
 make_netcdf.o: make_netcdf.f90 \
 	wam_coordinate_module.mod wam_general_module.mod wam_netcdf_module.mod \
 	wam_output_set_up_module.mod wam_print_module.mod
@@ -185,7 +185,7 @@ print_wam_status.o print_wam_status.mod: print_wam_status.f90 \
 	wam_ice_module.mod wam_nest_module.mod wam_output_set_up_module.mod \
 	wam_propagation_module.mod wam_radiation_module.mod \
 	wam_restart_module.mod wam_source_module.mod \
-	wam_tables_module.mod \
+	wam_source_output_module.mod wam_tables_module.mod \
 	wam_timopt_module.mod wam_topo_module.mod wam_wind_module.mod
 read_boundary_input.o: read_boundary_input.f90 \
 	wam_boundary_module.mod wam_file_module.mod wam_fre_dir_module.mod \
@@ -391,14 +391,14 @@ wam_restart_module.o wam_restart_module.mod: wam_restart_module.f90 \
 wam_source_module.o wam_source_module.mod: wam_source_module.f90 \
 	wam_file_module.mod wam_flux_module.mod wam_fre_dir_module.mod \
 	wam_general_module.mod wam_interface_module.mod wam_mpi_module.mod \
-	wam_oasis_module.mod wam_tables_module.mod \
+	wam_oasis_module.mod wam_source_output_module.mod wam_tables_module.mod \
 	wam_timopt_module.mod
-#wam_source_output_module.o wam_source_output_module.mod: \
-#	wam_source_output_module.f90 wam_file_module.mod wam_fre_dir_module.mod \
-#	wam_general_module.mod wam_grid_module.mod wam_ice_module.mod \
-#	wam_interface_module.mod wam_model_module.mod wam_mpi_comp_module.mod \
-#	wam_mpi_module.mod wam_oasis_module.mod wam_output_set_up_module.mod \
-#	wam_timopt_module.mod wam_topo_module.mod
+wam_source_output_module.o wam_source_output_module.mod: \
+	wam_source_output_module.f90 wam_file_module.mod wam_fre_dir_module.mod \
+	wam_general_module.mod wam_grid_module.mod wam_ice_module.mod \
+	wam_interface_module.mod wam_model_module.mod wam_mpi_comp_module.mod \
+	wam_mpi_module.mod wam_oasis_module.mod wam_output_set_up_module.mod \
+	wam_timopt_module.mod wam_topo_module.mod
 wam_special_module.o wam_special_module.mod: wam_special_module.f90 \
 	wam_file_module.mod wam_general_module.mod wam_mpi_module.mod
 wam_swell_module.o wam_swell_module.mod: wam_swell_module.f90 \
@@ -421,7 +421,7 @@ wam_user_module.o wam_user_module.mod: wam_user_module.f90 \
 	wam_current_module.mod wam_file_module.mod wam_ice_module.mod \
 	wam_nest_module.mod wam_oasis_module.mod wam_output_set_up_module.mod \
 	wam_radiation_module.mod wam_restart_module.mod \
-	wam_timopt_module.mod wam_topo_module.mod \
+	wam_source_output_module.mod wam_timopt_module.mod wam_topo_module.mod \
 	wam_wind_module.mod
 wam_wind_module.o wam_wind_module.mod: wam_wind_module.f90 \
 	wam_coordinate_module.mod wam_file_module.mod wam_general_module.mod \
@@ -435,7 +435,7 @@ wamodel.o wamodel.mod: wamodel.f90 wam_assi_module.mod \
 	wam_output_module.mod wam_output_set_up_module.mod \
 	wam_propagation_module.mod wam_radiation_module.mod \
 	wam_restart_module.mod wam_source_module.mod \
-	wam_timopt_module.mod wam_topo_module.mod \
+	wam_source_output_module.mod wam_timopt_module.mod wam_topo_module.mod \
 	wam_wind_module.mod
 wavemdl.o: wavemdl.f90 wam_current_module.mod \
 	wam_file_module.mod wam_general_module.mod wam_oasis_module.mod \
