@@ -20,6 +20,7 @@ USE WAM_GENERAL_MODULE,   ONLY:  &
 use wam_mpi_comp_module, only:   &
 &       mpi_gather_fl,           &
 &       mpi_gather_block,        &
+&       mpi_scatter_fl,          & !! ModR06: Update to Cyl6 restart version (required for SNS)
 &       mpi_exchng
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
@@ -155,7 +156,7 @@ endif
 !     3. READ RESTART (binary or ascii code)                                   !
 !        -----------------------------------                                   !
 
-allocate (rfl(1:nsea,1:kl,1:ml))
+!! allocate (rfl(1:nsea,1:kl,1:ml)) !! ModR06: Update to Cyl6 restart version
 
 ios = 0
 if (unformatted) then
@@ -190,26 +191,41 @@ IF (NSEA_R.NE.NSEA) THEN
    CALL ABORT1
 END IF
 
+if (irank==i_out_restart) then      !! ModR06: Update to Cyl6 restart version (required for SNS)
+   allocate (rfl(1:nsea,1:kl,1:ml)) !! ModR06
+else                                !! ModR06
+   allocate (rfl(1:nsea,2,1))       !! ModR06
+endif                               !! ModR06
+
 if (unformatted) then                       !! binary code
    IF (L_DECOMP) THEN
-     read (iu17) rfl(1:nsea,1,1)
-     u10(:)     = rfl(nijs:nijl,1,1)
-     read (iu17) rfl(1:nsea,1,1)
-     udir(:)    = rfl(nijs:nijl,1,1)
-     read (iu17) rfl(1:nsea,1,1)
-     tauw(:)    = rfl(nijs:nijl,1,1)
-     read (iu17) rfl(1:nsea,:,:)
-     fl3(:,:,:) = rfl(nijs:nijl,:,:)
+      read (iu17) rfl(1:nsea,1,1)
+      u10(:)     = rfl(nijs:nijl,1,1)
+      read (iu17) rfl(1:nsea,1,1)
+      udir(:)    = rfl(nijs:nijl,1,1)
+      read (iu17) rfl(1:nsea,1,1)
+      tauw(:)    = rfl(nijs:nijl,1,1)
+      if (irank==i_out_restart) then              !! ModR06
+         read (iu17) rfl(1:nsea,:,:)
+      else                                        !! ModR06
+         read (iu17)                              !! ModR06
+      endif                                       !! ModR06
+      !! fl3(:,:,:) = rfl(nijs:nijl,:,:)          !! ModR06
    ELSE
-     read (iu17) rfl(IJ2NEWIJ(1:nsea),1,1)
-     u10(:)     = rfl(nijs:nijl,1,1)
-     read (iu17) rfl(IJ2NEWIJ(1:nsea),1,1)
-     udir(:)    = rfl(nijs:nijl,1,1)
-     read (iu17) rfl(IJ2NEWIJ(1:nsea),1,1)
-     tauw(:)    = rfl(nijs:nijl,1,1)
-     read (iu17) rfl(IJ2NEWIJ(1:nsea),:,:)
-     fl3(:,:,:) = rfl(nijs:nijl,:,:)
+      read (iu17) rfl(IJ2NEWIJ(1:nsea),1,1)
+      u10(:)     = rfl(nijs:nijl,1,1)
+      read (iu17) rfl(IJ2NEWIJ(1:nsea),1,1)
+      udir(:)    = rfl(nijs:nijl,1,1)
+      read (iu17) rfl(IJ2NEWIJ(1:nsea),1,1)
+      tauw(:)    = rfl(nijs:nijl,1,1)
+      if (irank==i_out_restart) then              !! ModR06
+         read (iu17) rfl(IJ2NEWIJ(1:nsea),:,:)
+      else                                        !! ModR06
+         read (iu17)                              !! ModR06
+      endif                                       !! ModR06
+      !! fl3(:,:,:) = rfl(nijs:nijl,:,:)          !! ModR06
    END IF
+   CALL mpi_scatter_fl(i_out_restart,131,fl3,rfl) !! ModR06
    IF (CDTA.NE.' ') then
       IF (L_DECOMP) THEN
          READ (IU17) rfl(1:nsea,1,1)
@@ -242,8 +258,12 @@ else                           !! ascii code
       udir(:)    = rfl(nijs:nijl,1,1)
       read (iu17,*) rfl(1:nsea,1,1)
       tauw(:)    = rfl(nijs:nijl,1,1)
-      read (iu17,*) rfl(1:nsea,:,:)
-      fl3(:,:,:) = rfl(nijs:nijl,:,:)
+      if (irank==i_out_restart) then                   !! ModR06
+         read (iu17,*) rfl(1:nsea,:,:)
+      else                                             !! ModR06
+         read (iu17,*) (rfl(1:nsea,1,1),ifail=1,ml*kl) !! ModR06
+      endif                                            !! ModR06
+      !! fl3(:,:,:) = rfl(nijs:nijl,:,:)               !! ModR06
    ELSE
       read (iu17,*) rfl(IJ2NEWIJ(1:nsea),1,1)
       u10(:)     = rfl(nijs:nijl,1,1)
@@ -251,9 +271,14 @@ else                           !! ascii code
       udir(:)    = rfl(nijs:nijl,1,1)
       read (iu17,*) rfl(IJ2NEWIJ(1:nsea),1,1)
       tauw(:)    = rfl(nijs:nijl,1,1)
-      read (iu17,*) rfl(IJ2NEWIJ(1:nsea),:,:)
-      fl3(:,:,:) = rfl(nijs:nijl,:,:)
+      if (irank==i_out_restart) then                   !! ModR06
+         read (iu17,*) rfl(IJ2NEWIJ(1:nsea),:,:)
+      else                                             !! ModR06
+         read (iu17,*) (rfl(1:nsea,1,1),ifail=1,ml*kl) !! ModR06
+      endif                                            !! ModR06
+      !! fl3(:,:,:) = rfl(nijs:nijl,:,:)               !! ModR06
    END IF
+   CALL mpi_scatter_fl(i_out_restart,131,fl3,rfl)      !! ModR06
    if (cdta/='xxxxxxxxxxxxxx') then
       IF (L_DECOMP) THEN
          READ (IU17,*) rfl(1:nsea,1,1)
