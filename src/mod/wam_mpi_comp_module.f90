@@ -100,6 +100,12 @@ INTERFACE mpi_gather_fl              !! gather spectral field fl onto a
 END INTERFACE
 PUBLIC mpi_gather_fl
 
+             !! ModR06: Used in Cyl6 restart version (required for SNS)
+INTERFACE mpi_scatter_fl              !! scatter spectral field fl from a
+   MODULE PROCEDURE mpi_scatter_fl    !! single process
+END INTERFACE
+PUBLIC mpi_scatter_fl
+
 INTERFACE mpi_gather_grid            !! gather grid data field from the 
    MODULE PROCEDURE mpi_gather_grid  !! process isend onto the process irecv
 END INTERFACE
@@ -2222,6 +2228,176 @@ deallocate (zcombuf)
 comtime = MPI_WTIME()-comtime
 
 end subroutine mpi_gather_fl
+
+! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
+
+subroutine mpi_scatter_fl (isend, itag, fl, sfl)  !! ModR06: Used in Cyl6 restart version
+
+
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     mpi_gather_fl - gather spectral field fl onto a single process           !
+!                                                                              !
+!     A. Behrens   MSC/GKSS  December 2003  MPI parallelization (RPN_COMM)     !
+!     E. Myklebust           November 2004  MPI parallelization                !
+!     H. Bockelmann DKRZ     December 2011  modified arguments to avoid unnec. !
+!                                           tmp-arrays on sender site          !
+!                                                                              !
+! ---------------------------------------------------------------------------- !
+!
+!     purpose :
+!     ---------
+!
+!     gather array fl which is distributed across the different
+!     processes onto the single process isend
+!
+!     method :
+!     --------
+!
+!     MPI send of array fl to the process corresponding to isend
+!     for all processes except for the process corresponding to isend
+!     where it is received.
+!
+!     externals :
+!     -----------
+!
+!      MPI_send
+!      MPI_recv
+!
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     INTERFACE VARIABLES.                                                     !
+!     --------------------                                                     !
+
+integer, intent(in) :: isend !! process rank sending the grid field
+integer, intent(in) :: itag  !! tag to differentiate calls to this subroutine
+real, dimension(nijs:nijl,kl,ml), intent(inout) :: fl !! containing the part
+                                                      !! of the spectrum
+real, optional, dimension(1:nsea,kl,ml), intent(in) :: sfl !! the scattered
+                                                           !! spectrum
+! ---------------------------------------------------------------------------- !
+!
+!     local variables :
+!     -----------------
+
+real, allocatable, dimension (:) :: zcombuf
+integer :: kcount, mplength, len, ij, m, k, ip
+integer :: ierr, istatus(MPI_STATUS_SIZE)
+
+! ---------------------------------------------------------------------------- !
+
+comtime = MPI_WTIME()-comtime
+mplength = mpmaxlength*kl*ml
+
+! ---------------------------------------------------------------------------- !
+!
+!     1.0 default action if gathering is not required
+!         -------------------------------------------
+
+WRITE(iu06,*) 'ufo fl',shape(fl)	!wkdbg
+if (isend==0.or.petotal==1) then
+   comtime = MPI_WTIME()-comtime
+  IF (.NOT. PRESENT(sfl)) THEN
+    WRITE(iu06,*) ' +++ error: Sub. mpi_scatter_fl'
+    WRITE(iu06,*) ' +++ error: gathering process i = ', irank,' does not posess sfl'
+    CALL abort1
+  END IF
+  fl = sfl
+  return
+
+else if (irank/=isend) then
+
+!     1.1 reveive from the process that scatters the whole field
+!         ------------------------------------------------------
+
+   mplength = mpmaxlength*kl*ml
+   allocate (zcombuf(mplength))
+   len = nlen(irank)*kl*ml
+!
+!*    receive share from sending pe
+!
+WRITE(iu06,*) 'ufo vor receive',isend,len	!wkdbg
+   CALL MPI_recv(zcombuf, len, MPI_REAL, isend-1, itag, localcomm,  &
+&                istatus, ierr)
+WRITE(iu06,*) 'ufo nach receive',isend,len	!wkdbg
+   IF (ierr/=0) then
+      write (iu06,*) ' +++ error: Sub. mpi_gather_fl'
+      write (iu06,*) ' +++ error: MPI_recv, ierr = ', ierr
+      call abort1
+   END IF
+
+!    decode buffer
+
+   kcount = 0
+   do m=1,ml
+      do k=1,kl
+         do ij=nstart(irank),nend(irank)
+            kcount = kcount+1
+            fl(ij,k,m) = zcombuf(kcount)
+         enddo
+      enddo
+   enddo
+
+else
+WRITE(iu06,*) 'ufo sfl',shape(sfl)	!wkdbg
+
+!     1.2 send shares of the field to the other processes
+!         -----------------------------------------------
+
+!     check that collecting array is present
+
+  IF (.NOT. PRESENT(sfl)) THEN
+    WRITE(iu06,*) ' +++ error: Sub. mpi_gather_fl'
+    WRITE(iu06,*) ' +++ error: gathering process i = ', irank,' does not posess sfl'
+    CALL abort1
+  END IF
+!
+!     send shares to other pe's
+!
+   mplength = mpmaxlength*kl*ml
+   allocate (zcombuf(mplength))
+
+   do ip=1,petotal
+WRITE(iu06,*) 'ufo sfl',ip	!wkdbg
+
+      IF (ip==isend) THEN
+
+         fl(:,:,:) = sfl(nijs:nijl,:,:)  !! copy own part
+      ELSE
+
+         len = nlen(ip)*kl*ml
+
+	 kcount = 0
+	 do m=1,ml
+	    do k=1,kl
+               do ij=nstart(ip),nend(ip)
+        	  kcount = kcount+1
+        	  zcombuf(kcount) = sfl(ij,k,m)
+               enddo
+	    enddo
+	 enddo
+!
+!*    send contribution to receiving pe
+!
+WRITE(iu06,*) 'ufo vor send',ip,len,kcount	!wkdbg
+	 call MPI_send(zcombuf,len, MPI_REAL, ip-1, itag, localcomm, ierr)
+WRITE(iu06,*) 'ufo nach send',ip,len,kcount	!wkdbg
+
+	 if (ierr<0) then
+	    write (iu06,*) ' +++ error: Sub. mpi_scatter_fl'
+	    write (iu06,*) ' +++ error: MPI_send, ierr = ', ierr
+	    call abort1
+	 endif
+
+      endif
+   enddo
+
+endif
+
+deallocate (zcombuf)
+comtime = MPI_WTIME()-comtime
+
+end subroutine mpi_scatter_fl
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 

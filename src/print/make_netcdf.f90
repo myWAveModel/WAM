@@ -112,8 +112,8 @@ else
    write (iu06,*) ' +++ read namelist error !'
    call abort1
 endif
-ideldo  = ideldo*3600
-idfile  = idfile*3600
+!ideldo  = ideldo*3600 !! ModR06: all namelist values to be given in seconds!
+!idfile  = idfile*3600 !! ModR06: all namelist values to be given in seconds!
 idelint = ideldo
 if (iredu==1) then
    write (iu06,*) ' +++ grid is a reduced one !'
