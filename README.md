@@ -11,6 +11,8 @@ New in Cycle 7:
   - betamax for ST4 adjustable via namelist
   - improved Netcdf conversion
   - improved compilation
+  - merge with OASIS branch
+  - source term output
 
 ################################################################################
 ## License
