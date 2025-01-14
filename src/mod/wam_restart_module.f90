@@ -43,7 +43,9 @@ use wam_mpi_module,     only: irank, nijs, nijl, ninf, nsup, i_out_restart,    &
 &                             NGBFROMPE, NFROMPEMAX, NFROMPELST, NFROMPE,      &
 &                             NIJSTART,IJ2NEWIJ,localcomm  !! ModR04: Include OASIS
 use wam_special_module, only: ispec2d, ispecode
-  
+USE wam_flux_module,    ONLY: TAUOC_X, TAUOC_Y, PHIOC       !! ModR07: SAVE TAUOC & PHIOC for coupling
+USE wam_oasis_module,   ONLY: use_oasis, oasis_output_flags !! ModR07
+
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
 !     C. MODULE VARIABLES.                                                     !
@@ -77,9 +79,9 @@ INTERFACE CONNECT_RESTART           !! CONNECT RESTART FILE TO THE WAM MODEL.
 END INTERFACE
 PUBLIC CONNECT_RESTART
 
-INTERFACE SAVE_RESTART_FILE          !! SAVE RESTART FILE FOR THE WAM MODEL.
-   MODULE PROCEDURE SAVE_RESTART_FILE
-END INTERFACE
+!INTERFACE SAVE_RESTART_FILE         !! SAVE RESTART FILE FOR THE WAM MODEL.   !! ModR07: No more MODULE PROD. for debug option
+!   MODULE PROCEDURE SAVE_RESTART_FILE
+!END INTERFACE
 PUBLIC SAVE_RESTART_FILE
 
 INTERFACE SET_RESTART_FILE_STEP
@@ -249,6 +251,38 @@ if (unformatted) then                       !! binary code
 	     call mpi_exchng(v)
       END IF
    end if
+   !!=== ModR07: Read TAUOC & PHIOC ===
+   if (use_oasis .and. oasis_output_flags(61,3)) then !! ModR07: Read TAUOC_X
+      if(.not.allocated(tauoc_x)) allocate(tauoc_x(1:NIJL-NIJS+1))
+      IF (L_DECOMP) THEN
+         READ (IU17) rfl(1:nsea,1,1)
+         TAUOC_X(ninf:nsup) = rfl(ninf:nsup,1,1)
+      ELSE
+         READ (IU17) rfl(IJ2NEWIJ(1:nsea),1,1)
+         TAUOC_X = rfl(nijs:nijl,1,1)
+      ENDIF
+   endif
+   if (use_oasis .and. oasis_output_flags(62,3)) then !! ModR07: Read TAUOC_Y
+      if(.not.allocated(tauoc_y)) allocate(tauoc_y(1:NIJL-NIJS+1))
+      IF (L_DECOMP) THEN
+         READ (IU17) rfl(1:nsea,1,1)
+         TAUOC_Y(ninf:nsup) = rfl(ninf:nsup,1,1)
+      ELSE
+         READ (IU17) rfl(IJ2NEWIJ(1:nsea),1,1)
+         TAUOC_Y = rfl(nijs:nijl,1,1)
+      ENDIF
+   endif
+   if (use_oasis .and. oasis_output_flags(59,3)) then !! ModR07: Read PHIOC
+      if(.not.allocated(phioc)) allocate(phioc(1:NIJL-NIJS+1))
+      IF (L_DECOMP) THEN
+         READ (IU17) rfl(1:nsea,1,1)
+         PHIOC(ninf:nsup) = rfl(ninf:nsup,1,1)
+      ELSE
+         READ (IU17) rfl(IJ2NEWIJ(1:nsea),1,1)
+         PHIOC = rfl(nijs:nijl,1,1)
+      ENDIF
+   endif
+   !!=== End of ModR07 ===
 else                           !! ascii code
 
    IF (L_DECOMP) THEN
@@ -306,6 +340,38 @@ else                           !! ascii code
    else
      cdca = ' '
    end if
+   !!=== ModR07: Read TAUOC & PHIOC ===
+   if (use_oasis .and. oasis_output_flags(61,3)) then !! ModR07: Read TAUOC_X
+      if(.not.allocated(tauoc_x)) allocate(tauoc_x(1:NIJL-NIJS+1))
+      IF (L_DECOMP) THEN
+         READ (IU17,*) rfl(1:nsea,1,1)
+         TAUOC_X(ninf:nsup) = rfl(ninf:nsup,1,1)
+      ELSE
+         READ (IU17,*) rfl(IJ2NEWIJ(1:nsea),1,1)
+         TAUOC_X = rfl(nijs:nijl,1,1)
+      ENDIF
+   endif
+   if (use_oasis .and. oasis_output_flags(62,3)) then !! ModR07: Read TAUOC_Y
+      if(.not.allocated(tauoc_y)) allocate(tauoc_y(1:NIJL-NIJS+1))
+      IF (L_DECOMP) THEN
+         READ (IU17,*) rfl(1:nsea,1,1)
+         TAUOC_Y(ninf:nsup) = rfl(ninf:nsup,1,1)
+      ELSE
+         READ (IU17,*) rfl(IJ2NEWIJ(1:nsea),1,1)
+         TAUOC_Y = rfl(nijs:nijl,1,1)
+      ENDIF
+   endif
+   if (use_oasis .and. oasis_output_flags(59,3)) then !! ModR07: Read PHIOC
+      if(.not.allocated(phioc)) allocate(phioc(1:NIJL-NIJS+1))
+      IF (L_DECOMP) THEN
+         READ (IU17,*) rfl(1:nsea,1,1)
+         PHIOC(ninf:nsup) = rfl(ninf:nsup,1,1)
+      ELSE
+         READ (IU17,*) rfl(IJ2NEWIJ(1:nsea),1,1)
+         PHIOC = rfl(nijs:nijl,1,1)
+      ENDIF
+   endif
+   !!=== End of ModR07 ===
 endif
 deallocate(rfl)
 
@@ -436,7 +502,7 @@ END SUBROUTINE PRINT_RESTART_STATUS
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
-SUBROUTINE SAVE_RESTART_FILE
+SUBROUTINE SAVE_RESTART_FILE(DBGID) !! ModR07: Add name extension parameter for debug option.
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -472,13 +538,36 @@ SUBROUTINE SAVE_RESTART_FILE
 
 real, allocatable, dimension (:,:,:) :: rfl
 real, allocatable, dimension (:)     :: ru10, rudir, rtauw, ru, rv, rdepth
+real, allocatable, dimension (:)     :: rtauocu, rtauocv, rphioc ! ModR07: Write TAUOC & PHIOC
 
 !     local variables
 !     ---------------
 
 integer :: ifail = 0
 integer :: ierr
-     
+
+!!=== ModR07: Set filename for regular or debug case ===
+integer :: L1, L2
+character(LEN=*), intent(in) :: DBGID
+character(LEN=15) :: fnampref = ' '
+
+! ---------------------------------------------------------------------------- !
+!                                                                              !
+!     0. SET FILE NAME FOR REGULAR OR DEBUG CASE.                              !
+!        ----------------------------------------                              !
+
+L1=0
+L2=0
+L1=LEN_TRIM(file17)
+if (DBGID .eq. '0') then
+        fnampref(1:L1)=file17(1:L1)
+else
+        fnampref(1:L1)=file17(1:L1)
+        L2=LEN_TRIM(DBGID)
+        fnampref(L1+1:L1+L2)=DBGID(1:L2)
+endif
+!!=== End of ModR07 ===
+
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     1. OPEN FILE AND WRITE OUT.                                              !
@@ -508,9 +597,26 @@ if (irank==i_out_restart) then
       CALL mpi_gather_block(i_out_restart, v(nijs:nijl), rv)
       CALL mpi_barrier(localcomm,ierr)                 !! ModR04: MPI_COMM_WORLD->localcomm
    end if
+   !!=== ModR07: Write TAUOC & PHIOC ===
+   if (allocated(tauoc_x) .and. use_oasis .and. oasis_output_flags(61,3)) then !! ModR07: Write TAUOC_X
+      allocate (rtauocu(1:nsea))
+      call mpi_gather_block(i_out_restart, tauoc_x, rtauocu)
+      call mpi_barrier(localcomm,ierr)
+   endif
+   if (allocated(tauoc_y) .and. use_oasis .and. oasis_output_flags(62,3)) then !! ModR07: Write TAUOC_Y
+      allocate (rtauocv(1:nsea))
+      call mpi_gather_block(i_out_restart, tauoc_y, rtauocv)
+      call mpi_barrier(localcomm,ierr)
+   endif
+   if (allocated(phioc) .and. use_oasis .and. oasis_output_flags(59,3)) then   !! ModR07: Write PHIOC
+      allocate (rphioc(1:nsea))
+      call mpi_gather_block(i_out_restart, phioc, rphioc)
+      call mpi_barrier(localcomm,ierr)
+   endif
+   !!=== End of ModR07 ===
    REWIND IU17
    if (ispecode==1) then                                   !! asci code
-      call open_file (iu06, iu17, file17, cdtpro, 'unknown', ifail, 'FORMATTED')
+      call open_file (iu06, iu17, fnampref(1:L1+L2), cdtpro, 'unknown', ifail, 'FORMATTED') !! ModR07: file17 -> fnampref
       if (ifail/=0) call abort1
       if (cdta==' ') cdta = 'xxxxxxxxxxxxxx'
       if (cdca==' ') cdca = 'xxxxxxxxxxxxxx'
@@ -523,6 +629,9 @@ if (irank==i_out_restart) then
          write (iu17,*) rfl
          if (cdta/='xxxxxxxxxxxxxx') write (iu17,*) rdepth
          if (cdca/='xxxxxxxxxxxxxx') write (iu17,*) ru, rv
+         if (allocated(rtauocu) .and. use_oasis .and. oasis_output_flags(61,3)) write (iu17,*) rtauocu !! ModR07: Write TAUOC_X
+         if (allocated(rtauocv) .and. use_oasis .and. oasis_output_flags(62,3)) write (iu17,*) rtauocv !! ModR07: Write TAUOC_Y
+         if (allocated(rphioc)  .and. use_oasis .and. oasis_output_flags(59,3)) write (iu17,*) rphioc  !! ModR07: Write PHIOC
       ELSE
          write (iu17,*) ru10(IJ2NEWIJ(1:NSEA))
          write (iu17,*) rudir(IJ2NEWIJ(1:NSEA))
@@ -530,12 +639,15 @@ if (irank==i_out_restart) then
          write (iu17,*) rfl(IJ2NEWIJ(1:NSEA),:,:)
          if (cdta/='xxxxxxxxxxxxxx') write (iu17,*) rdepth(IJ2NEWIJ(1:NSEA))
          if (cdca/='xxxxxxxxxxxxxx') write (iu17,*) ru(IJ2NEWIJ(1:NSEA)), rv(IJ2NEWIJ(1:NSEA))
+         if (allocated(rtauocu) .and. use_oasis .and. oasis_output_flags(61,3)) write (iu17,*) rtauocu(IJ2NEWIJ(1:NSEA)) !! ModR07: Write TAUOC_X
+         if (allocated(rtauocv) .and. use_oasis .and. oasis_output_flags(62,3)) write (iu17,*) rtauocv(IJ2NEWIJ(1:NSEA)) !! ModR07: Write TAUOC_Y
+         if (allocated(rphioc)  .and. use_oasis .and. oasis_output_flags(59,3)) write (iu17,*) rphioc(IJ2NEWIJ(1:NSEA))  !! ModR07: Write PHIOC
       ENDIF
       if (cdta=='xxxxxxxxxxxxxx') cdta = ' '
       if (cdca=='xxxxxxxxxxxxxx') cdca = ' '
 
    else                                                    !! binary code
-      call open_file (iu06, iu17, file17, cdtpro, 'unknown', ifail)
+      call open_file (iu06, iu17, fnampref(1:L1+L2), cdtpro, 'unknown', ifail) !! ModR07: file17 -> fnampref
       if (ifail/=0) call abort1
 
       IF (L_DECOMP) THEN
@@ -546,6 +658,9 @@ if (irank==i_out_restart) then
          WRITE (IU17) rfl
          IF (CDTA.NE.' ') WRITE (IU17) rdepth
          IF (CDCA.NE.' ') WRITE (IU17) rU, rV
+         IF (allocated(rtauocu) .and. use_oasis .and. oasis_output_flags(61,3)) WRITE (IU17) rtauocu !! ModR07: Write TAUOC_X
+         IF (allocated(rtauocv) .and. use_oasis .and. oasis_output_flags(62,3)) WRITE (IU17) rtauocv !! ModR07: Write TAUOC_Y
+         IF (allocated(rphioc)  .and. use_oasis .and. oasis_output_flags(59,3)) WRITE (IU17) rphioc  !! ModR07: Write PHIOC
       ELSE
          WRITE (IU17) NSEA, CDTPRO, CDTSOU, CDA, CDTA, CDCA
          WRITE (IU17) ru10(IJ2NEWIJ(1:NSEA))
@@ -554,6 +669,9 @@ if (irank==i_out_restart) then
          WRITE (IU17) rfl(IJ2NEWIJ(1:NSEA),:,:)
          IF (CDTA.NE.' ') WRITE (IU17) rdepth(IJ2NEWIJ(1:NSEA))
          IF (CDCA.NE.' ') WRITE (IU17) rU(IJ2NEWIJ(1:NSEA)), rV(IJ2NEWIJ(1:NSEA))
+         IF (allocated(rtauocu) .and. use_oasis .and. oasis_output_flags(61,3)) WRITE (IU17) rtauocu(IJ2NEWIJ(1:NSEA)) !! ModR07: Write TAUOC_X
+         IF (allocated(rtauocv) .and. use_oasis .and. oasis_output_flags(62,3)) WRITE (IU17) rtauocv(IJ2NEWIJ(1:NSEA)) !! ModR07: Write TAUOC_Y
+         IF (allocated(rphioc)  .and. use_oasis .and. oasis_output_flags(59,3)) WRITE (IU17) rphioc(IJ2NEWIJ(1:NSEA))  !! ModR07: Write PHIOC
       ENDIF
    endif
    CLOSE (UNIT=IU17, STATUS="KEEP")
@@ -564,6 +682,9 @@ if (irank==i_out_restart) then
    if (allocated(rtauw)) deallocate(rtauw)
    if (allocated(ru)) deallocate(ru)
    if (allocated(rv)) deallocate(rv)
+   if (allocated(rtauocu)) deallocate(rtauocu) !! ModR07
+   if (allocated(rtauocv)) deallocate(rtauocv) !! ModR07
+   if (allocated(rphioc)) deallocate(rphioc)   !! ModR07
 else
    CALL mpi_gather_fl(i_out_restart,121,fl3)
    CALL mpi_barrier(localcomm,ierr)                    !! ModR04: MPI_COMM_WORLD->localcomm
@@ -583,6 +704,18 @@ else
       CALL mpi_gather_block(i_out_restart, v(nijs:nijl))
       CALL mpi_barrier(localcomm,ierr)                 !! ModR04: MPI_COMM_WORLD->localcomm
    end if
+   if (allocated(tauoc_x) .and. use_oasis .and. oasis_output_flags(61,3)) then !! ModR07: Write TAUOC_X
+      call mpi_gather_block(i_out_restart, tauoc_x)
+      call mpi_barrier(localcomm,ierr)
+   endif
+   if (allocated(tauoc_y) .and. use_oasis .and. oasis_output_flags(62,3)) then !! ModR07: Write TAUOC_Y
+      call mpi_gather_block(i_out_restart, tauoc_y)
+      call mpi_barrier(localcomm,ierr)
+   endif
+   if (allocated(phioc) .and. use_oasis .and. oasis_output_flags(59,3)) then   !! ModR07: Write PHIOC
+      call mpi_gather_block(i_out_restart, phioc)
+      call mpi_barrier(localcomm,ierr)
+   endif
 endif
 
 ! ---------------------------------------------------------------------------- !
@@ -591,7 +724,7 @@ endif
 !        ----------------                                                      !
 
 WRITE(IU06,*) ' '
-WRITE(IU06,*) ' SUB. SAVE_RESTART: RESTART FILE SAVED'
+WRITE(IU06,*) ' SUB. SAVE_RESTART: RESTART FILE SAVED (', fnampref(1:L1+L2), cdtpro, ')' !! ModR07: Print out file name
 WRITE(IU06,*) ' '
 WRITE(IU06,*) ' PROPAGATION DATE IS .............. CDTPRO  = ', CDTPRO
 WRITE(IU06,*) ' SOURCE FUNCTION DATE IS .......... CDTSOU  = ', CDTSOU
@@ -608,7 +741,7 @@ END IF
 !     3. NEXT DATE TO WRITE A RESTART FILE.                                    !
 !        ----------------------------------                                    !
 
-IF (CDT_RES.LT.CDATEE) THEN
+IF (CDT_RES.LT.CDATEE .and. DBGID.eq.'0') THEN !! ModR07: Only for "regular" cases
    CALL INCDATE(CDT_RES,IDEL_RES)
    WRITE(IU06,*) ' NEXT RESTART FILE IS SAVED AT ... CDT_RES  = ', CDT_RES
 END IF

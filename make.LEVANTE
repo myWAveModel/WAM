@@ -13,7 +13,8 @@ module load netcdf-fortran/4.5.3-openmpi-4.1.2-intel-2021.5.0
 #module load netcdf-c/4.8.1-intel-2021.5.0
 
 export FC=mpifort
-export FFLAGS="-heap-arrays 64 -fp-model precise" #"-heap-arrays 64 -g -traceback -check bounds"
+export FFLAGS="-heap-arrays 64 -fp-model precise" 
+#export FFLAGS+=" -g -traceback -check bounds"
 
 export MPIHOME=/sw/spack-levante/openmpi-4.1.2-yfwe6t
 export NETCDFHOME=/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g  # ref to module netcdf-fortran/4.5.3-openmpi-4.1.2-intel-2021.5.0

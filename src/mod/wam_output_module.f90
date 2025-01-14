@@ -88,7 +88,7 @@ USE WAM_FLUX_MODULE,    ONLY: PHIOC, PHIAW, TAUOC_X, TAUOC_Y,                  &
 USE WAM_MODEL_MODULE,  ONLY: FL3, U10, UDIR, USTAR, TAUW, Z0, DEPTH, INDEP, U, V
 
 USE WAM_TIMOPT_MODULE, ONLY: IDELPRO, CDTPRO,                                  &
-&                            SHALLOW_RUN, REFRACTION_C_RUN, cdatea
+&                            SHALLOW_RUN, REFRACTION_C_RUN, cdatea, cdatee     !! ModR07: Add CDATEE
 
 USE WAM_OUTPUT_PARAMETER_MODULE, ONLY:                                         &
 &            NOUT_P, TITL_P, SCAL_P, NOUT_S, TITL_S
@@ -265,7 +265,7 @@ ELSE
    CALL WRITE_MODEL_OUTPUT (FL3, FL, IU20, IU25)
 END IF
 
-IF (use_oasis_force_output) THEN  !! ModR04: Include OASIS
+IF (use_oasis_force_output .and. cdtpro.lt.cdatee) THEN  !! ModR04+ModR07: Include OASIS
    CALL Wam_oasis_send_output_parameter(block)
    CFLAG_P=OASIS_OUTPUT_FLAGS(:,2)
 ENDIF
