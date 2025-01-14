@@ -307,6 +307,7 @@ CHARACTER (LEN=14)  :: CDTSOE
 LOGICAL             :: NEW_DEPTH_OR_CURR, NEW_TOPO, NEW_CURR !! ModR04
 LOGICAL, SAVE       :: FRST_T = .TRUE., FRST_C = .TRUE.      !! ModR04
 INTEGER             :: CODE = 0                              !! ModR04
+CHARACTER (LEN=14)  :: CDTPRO_S                              !! ModR07
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -323,6 +324,7 @@ PROP: DO KADV = 1,NADV
 !     1.1 UPDATE TIMES.                                                        !
 !         -------------                                                        !
 
+   CDTPRO_S = CDTPRO                 !! ModR07
    CALL INCDATE (CDTPRO,IDELPRO)     !! UPDATE END DATE OF PROPAGATION.
 
 !     1.2 NEW DEPTH AND/OR CURRENT DATA.                                       !
@@ -330,7 +332,7 @@ PROP: DO KADV = 1,NADV
 
    NEW_TOPO = .FALSE.                                !! ModR04: Include OASIS !!
    IF (use_oasis_elev_in) THEN
-      CALL Wam_oasis_rec_topo(CDTPRO,NEW_TOPO)
+      CALL Wam_oasis_rec_topo(CDTPRO_S,NEW_TOPO) !! ModR07
       IF (NEW_TOPO) THEN
 	 IF (ITEST.GE.2) WRITE(IU06,*) '   SUB. WAMODEL: NEW DEPTH FIELD'
          IF (FRST_T) THEN
@@ -357,10 +359,10 @@ PROP: DO KADV = 1,NADV
          WRITE (IU06,*) '   SUB. WAMODEL: MAKE_SHALLOW_SNL DONE '
       END IF
    END IF
-
+   
    NEW_CURR = .FALSE. !!ModR04
    IF (use_oasis_curr_in) THEN
-      call Wam_oasis_rec_current(CDTPRO,NEW_CURR)
+      call Wam_oasis_rec_current(CDTPRO_S,NEW_CURR) !! ModR07
       IF (NEW_CURR) THEN
 	 IF (ITEST.GE.2) WRITE(IU06,*) '   SUB. WAMODEL: NEW CURRENT FIELD'
 	 IF (FRST_C) THEN
@@ -395,7 +397,7 @@ PROP: DO KADV = 1,NADV
 
    CDTSOE = CDTSOU                  !! END DATE OF SOURCE INTEGRATION.
    CALL INCDATE (CDTSOE,IDELT)
-   CALL WAM_OASIS_CHECK_OUT         !! ModR04: Include OASIS
+   IF(CDTPRO.LT.CDATEE) CALL WAM_OASIS_CHECK_OUT         !! ModR04: Include OASIS !! ModR07: Update OASIS
 
    PHYSICS: DO WHILE (CDTSOE.LE.CDTPRO)
       LCFLX = CDTINTT.EQ.CDTSOE .AND. ANY(CFLAG_P (59:62)) .OR. use_oasis_force_source !! ModR04: Include OASIS
@@ -407,7 +409,7 @@ PROP: DO KADV = 1,NADV
       END IF
 
       IF(use_oasis_wind_in)THEN                !! ModR04: Include OASIS
-         CALL Wam_oasis_rec_atmo               !! ModR04
+         CALL Wam_oasis_rec_atmo(CDTPRO)       !! ModR04 !! ModR07: Add time parameter
       ELSE IF (CDTSOE.GE.CDATEWO) THEN         !! NEW WINDS IF NEEDED
          CALL GET_WIND (CDATEWO)
       END IF
@@ -443,7 +445,7 @@ PROP: DO KADV = 1,NADV
 !         -------------------------                                            !
 
    IF(use_oasis_bdy_in)THEN         !! ModR04: Include OASIS
-      CALL Wam_oasis_rec_boundary   !! ModR04
+      CALL Wam_oasis_rec_boundary(CDTPRO_S)   !! ModR04 !! ModR07: Add time parameter
    ELSE IF (FINE) THEN
       CALL BOUNDARY_INPUT
       IF (ITEST.GE.2) THEN
@@ -454,7 +456,9 @@ PROP: DO KADV = 1,NADV
 !     1.6 SET SPECTRA AT ICE POINTS TO ZERO.                                   !
 !         ----------------------------------                                   !
 
-   IF (ICE_RUN) THEN
+   IF (USE_OASIS_ICE_IN) THEN           !! ModR07
+      CALL Wam_oasis_rec_ice(CDTPRO_S)  !! ModR07
+   ELSE IF (ICE_RUN) THEN
       IF (CDTPRO.GT.CD_ICE_NEW) THEN
          CALL GET_ICE                 !! NEW ICE DATA
          IF (ITEST.GE.2) THEN
@@ -462,7 +466,6 @@ PROP: DO KADV = 1,NADV
          END IF
       END IF
    END IF                                        !! ModR04
-   IF (USE_OASIS_ICE_IN) CALL Wam_oasis_rec_ice  !! ModR04: Include OASIS
    IF (ICE_RUN.OR.USE_OASIS_ICE_IN) THEN         !! ModR04
       CALL PUT_ICE (FL3, 0.)
       IF (ITEST.GE.2) WRITE(IU06,*) '   SUB. WAMODEL: ICE INSERTED'
@@ -521,7 +524,7 @@ PROP: DO KADV = 1,NADV
 !     1.9 SAVE RECOVERY FILES WHEN TIME REACHES THE SAVE DATE.                 !
 !         ----------------------------------------------------                 !
 
-   if (cdt_res==cdtpro.and.cdt_res<=cdtstop) call save_restart_file
+   if (cdt_res==cdtpro.and.cdt_res<=cdtstop) call save_restart_file('0')       !! ModR07: Debug option for restart file writing
 
 
 !     1.10 PRINT TIME.                                                         !

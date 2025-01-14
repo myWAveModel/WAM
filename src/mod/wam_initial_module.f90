@@ -222,9 +222,9 @@ END IF
 !     3. GENERATE START FIELDS OR READ RESTART FILE.                           !
 !        -------------------------------------------                           !
 
-IF(USE_OASIS_WIND_IN)CALL WAM_OASIS_REC_ATMO                      !! ModR04: Include OASIS
-IF(USE_OASIS_ELEV_IN)CALL WAM_OASIS_REC_TOPO(cdatea,gotfield)     !! ModR04
-IF(USE_OASIS_CURR_IN)CALL WAM_OASIS_REC_CURRENT(cdatea,gotfield)  !! ModR04
+!IF(USE_OASIS_WIND_IN)CALL WAM_OASIS_REC_ATMO(cdatea)              !! ModR04: Include OASIS !! ModR07: Removed
+!IF(USE_OASIS_ELEV_IN)CALL WAM_OASIS_REC_TOPO(cdatea,gotfield)     !! ModR04, ModR07
+!IF(USE_OASIS_CURR_IN)CALL WAM_OASIS_REC_CURRENT(cdatea,gotfield)  !! ModR04, ModR07
 
 IF (COLDSTART) THEN
    CALL PREPARE_COLDSTART
@@ -267,12 +267,13 @@ else
    write (iu06,*) ' +++ WAM runs without wind ready files'
 endif
    
-IF (ICE_RUN.or.use_oasis_ice_in) THEN !! ModR04: Include OASIS
+!IF (ICE_RUN.or.use_oasis_ice_in) THEN !! ModR04: Include OASIS
+IF (ICE_RUN .and. .not.use_oasis_ice_in) THEN !! ModR07: Include OASIS
    IF (ICE_RUN) THEN
       CALL GET_ICE
       IF (ITEST.GE.2) WRITE(IU06,*) '    SUB. PREPARE_START: GET_ICE DONE'
    END IF
-   IF (use_oasis_ice_in) call Wam_oasis_rec_ice !! ModR04: Include OASIS
+   !IF (use_oasis_ice_in) call Wam_oasis_rec_ice(cdatea) !! ModR04: Include OASIS !! ModR07: Removed
 
    CALL PUT_ICE (FL3, 0.)
    IF (ITEST.GE.2) WRITE(IU06,*) '    SUB. PREPARE_START: ICE INSERTED'
@@ -373,7 +374,9 @@ IF (IDELT.LT.IDELWO) CALL INCDATE(CDATEWO,IDELWO/2)
 !     9. INITIALIZE DATE FOR NEXT DEPTH FIELD.                                 !
 !        -------------------------------------                                 !
 
-IF (IDELTI.LE.0 .OR. .NOT.TOPO_RUN) THEN
+IF (USE_OASIS_ELEV_IN .AND. .NOT.COLDSTART) THEN !! ModR07: Update OASIS
+   CD_TOPO_NEW=CDATEA
+ELSE IF (IDELTI.LE.0 .OR. .NOT.TOPO_RUN) THEN
    CD_TOPO_NEW = '99991231235900'
    TOPO_RUN = .FALSE.
    IDELTI = 0
@@ -881,7 +884,7 @@ END IF
 
 IF (USE_OASIS_ELEV_IN) THEN  !! ModR04: Include OASIS
    TOPO_RUN=.TRUE.
-   CDTA = CDATEA
+   !CDTA = CDATEA !! ModR07: Removed
 END IF
 
 CALL FIND_DRY_POINTS

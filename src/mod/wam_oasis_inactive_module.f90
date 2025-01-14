@@ -10,6 +10,7 @@
 !
 MODULE WAM_OASIS_MODULE
 
+ USE WAM_OUTPUT_PARAMETER_MODULE, ONLY: NOUT_P !! ModR07
  IMPLICIT NONE
  PUBLIC
   LOGICAL :: use_oasis		= .FALSE., &
@@ -22,7 +23,8 @@ MODULE WAM_OASIS_MODULE
 	     use_oasis_nest_out	= .FALSE., &
 	     use_oasis_force_source=.FALSE.,&
 	     use_oasis_force_output=.FALSE.
-  LOGICAL, ALLOCATABLE	:: oasis_output_flags(:,:)
+  !LOGICAL, ALLOCATABLE	:: oasis_output_flags(:,:)
+  LOGICAL, DIMENSION(nout_p,3) :: oasis_output_flags = .FALSE. !! ModR07: Changed to static allocation
   CHARACTER(len=6) :: comp_name = 'WAM'
   INTEGER :: comp_id
  CONTAINS
@@ -39,10 +41,12 @@ MODULE WAM_OASIS_MODULE
   SUBROUTINE Wam_oasis_check_out
     END SUBROUTINE Wam_oasis_check_out
 
-  SUBROUTINE Wam_oasis_rec_atmo
+  SUBROUTINE Wam_oasis_rec_atmo(cdat)       !! ModR07: Add time parameter cdat
+   CHARACTER (LEN=14)	:: cdat             !! ModR07
    END SUBROUTINE Wam_oasis_rec_atmo
 
-  SUBROUTINE Wam_oasis_rec_boundary
+  SUBROUTINE Wam_oasis_rec_boundary(cdat)   !! ModR07: Add time parameter cdat
+   CHARACTER (LEN=14)	:: cdat             !! ModR07
     END SUBROUTINE Wam_oasis_rec_boundary
 
   SUBROUTINE Wam_oasis_send_nest
@@ -58,7 +62,8 @@ MODULE WAM_OASIS_MODULE
    LOGICAL,INTENT(InOut):: gotfield
     END SUBROUTINE Wam_oasis_rec_current
 
-  SUBROUTINE Wam_oasis_rec_ice
+  SUBROUTINE Wam_oasis_rec_ice(cdat)        !! ModR07: Add time parameter cdat
+   CHARACTER (LEN=14)	:: cdat             !! ModR07
     END SUBROUTINE Wam_oasis_rec_ice
 
   SUBROUTINE Wam_oasis_send_gcm(CDTSOU,SOURCE_ARRAY)

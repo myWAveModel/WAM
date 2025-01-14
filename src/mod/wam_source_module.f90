@@ -47,7 +47,7 @@ USE WAM_FRE_DIR_MODULE, ONLY: KL, ML, FR, CO, TH, DELTH, COSTH, SINTH, DFIM,   &
 &                             C, FMIN, FR5, FRM5, RHOWG_DFIM, INV_LOG_CO,      &
 &                             DF, MO_TAIL, MM1_TAIL
 USE WAM_TIMOPT_MODULE,  ONLY: IDELT, SHALLOW_RUN, IPHYS, WAVE_BREAKING_RUN,    &
-&                             PHILLIPS_RUN, ISNONLIN, LCFLX
+&                             PHILLIPS_RUN, ISNONLIN, LCFLX, COLDSTART !! ModR07: add COLDSTART
 USE WAM_FILE_MODULE,    ONLY: IU06, ITEST
 USE WAM_TABLES_MODULE,  ONLY: FLMINFR, NDEPTH, TFAK, TCGOND, T_TAIL, EPS1,     &
 &                             JUMAX, DELU  
@@ -55,6 +55,7 @@ USE WAM_TABLES_MODULE,  ONLY: FLMINFR, NDEPTH, TFAK, TCGOND, T_TAIL, EPS1,     &
 USE WAM_FLUX_MODULE,    ONLY: PHIOC, PHIAW, TAUOC_X, TAUOC_Y,                  &
 &                             PHIBOT, TAUBOT_X, TAUBOT_Y
 use wam_mpi_module,     only: NIJS, NIJL
+use wam_oasis_module,   only: use_oasis, oasis_output_flags !! ModR07
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
@@ -770,24 +771,42 @@ CALL INIT_X0TAUHF
 !     3. ALLOCATE ARRAYS FOR FLUXES.                                           !
 !        ---------------------------                                           !
 
-IF (ALLOCATED(PHIOC)) DEALLOCATE(PHIOC)
-ALLOCATE (PHIOC(1:NIJL-NIJS+1))
-PHIOC(:) = 0.0
+IF(coldstart .or. .not.(use_oasis .and. oasis_output_flags(59,3))) then        !! ModR07: Re-allocate only when not restart in coupling mode
+    IF (ALLOCATED(PHIOC)) DEALLOCATE(PHIOC)
+    ALLOCATE (PHIOC(1:NIJL-NIJS+1))
+    PHIOC(:) = 0.0
+ELSE IF(.not.allocated(PHIOC)) then                                            !! ModR07
+    WRITE(IU06,*) '!!! WARNING: PHIOC is not allocated BUT should have been read from restart file !!!' !! ModR07
+ENDIF                                                                          !! ModR07
+
 IF (ALLOCATED(PHIAW)) DEALLOCATE(PHIAW)
 ALLOCATE (PHIAW(1:NIJL-NIJS+1))
 PHIAW(:) = 0.0
-IF (ALLOCATED(TAUOC_X)) DEALLOCATE(TAUOC_X)
-ALLOCATE (TAUOC_X(1:NIJL-NIJS+1))
-TAUOC_X(:) = 0.0
-IF (ALLOCATED(TAUOC_Y)) DEALLOCATE(TAUOC_Y)
-ALLOCATE (TAUOC_Y(1:NIJL-NIJS+1))
-TAUOC_Y(:) = 0.0
+
+IF(coldstart .or. .not.(use_oasis .and. oasis_output_flags(61,3))) then        !! ModR07: Re-allocate only when not restart in coupling mode
+    IF (ALLOCATED(TAUOC_X)) DEALLOCATE(TAUOC_X)
+    ALLOCATE (TAUOC_X(1:NIJL-NIJS+1))
+    TAUOC_X(:) = 0.0
+ELSE IF(.not.allocated(TAUOC_X)) then                                          !! ModR07
+    WRITE(IU06,*) '!!! WARNING: TAUOC_X is not allocated BUT should have been read from restart file !!!' !! ModR07
+ENDIF                                                                          !! ModR07
+
+IF(coldstart .or. .not.(use_oasis .and. oasis_output_flags(62,3))) then        !! ModR07: Re-allocate only when not restart in coupling mode
+    IF (ALLOCATED(TAUOC_Y)) DEALLOCATE(TAUOC_Y)
+    ALLOCATE (TAUOC_Y(1:NIJL-NIJS+1))
+    TAUOC_Y(:) = 0.0
+ELSE IF(.not.allocated(TAUOC_Y)) then                                          !! ModR07
+    WRITE(IU06,*) '!!! WARNING: TAUOC_Y is not allocated BUT should have been read from restart file !!!' !! ModR07
+ENDIF                                                                          !! ModR07
+
 IF (ALLOCATED(PHIBOT)) DEALLOCATE(PHIBOT)
 ALLOCATE (PHIBOT(1:NIJL-NIJS+1))
 PHIBOT(:) = 0.0
+
 IF (ALLOCATED(TAUBOT_X)) DEALLOCATE(TAUBOT_X)
 ALLOCATE (TAUBOT_X(1:NIJL-NIJS+1))
 TAUBOT_X(:) = 0.0
+
 IF (ALLOCATED(TAUBOT_Y)) DEALLOCATE(TAUBOT_Y)
 ALLOCATE (TAUBOT_Y(1:NIJL-NIJS+1))
 TAUBOT_Y(:) = 0.0
