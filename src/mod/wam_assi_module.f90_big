@@ -9,6 +9,7 @@ MODULE WAM_ASSI_MODULE
 !     A.  EXTERNALS.                                                           !
 !                                                                              !
 ! ---------------------------------------------------------------------------- !
+USE mpi_f08 !! ModR08: switch to modern MPI library
 
 USE WAM_COORDINATE_MODULE           !! COORDINATE PROCEDURES
 
@@ -73,7 +74,7 @@ use wam_mpi_module,      only: irank, nijs, nijl
 ! ---------------------------------------------------------------------------- !
 
 IMPLICIT NONE
-include 'mpif.h'
+!include 'mpif.h' !! ModR08
 
 INTEGER, PRIVATE :: LENT
 			

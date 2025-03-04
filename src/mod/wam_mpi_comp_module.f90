@@ -9,6 +9,7 @@ MODULE WAM_MPI_COMP_MODULE
 !     A.  EXTERNALS.                                                           !
 !                                                                              !
 ! ---------------------------------------------------------------------------- !
+USE mpi_f08 !! ModR08: switch to modern MPI library
 
 USE WAM_GENERAL_MODULE,   ONLY:  &
 &       ABORT1,                  &   !! TERMINATES PROCESSING.
@@ -48,7 +49,7 @@ use wam_mpi_module,           only: petotal, irank, nstart, nend, nlen,        &
 USE WAM_TIMOPT_MODULE,        ONLY: L_DECOMP, L_OBSTRUCTION
 
 implicit none
-include 'mpif.h'
+!include 'mpif.h' !! ModR08
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
@@ -1519,10 +1520,11 @@ real, dimension (ninf:nsup,kl,ml), intent(inout) :: fl !! frequency spectra
 !*    local variables :
 !     -----------------
 
-integer :: ir, iproc, ingb, ij, ih, kcount, m, k, ktag, ierr(1)
-integer :: istatus(MPI_STATUS_SIZE,ngbtope+ngbfrompe)
+integer :: ir, iproc, ingb, ij, ih, kcount, m, k, ktag, ierr
 integer :: nbufmax
-integer, dimension(ngbtope+ngbfrompe) :: ireq
+TYPE(MPI_Status),  dimension(ngbtope+ngbfrompe) :: istatus !! ModR08: Integer->TYPE(MPI_Status)
+!integer :: istatus(MPI_STATUS_SIZE,ngbtope+ngbfrompe)     !! ModR08
+TYPE(MPI_Request), dimension(ngbtope+ngbfrompe) :: ireq    !! ModR08: Integer->TYPE(MPI_Request)
 
 real, allocatable :: zcombufs(:,:)
 real, allocatable :: zcombufr(:,:)
@@ -1570,7 +1572,7 @@ DO ingb = 1, ngbfrompe
    kcount = ml*kl*nfrompe(iproc)
    call MPI_irecv(zcombufr(1,ingb), kcount, MPI_REAL, iproc-1, KTAG,            &
 &                localcomm, ireq(ir), ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
-   if (ierr(1)/=0) then
+   if (ierr/=0) then
       write (iu06,*) ' +++ error: Sub. mpi_MPEXCHNG'
       write (iu06,*) ' +++ error: MPI_recv, ierr = ', ierr
       write (iu06,*) ' receiving from iproc = ', iproc
@@ -1584,7 +1586,7 @@ DO ingb = 1, ngbtope
    kcount = ml*kl*ntope(iproc)
    call MPI_iSend(zcombufs(1,ingb), kcount, MPI_REAL, iproc-1, KTAG,             &
 &                localcomm, ireq(ir), ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
-   if (ierr(1)/=0) then
+   if (ierr/=0) then
       write (iu06,*) ' +++ error: Sub. mpi_MPEXCHNG'
       write (iu06,*) ' +++ error: MPI_send, ierr = ', ierr
       write (iu06,*) ' send to iproc = ', iproc
@@ -1599,7 +1601,7 @@ enddo
 
 call MPI_Waitall(ir, ireq(1:ir),istatus, ierr)
 
-if (ierr(1)/=0) then
+if (ierr/=0) then
    write (iu06,*) ' +++ error: Sub. mpi_exchng'
    write (iu06,*) ' +++ error: MPI_Wait, ierr = ', ierr
    call abort1
@@ -1684,10 +1686,11 @@ real, dimension (ninf:nsup), intent(inout) :: fl !! PARAMETER FIELD
 !*    local variables :
 !     -----------------
 
-integer :: ir, iproc, ingb, ij, ih, kcount, ktag, ierr(1)
-integer :: istatus(MPI_STATUS_SIZE,ngbtope+ngbfrompe)
+integer :: ir, iproc, ingb, ij, ih, kcount, ktag, ierr
 integer :: nbufmax
-integer, dimension(ngbtope+ngbfrompe) :: ireq
+TYPE(MPI_Status),  dimension(ngbtope+ngbfrompe) :: istatus !! ModR08: Integer->TYPE(MPI_Status)
+!integer :: istatus(MPI_STATUS_SIZE,ngbtope+ngbfrompe)     !! ModR08
+TYPE(MPI_Request), dimension(ngbtope+ngbfrompe) :: ireq    !! ModR08: Integer->TYPE(MPI_Request)
 
 real, allocatable :: zcombufs(:,:)
 real, allocatable :: zcombufr(:,:)
@@ -1731,7 +1734,7 @@ DO ingb = 1, ngbfrompe
    kcount = nfrompe(iproc)
    call MPI_irecv(zcombufr(1,ingb), kcount, MPI_REAL, iproc-1, 0,             &
 &                localcomm,ireq(ir), ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
-   if (ierr(1)/=0) then
+   if (ierr/=0) then
       write (iu06,*) ' +++ error: Sub. mpi_MPEXCHNG_V'
       write (iu06,*) ' +++ error: MPI_recv, ierr = ', ierr
       write (iu06,*) ' receiving from iproc = ', iproc
@@ -1745,7 +1748,7 @@ DO ingb = 1, ngbtope
    kcount = ntope(iproc)
    call MPI_iSend(zcombufs(1,ingb), kcount, MPI_REAL, iproc-1, 0,             &
 &                localcomm,ireq(ir), ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
-   if (ierr(1)/=0) then
+   if (ierr/=0) then
       write (iu06,*) ' +++ error: Sub. mpi_MPEXCHNG_V'
       write (iu06,*) ' +++ error: MPI_send, ierr = ', ierr
       write (iu06,*) ' send to iproc = ', iproc
@@ -1760,7 +1763,7 @@ enddo
 
 call MPI_Waitall(ir, ireq(1:ir),istatus, ierr)
 
-if (ierr(1)/=0) then
+if (ierr/=0) then
    write (iu06,*) ' +++ error: Sub. mpi_exchng_V'
    write (iu06,*) ' +++ error: MPI_Wait, ierr = ', ierr
    call abort1
@@ -1823,9 +1826,9 @@ subroutine mpi_gather_block (irecv, field, rfield)
 !     INTERFACE VARIABLES.                                                     !
 !     --------------------                                                     !
 
-integer,                    intent(in) :: irecv !! process rank receiving the grid field
-real, dimension(nijs:nijl), intent(in) :: field !! containing the part be gathered
-real, optional, dimension(1:nsea), intent(inout) :: rfield !! the gathered field
+integer,                           intent(in)  :: irecv  !! process rank receiving the grid field
+real, dimension(nijs:nijl),        intent(in)  :: field  !! containing the part be gathered
+real, optional, dimension(1:nsea), intent(out) :: rfield !! the gathered field !! ModR08: Intent INOUT->OUT
     
 ! ---------------------------------------------------------------------------- !
 !
@@ -1834,6 +1837,7 @@ real, optional, dimension(1:nsea), intent(inout) :: rfield !! the gathered field
 
 integer :: ierr,i
 integer, dimension(petotal) :: displ     ! HB TODO: dies koennte im mpi_module liegen
+real,    dimension(1)       :: rfield_dummy !! ModR08: Dummy receiver variable for non-root processes
 
 ! ---------------------------------------------------------------------------- !
 
@@ -1860,8 +1864,21 @@ else
     displ(i) = nstart(i)-1
   end do
 
-  CALL MPI_Gatherv(field, nlen(irank), MPI_REAL, rfield, nlen, displ,          &
-                   MPI_REAL, irecv-1, localcomm, ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
+  if (irank==irecv) then !! ModR08: Bugfix for MPI_GatherV with MPI_f08 Module and IntelMPI: Non-root processes require an allocated dummy receive buffer
+    IF (.NOT. PRESENT(rfield)) THEN
+      WRITE(iu06,*) ' +++ error: Sub. mpi_gather_block'
+      WRITE(iu06,*) ' +++ error: rfield missing for gathering root process'
+      WRITE(iu06,*) ' +++ error: process = ',irank
+      WRITE(iu06,*) ' +++ error:    root = ',irecv
+      CALL abort1
+    END IF
+    CALL MPI_Gatherv(sendbuf=field, sendcount=nlen(irank), sendtype=MPI_REAL, recvbuf=rfield, recvcounts=nlen, displs=displ,       &
+                   recvtype=MPI_REAL, root=irecv-1, comm=localcomm, ierror=ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
+  else
+    CALL MPI_Gatherv(sendbuf=field, sendcount=nlen(irank), sendtype=MPI_REAL, recvbuf=rfield_dummy, recvcounts=nlen, displs=displ, &
+                   recvtype=MPI_REAL, root=irecv-1, comm=localcomm, ierror=ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
+  endif !! End ModR08
+  
   IF (ierr/=0) THEN
     write (iu06,*) ' +++ error: SUB. mpi_gather_block'
     write (iu06,*) ' +++ error: MPI-task ',irank,' -> MPI_Gatherv ierr = ',ierr
@@ -1928,8 +1945,9 @@ real, dimension (max_nest,n_nest), intent(out) :: depthbc !! depth at
 !     -----------------
 
 integer :: maxlength, ngou, ij, k, m, ip, i, ij1
-integer :: kcount, ierr, istatus(MPI_STATUS_SIZE),ir,isc
-integer,allocatable,dimension(:)  :: ireq
+integer :: kcount, ierr, ir, isc !, istatus(MPI_STATUS_SIZE) !! ModR08
+TYPE(MPI_Status)                           :: istatus        !! ModR08: Integer->TYPE(MPI_Status)
+TYPE(MPI_Request),allocatable,dimension(:) :: ireq           !! ModR08: Integer->TYPE(MPI_Request)
 real, allocatable, dimension (:)  :: zcombufs
 real, allocatable, dimension (:,:):: zcombufr
 
@@ -2123,8 +2141,9 @@ real, optional, dimension(1:nsea,kl,ml), intent(inout) :: rfl !! the gathered
    
 real, allocatable, dimension (:) :: zcombuf
 integer :: kcount, mplength, len, ij, m, k, ip
-integer :: ierr, istatus(MPI_STATUS_SIZE)
-    
+integer :: ierr !, istatus(MPI_STATUS_SIZE) !! ModR08
+TYPE(MPI_Status) :: istatus                 !! ModR08: Integer->TYPE(MPI_Status)
+
 ! ---------------------------------------------------------------------------- !
 
 comtime = MPI_WTIME()-comtime
@@ -2282,7 +2301,8 @@ real, optional, dimension(1:nsea,kl,ml), intent(in) :: sfl !! the scattered
 
 real, allocatable, dimension (:) :: zcombuf
 integer :: kcount, mplength, len, ij, m, k, ip
-integer :: ierr, istatus(MPI_STATUS_SIZE)
+integer :: ierr !, istatus(MPI_STATUS_SIZE) !! ModR08
+TYPE(MPI_Status) :: istatus                 !! ModR08: Integer->TYPE(MPI_Status)
 
 ! ---------------------------------------------------------------------------- !
 
@@ -2447,7 +2467,8 @@ real, dimension (nx,ny), intent(inout) :: field !! array containing the field
 !     -----------------
 
 integer :: len, ierr, ij, j, i
-integer :: istatus(MPI_STATUS_SIZE)
+TYPE(MPI_Status) :: istatus          !! ModR08: Integer->TYPE(MPI_Status)
+!integer :: istatus(MPI_STATUS_SIZE) !! ModR08
 
 real, dimension (nx*ny) :: zcombuf
 
@@ -2588,7 +2609,8 @@ real, optional, dimension (noutp,nscfld), INTENT(OUT)  :: block_sp !! INTEGRATED
 !     local variables.
 !     ----------------
 
-integer :: istatus(MPI_STATUS_SIZE)
+TYPE(MPI_Status) :: istatus          !! ModR08: Integer->TYPE(MPI_Status)
+!integer :: istatus(MPI_STATUS_SIZE) !! ModR08
 integer :: ij, ij1, kcount, ierr, ip, rcount, klml
 integer :: ngou, maxlength
 real, allocatable, dimension (:) :: zcombuf

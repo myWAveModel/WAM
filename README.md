@@ -13,6 +13,9 @@ New in Cycle 7:
   - improved compilation
   - merge with OASIS branch
   - source term output
+  - updated coupling interface following OASIS3-MCT conventions (data exchange 
+    at coupling times t=0,...,N-1 only; no data exchange at t=N)
+  - Upgrade to modern Fortran 2008 MPI module mpi_f08
 
 ################################################################################
 ## License

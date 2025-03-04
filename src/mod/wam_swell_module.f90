@@ -10,6 +10,7 @@ MODULE WAM_SWELL_MODULE
 !     A.  EXTERNALS.                                                           !
 !                                                                              !
 ! ---------------------------------------------------------------------------- !
+USE mpi_f08 !! ModR08: switch to modern MPI library
 
 USE WAM_INTERFACE_MODULE, ONLY:  &
 &       FEMEAN,                  &  !! COMPUTATION OF MEAN FREQUENCY.
@@ -46,7 +47,7 @@ use wam_mpi_module,    only: nijs, nijl
 
 IMPLICIT NONE
 
-include 'mpif.h'
+!include 'mpif.h' !! ModR08
 
 PRIVATE
 INTEGER, PARAMETER :: NTRAIN = 3         !! MAXIMUM NUMBER OF SWELL TRAINS.

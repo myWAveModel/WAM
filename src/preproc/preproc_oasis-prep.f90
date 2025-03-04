@@ -87,6 +87,7 @@ PROGRAM PREPROC
 !                                                                              !
 !     EXTERNALS.                                                               !
 !     ----------                                                               !
+USE mpi_f08 !! ModR08: switch to modern MPI library
 
 USE WAM_FILE_MODULE,      ONLY:  &
 &       SET_USER_FILE,           &  !!  SET USER FILE
@@ -117,7 +118,7 @@ USE WAM_OASIS_MODULE, ONLY: use_oasis, comp_name  !! ModR04: Include OASIS
     
 
 IMPLICIT NONE
-include "mpif.h"
+!include "mpif.h" !! ModR08
 integer ierror
 
 CALL Wam_oasis_init_comp  !! ModR04: Include OASIS

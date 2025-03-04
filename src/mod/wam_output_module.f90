@@ -10,6 +10,7 @@ MODULE WAM_OUTPUT_MODULE
 !     A.  EXTERNALS.                                                           !
 !                                                                              !
 ! ---------------------------------------------------------------------------- !
+USE mpi_f08 !! ModR08: switch to modern MPI library
 
 USE WAM_GENERAL_MODULE,   ONLY:  &
 &       ABORT1,                  &  !! TERMINATE PROCESSING.
@@ -120,7 +121,7 @@ USE WAM_OASIS_MODULE,  ONLY: use_oasis_force_output,OASIS_OUTPUT_FLAGS  !! ModR0
 ! ---------------------------------------------------------------------------- !
 
 IMPLICIT NONE
-include 'mpif.h'
+!include 'mpif.h' !! ModR08
 PRIVATE
 
 INTEGER :: I, ishift
