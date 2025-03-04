@@ -10,6 +10,7 @@ MODULE WAM_SOURCE_OUTPUT_MODULE
 !     A.  EXTERNALS.                                                           !
 !                                                                              !
 ! ---------------------------------------------------------------------------- !
+USE mpi_f08 !! ModR08: switch to modern MPI library
 
 USE WAM_GENERAL_MODULE,     ONLY:  &
 &             ABORT1,              &  !! TERMINATES PROCESSING.
@@ -63,7 +64,7 @@ use wam_mpi_module,           only: petotal, irank, nstart, nend,              &
 ! ---------------------------------------------------------------------------- !
 
 IMPLICIT NONE
-include 'mpif.h'
+!include 'mpif.h' !! ModR08
 PRIVATE
 
 CHARACTER (LEN=14) , PARAMETER :: ZERO = ' '

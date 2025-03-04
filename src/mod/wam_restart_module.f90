@@ -11,6 +11,7 @@ MODULE WAM_RESTART_MODULE
 !     A.  EXTERNALS.                                                           !
 !                                                                              !
 ! ---------------------------------------------------------------------------- !
+USE mpi_f08 !! ModR08: switch to modern MPI library
 
 USE WAM_GENERAL_MODULE,   ONLY:  &
 &       ABORT1,                  & !! TERMINATES PROCESSING.
@@ -53,7 +54,7 @@ USE wam_oasis_module,   ONLY: use_oasis, oasis_output_flags !! ModR07
 ! ---------------------------------------------------------------------------- !
 
 IMPLICIT NONE
-include 'mpif.h'
+!include 'mpif.h' !! ModR08
 PRIVATE
 
 ! ---------------------------------------------------------------------------- !

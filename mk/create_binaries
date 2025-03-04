@@ -85,7 +85,7 @@ elif [ "$1" == levante-GCC ]; then
         module load netcdf-fortran/4.5.3-openmpi-4.1.2-gcc-11.2.0
 
         export FC=mpifort
-        export FFLAGS="-fallow-argument-mismatch -march=native" #"-heap-arrays 64 -g -traceback -check bounds"
+        export FFLAGS=" " #"-march=native" #"-heap-arrays 64 -g -traceback -check bounds"
         #export MPIIN="-I/sw/spack-levante/openmpi-4.1.2-mnmady/include"
         export NCDFIN="-I/sw/spack-levante/netcdf-fortran-4.5.3-jlxcfz/include"
         export NCDFLIB="-L/sw/spack-levante/netcdf-fortran-4.5.3-jlxcfz/lib -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-jlxcfz/lib"

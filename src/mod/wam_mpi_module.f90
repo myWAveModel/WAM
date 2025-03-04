@@ -14,13 +14,14 @@ module wam_mpi_module
 !   A. module variables.                                                       !
 !                                                                              !
 ! ---------------------------------------------------------------------------- !
+USE mpi_f08, ONLY: MPI_Comm !! ModR08: Include Communicator type of modern MPI library 
 
 implicit none
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 
-integer :: localcomm     !!  local communicator  !! ModR04: Include OASIS
+TYPE(MPI_Comm) :: localcomm     !!  local communicator  !! ModR04: Include OASIS; ModR08: Integer->TYPE(MPI_Comm)
 integer :: petotal       !!  total number of processors
 integer :: pelocal       !!  local process number
 integer :: irank         !!  rank of local process (pelocal+1)

@@ -67,6 +67,7 @@ PROGRAM CHIEF
 !                                                                              !
 !      EXTERNALS.                                                              !
 !     -----------                                                              !
+USE mpi_f08 !! ModR08: switch to modern MPI library
 
 USE WAM_GENERAL_MODULE,   ONLY:  &
 &       ABORT1,                  &  !! TERMINATES PROCESSING.
@@ -90,7 +91,7 @@ use wam_mpi_module,    only: pelocal, petotal, nprevious, nnext,               &
 USE WAM_GENERAL_MODULE,ONLY: ABORTCASE  !! ALSO TERMINATE MPI(1) OR OASIS(2)    !! ModR04: Include OASIS
 
 IMPLICIT NONE 
-INCLUDE 'mpif.h'
+!INCLUDE 'mpif.h' !! ModR08
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -103,14 +104,14 @@ character (len=80), dimension (1) :: logfilename
 
 ! ---------------------------------------------------------------------------- !
 !
-CALL Wam_oasis_init_comp   !! ModR04: Include OASIS
-IF(USE_OASIS)THEN
+IF(USE_OASIS)THEN                !! ModR04: Include OASIS
   ABORTCASE=2
+  CALL Wam_oasis_init_comp       !! ModR08: Can be moved to here
 ELSE
   ABORTCASE=1
   call MPI_INIT (ierr)
   localcomm=MPI_COMM_WORLD
-ENDIF                      !! End ModR04
+ENDIF                            !! End ModR04
 TIME0 = MPI_WTIME()
 
 CDTPRO = ' '
@@ -186,5 +187,5 @@ WRITE (IU06,*) ' +++++++++++++++++++++++++++++++++'
 
 WRITE (*,*) ' Chief all done '
 
-STOP
+!STOP !! ModR08: STOP is redundant here.
 END PROGRAM CHIEF

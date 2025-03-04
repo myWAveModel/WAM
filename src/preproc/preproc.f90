@@ -87,6 +87,7 @@ PROGRAM PREPROC
 !                                                                              !
 !     EXTERNALS.                                                               !
 !     ----------                                                               !
+USE mpi_f08 !! ModR08: switch to modern MPI library
 
 USE WAM_FILE_MODULE,      ONLY:  &
 &       SET_USER_FILE,           &  !!  SET USER FILE
@@ -110,7 +111,7 @@ USE WAM_TABLES_MODULE,    ONLY:  &
 USE WAM_FILE_MODULE,  ONLY: IU06, FILE06, ITEST
 
 IMPLICIT NONE
-include "mpif.h"
+!include "mpif.h" !! ModR08
 integer ierror
 
 call mpi_init (ierror)

@@ -11,6 +11,7 @@ module wam_special_module
 !      a.  externals                                                           !
 !                                                                              !
 ! ---------------------------------------------------------------------------- !
+USE mpi_f08 !! ModR08: switch to modern MPI library
 
 use wam_general_module,   only:  &
 &       abort1                      !! terminates processing
@@ -23,7 +24,7 @@ use wam_general_module,   only:  &
 !
 use wam_file_module,  only: iu06, wpath, area
 use wam_mpi_module,   only: irank,localcomm         !! ModR04: MPI_COMM_WORLD->localcomm
-USE MPI,	      ONLY: mpi_barrier,mpi_logical !! ModR04
+!USE MPI,	      ONLY: mpi_barrier,mpi_logical !! ModR04, ModR08: removed
  
 implicit none
 !include 'mpif.h'                                   !! ModR04

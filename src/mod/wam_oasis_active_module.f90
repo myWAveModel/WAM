@@ -18,11 +18,12 @@
 !__________________________________________________________________________
 
 MODULE WAM_OASIS_MODULE
+  USE mpi_f08 !! ModR08: switch to modern MPI library
   USE MOD_OASIS
-  USE MPI,			ONLY:	MPI_COMM_RANK,MPI_COMM_WORLD,MPI_IN_PLACE,	&
-					 MPI_DATATYPE_NULL,MPI_REAL,MPI_LOGICAL,	&
-					 MPI_COMM_SPLIT,MPI_BARRIER,	&
-					 MPI_UNDEFINED,MPI_COMM_NULL,MPI_INTEGER
+!  USE MPI,			ONLY:	MPI_COMM_RANK,MPI_COMM_WORLD,MPI_IN_PLACE,	& !! ModR08: removed
+!					 MPI_DATATYPE_NULL,MPI_REAL,MPI_LOGICAL,	&
+!					 MPI_COMM_SPLIT,MPI_BARRIER,	&
+!					 MPI_UNDEFINED,MPI_COMM_NULL,MPI_INTEGER
   USE WAM_GENERAL_MODULE,	ONLY:	DIFDATE,INCDATE,ZPI
   USE WAM_MPI_MODULE,		ONLY:	LOCALCOMM,rank=>pelocal,petot=>petotal
   USE WAM_TIMOPT_MODULE,        ONLY:   IDELT,IDELPRO,cdatea,TOPO_RUN,CURRENT_RUN,	&
@@ -57,11 +58,12 @@ MODULE WAM_OASIS_MODULE
   INTEGER, PARAMETER	:: nvars = 22
   INTEGER, PARAMETER	:: nnest = 20			! from preproc_user_module
   INTEGER, PARAMETER	:: vgcmo=1,vgcmi=6,vatmi=9,vicei=11,vbdyi=12,vouto=13,vnsto=nvars+1
-  INTEGER		:: a,iot(nvars+nnest)=[(2,a=1,5),(1,a=6,12),(2,a=13,nvars+nnest)],	&
-                            comp_id,ierror,var_id(nvars+nnest)=-1,ioi(nvars+nnest),		&
-	bdyuse,		    ij,b,c,nix,nr,bdycomm,nestcomm(nnest),an(nnest)=0,bn(nnest)=0,	&
- 			    oux(vouto:nvars)=[(a,a=57,62),9,32,11,4]
-!!			    oux(vouto:nvars)=[(a,a=57,62),9,32,1,2]	! For testing only !!
+  INTEGER		:: a,iot(nvars+nnest)=[(2,a=1,5),(1,a=6,12),(2,a=13,nvars+nnest)], &
+                           comp_id,ierror,var_id(nvars+nnest)=-1,ioi(nvars+nnest),         &
+                           ij,b,c,nix,nr,nestcomm(nnest),an(nnest)=0,bn(nnest)=0,          &
+                           oux(vouto:nvars)=[(a,a=57,62),9,32,11,4]
+!!			   oux(vouto:nvars)=[(a,a=57,62),9,32,1,2]	! For testing only !!
+  TYPE(MPI_Comm)        :: bdyuse, bdycomm                                      !! ModR08: Integer->TYPE(MPI_Comm)
   INTEGER, PARAMETER	:: wp = SELECTED_REAL_KIND(12,307) ! double
   CHARACTER(len=80)	:: vnamen(nvars+nnest) =     			&	! default
    ['SNDWLEN','SNDPKDIR','SNDQB','SNDDISWB','SNDDISWS',			&	! variable
@@ -149,9 +151,9 @@ SUBROUTINE Wam_oasis_init_comp
     CALL OASIS_INIT_COMP(comp_id,comp_name,ierror)		! start coupler
     IF(ierror/=0)call Oaa('oasis_init_comp','oasis_init_comp failed')
     
-    CALL OASIS_GET_LOCALCOMM(localcomm,ierror)			! MPI local communicator
+    CALL OASIS_GET_LOCALCOMM(localcomm%MPI_Val,ierror)		! MPI local communicator !! ModR08: added type conversion between modern communicator (TYPE(MPI_Comm), WAM) and old communicator (INTEGER, OASIS)
     IF(ierror/=0)call Oaa('oasis_get_localcomm','oasis_get_localcomm failed')
-    
+
     CALL MPI_Comm_Rank(MPI_COMM_WORLD,ij,ierror)		! get MPI global rank
     IF(ierror/=0)call Oaa('global MPI_Comm_Rank','MPI_Comm_Rank global failed')
     
@@ -416,7 +418,7 @@ SUBROUTINE Wam_oasis_write_part
         CALL MPI_COMM_SPLIT(localcomm,j,rank,bdycomm,ierror)	! for mpi_bcast use_oasis_bdy_in
         IF (ierror/=0)call Oaa('mpi_comm_split for bdycomm','mpi_comm_split for bdycomm failed')
         IF(bdy_in)THEN		! pass communicator to oasis 
-            CALL oasis_set_couplcomm(bdycomm,ierror)
+            CALL oasis_set_couplcomm(bdycomm%MPI_Val,ierror)    !! ModR08: added type conversion between modern communicator (TYPE(MPI_Comm), WAM) and old communicator (INTEGER, OASIS); Should be removed once OASIS is updated to modern Fortran MPI
             IF (ierror/=0)call Oaa('oasis_set_couplcomm for bdycomm','oasis_set_couplcomm for bdycomm failed')
             CALL oasis_def_partition(part_bi,iseg(1:3),ierror)	! pass partition info to coupler
             IF (ierror/=0)call Oaa('oasis_def_partition for bdy','oasis_def_partition for bdy failed')
@@ -440,7 +442,7 @@ SUBROUTINE Wam_oasis_write_part
     b=nijl	! copy WAM partition upper boundary for later use
 
     IF(ITEST.GE.9)WRITE(IU06,*)'Nach Nestpart ',coarse,n_code(1:n_nest)
-    CALL oasis_set_couplcomm(localcomm,ierror)					! seems to be essential to set couplcomm
+    CALL oasis_set_couplcomm(localcomm%MPI_Val,ierror)				! seems to be essential to set couplcomm !! ModR08: added type conversion between modern communicator (TYPE(MPI_Comm), WAM) and old communicator (INTEGER, OASIS)
     IF (ierror/=0)call Oaa('oasis_set_couplcomm','oasis_set_couplcomm failed')	! to localcom before enddef !!!
     IF(ITEST.GE.9)WRITE(IU06,*)'Vor oasis_enddef '
     CALL oasis_enddef(ierror)			! finish coupler definition phase
@@ -579,7 +581,7 @@ CONTAINS
                 k=1
 	    ENDIF
 	ENDIF			! create communicator for output of boundary data for this nest
-        CALL oasis_create_couplcomm(k,localcomm,nestcomm(i1),ierror)
+        CALL oasis_create_couplcomm(k,localcomm%MPI_Val,nestcomm(i1),ierror) !! ModR08: added type conversion between modern communicator (TYPE(MPI_Comm), WAM) and old communicator (INTEGER, OASIS)
 	IF (ierror/=0)call Oaa('oasis_create_couplcomm','oasis_create_couplcomm failed')
         CALL oasis_def_partition(p,iseg,ierror)	! pass partition info to coupler
 	IF (ierror/=0)call Oaa('oasis_def_partition','oasis_def_partition failed')
@@ -702,14 +704,14 @@ END SUBROUTINE Wam_oasis_write_part
 	endif
       deallocate(buf)
       ENDIF
-    call mpi_bcast(gotdata,1,mpi_logical,[0],bdyuse,ierror)
+    call mpi_bcast(gotdata,1,mpi_logical,0,bdyuse,ierror)
     IF(gotdata)THEN
       if(.not.fl3iavail)then
         if(allocated(fl3i))deallocate(fl3i)
         allocate(fl3i(ml*kl+3,nbinp))
         fl3iavail=.true.
 	endif
-      call mpi_bcast(fl3i,size(fl3i),mpi_real,[0],bdyuse,ierror)
+      call mpi_bcast(fl3i,size(fl3i),mpi_real,0,bdyuse,ierror)
       IF(ierror/=0)call Oaa('mpi_bcast for boundary input','mpi_bcast boundary input failed')
       IF(ITEST>=6)WRITE(IU06,*)'SUBROUTINE Wam_oasis_rec_boundary ',TRIM(comp_name),isec,ierror
       ENDIF

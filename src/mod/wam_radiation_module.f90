@@ -12,6 +12,7 @@ MODULE WAM_RADIATION_MODULE
 !     A.  METHODS FROM BASIC MODULES.                                          !
 !                                                                              !
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
+USE mpi_f08 !! ModR08: switch to modern MPI library
 
 USE WAM_ICE_MODULE,         ONLY:  &
 &             PUT_ICE                 !! PUTS ICE INDICATOR INTO DATA FILED.
@@ -51,7 +52,7 @@ USE WAM_OUTPUT_SET_UP_MODULE, ONLY: CFLAG_P, ZMISS
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
 IMPLICIT NONE
-include 'mpif.h'
+!include 'mpif.h' !! ModR08
 PRIVATE
 
 INTEGER :: I
