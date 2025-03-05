@@ -531,6 +531,9 @@ NUMBWH = 0
 NUMBUS = 0
 NR = 0
 
+!SWHO=0. !! ModR09: Bugfix (Alternative): Set init value SWHO=0 for 1st loop iteration
+!WSO=0.  !! ModR09: Bugfix (Alternative): Set init value WSO=0  for 1st loop iteration
+
 IOLD = 0
 JOLD = 0
 CDATEO = ' '
@@ -568,6 +571,11 @@ DATA_LOOP: DO
    CALL READSAT (IU80, CDATE, RLAT, RLON, SWH, WS, EOFD)
    M_RLAT = DEG_TO_M_SEC (RLAT) 
    M_RLON = DEG_TO_M_SEC (RLON)
+
+   IF (ICOUNTD.EQ.0) THEN !! ModR09: Bugfix: Set init values SWHO & WSO for 1st loop iteration
+      SWHO = SWH
+      WSO = WS
+   END IF                 !! End ModR09
 
    IF (EOFD) EXIT DATA_LOOP
 

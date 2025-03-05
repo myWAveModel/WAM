@@ -16,6 +16,7 @@ New in Cycle 7:
   - updated coupling interface following OASIS3-MCT conventions (data exchange 
     at coupling times t=0,...,N-1 only; no data exchange at t=N)
   - Upgrade to modern Fortran 2008 MPI module mpi_f08
+  - Bug fix of uninitialized value in data assimilation routine
 
 ################################################################################
 ## License
@@ -219,7 +220,7 @@ scripts for the Strand and Levante HPC environements:
   <https://www.ecmwf.int/en/elibrary/79883-wave-model>
 
 ################################################################################  
-Version 7.0.8  
+Version 7.0.9  
 Marcel Ricker   (marcel DOT ricker AT hereon DOT de)  
 Robert Hartmann (robert DOT hartmann AT hereon DOT de)  
-20 Feb 2024
+05 March 2025
