@@ -279,7 +279,7 @@ IF (ncid(0)<0) THEN
    vmin(29) = 1.
    vmax(29) = 25.
 
-   vl(1,30) = 'thw_swell'
+   vl(1,30) = 'thq_swell'
    vl(2,30) = 'sea_surface_swell_wave_to_direction'
    vl(3,30) = 'Swell mean wave direction'
    vl(4,30) = 'degree'
