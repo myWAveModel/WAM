@@ -202,6 +202,34 @@ C
 C
 C ------------------------------------------------------------------------------
 C
+C           **** SOURCE OUTPUT ****
+C
+C     IDELSCR  INTEGER    > 0  : OUTPUT TIME STEP OF SOURCE FUNCTIONS.
+C                         = 0  : OUTPUT EVERY IDELT STEPS
+C                         < 0  : NO OUTPUT  (DEFAULT)
+C     IDELFSC  INTEGER    > 0  : FILE SAVE TIME STEP OF RADIATION STRESS.
+C                         <= 0 : SAVE FILE EVERY OT_STEP STEPS (DEFAULT)
+C     U        CHARACTER  TIME UNIT: M OR m MINUTE; H OR h HOUR; DEFAULT SECOND.
+C
+CIDELSCR U  IDELFSC U
+C------- -  ------- -
+      -1 S        0 H
+C
+C           **** SELECTION OF SOURCE OUTPUT OUTPUT DATA ****
+C
+C     P  PRINTER OUTPUT: T : DATA ARE PRINTED;  DEFAULT F : NO OUTPUT
+C     F  FILE OUTPUT:    F : NO OUTPUT ,        DEFAULT T : OUTPUT
+C
+CP F                                   P F
+C- -                                   - -
+ F T   WIND INPUT PHILLIPS             F T   WIND INPUT
+ F T   NON-LINEAR SOURCE TERM          F T   WHITE CAPPING DISSIPATION
+ F T   BOTTOM FRICTION                 F T   WAVE BREAKING
+ F T   FRACTION OF BREAKING            F T   SIGNIFICANT WAVE HEIGHT
+ F T   PEAK WAVE DIRECTION             F T   MEAN WAVE LENGTH
+C
+C ------------------------------------------------------------------------------
+C
 C           **** SELECTION OF OUTPUT DATA ****
 C
 C     P  PRINTER OUTPUT: T : DATA ARE PRINTED;  DEFAULT F : NO OUTPUT
