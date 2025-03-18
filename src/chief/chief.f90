@@ -104,14 +104,14 @@ character (len=80), dimension (1) :: logfilename
 
 ! ---------------------------------------------------------------------------- !
 !
-IF(USE_OASIS)THEN                !! ModR04: Include OASIS
+CALL Wam_oasis_init_comp   !! ModR04: Include OASIS
+IF(USE_OASIS)THEN
   ABORTCASE=2
-  CALL Wam_oasis_init_comp       !! ModR08: Can be moved to here
 ELSE
   ABORTCASE=1
   call MPI_INIT (ierr)
   localcomm=MPI_COMM_WORLD
-ENDIF                            !! End ModR04
+ENDIF                      !! End ModR04
 TIME0 = MPI_WTIME()
 
 CDTPRO = ' '
@@ -135,6 +135,7 @@ endif
 
 iu06 = 66
 IF (petotal.GT.1) THEN
+   call system('mkdir -p WAMLOGS')            !! ModR08: Automatic internal creation of WAMLOGS directory
    logfilename(1) ='WAMLOGS/logfile.%p'
    call expand_string (pelocal,petotal,0,0,logfilename,1)
    open (iu06, file=logfilename(1),status='unknown')
