@@ -10,11 +10,11 @@ New in Cycle 7:
   - bug fix in normalised wave stress
   - betamax for ST4 adjustable via namelist
   - improved Netcdf conversion
-  - improved compilation
+  - ! IMPROVED COMPILATION VIA NEW MAKEFILE !
   - merge with OASIS branch
   - source term output
-  - updated coupling interface following OASIS3-MCT conventions (data exchange 
-    at coupling times t=0,...,N-1 only; no data exchange at t=N)
+  - ! UPDATED COUPLING INTERFACE FOLLOWING OASIS3-MCT CONVENTIONS (data exchange 
+    at coupling times t=0,...,N-1 only; no data exchange at t=N) !
   - Upgrade to modern Fortran 2008 MPI module mpi_f08
   - Bug fix of uninitialized value in data assimilation routine
 
@@ -42,7 +42,7 @@ WAM. If not, see <http://www.gnu.org/licenses/>
 
 2. Download the repository: <https://github.com/mywave/WAM/tree/WAM_Cycle7>
 
-### OPTION A: via mk/create_binaries as stand-alone WAM 
+### OPTION A: individual compilation directly via make 
 
 3. Link the compatible subroutines for the desired input data format in the 
    source code directories src/chief and src/preproc:
@@ -60,65 +60,81 @@ WAM. If not, see <http://www.gnu.org/licenses/>
    [preproc] $ ln -sf read_topography_arno.f90     read_topography.f90
    ```
 
-4. Set the library paths and modules to be loaded for your SYSTEM in the 
-   preamble of mk/create_binaries.
-
-5. Ensure executable permission is set for mk/create_binaries, mk/build_*, and 
-   mk/make_* files.
+4. Load the required modules (MPI, NetCDF, and potential prerequisites).
    ```
-   [mk] $ chmod -u+x create_binaries build_* make_* 
+   [WAM] $ module load NAMES
    ```
+   Note: The exact NAMES can differ for each SYSTEM.
 
-6. Compile the executables from the directory mk:
+5. Set the compiler specifications and library paths in the preamble of the
+   Makefile.
+
+6. Compile the executables via make:
    ```
-   [mk] $ rm ../abs/* ../obj/* 
-   [mk] $ ./create_binaries SYSTEM
+   [WAM] $ make clean 
+   [WAM] $ make TARGET
    ```
-   The argument SYSTEM specifies the libraries and moduled set under 3. 
-   Currently supported systems are: 
-   * strand[-oneAPI]
-   * levante[-oneAPI]
-   * first  
-   "first" does not specify any modules or libraries and should only be used for
-   calls from super-scripts, which already set the SYSTEM environement.
-
-7. DONE! The executables can be found in the directory abs.
-
-### OPTION B: via make.SYSTEM for coupled models
-
-3. Set the library paths and modules to be loaded for your SYSTEM in the 
-   preamble of make.SYSTEM (e.g. make.LEVANTE).
-
-4. Adjust the linking of read subroutines IN the file make.SYSTEM (e.g., 
-   make.LEVANTE). See step 3 of OPTION A for a linking example.
-
-5. Ensure executable permission is set for make.SYSTEM, mk/create_binaries, 
-   mk/build_*, and mk/make_* files.
-   ```
-   [WAM] $ chmod -u+x make.SYSTEM mk/create_binaries mk/build_* mk/make_* 
-   ```
-
-6. Compile the executables by executing
-   ```
-   [WAM] $ ./make.SYSTEM clean 
-   [WAM] $ ./make.SYSTEM first
-   [WAM] $ ./make.SYSTEM
-   ```
-   Note that "./make.SYSTEM first" is equivalent to OPTION A "./create_binaries
-   SYSTEM" with according manually-linked subroutines. The final call of 
-   "./make.SYSTEM" rebulids the executable wam with activated OASIS coupling. 
-
-7. DONE! The executables can be found in the directory abs.
-
-After a successfull compilation abs should cointain the following executables 
-(binaries):
+   The optional argument TARGET specifies programm component to be compiled:
+   * all       : All of the below are compiled (DEFAULT)
    * preproc   : Pre-processing program to create domain/grid files
    * wam       : Main program running the wave model 
    * pnetcdf   : Converter of binary wam output to NetCDF-format
-   * pgrid     : !!! TODO !!!
-   * pspec     : !!! TODO !!!
-   * ptime[_S] : !!! TODO !!!
-   * psource   : !!! TODO !!!
+   * pgrid     : Post-processing program for !!! TODO !!!
+   * pspec     : Post-processing program for !!! TODO !!!
+   * ptime[_S] : Post-processing program for !!! TODO !!!
+   * psource   : Post-processing program for source-term output conversion
+   
+   Note that no TARGET is equivalent to TARGET=all.
+
+7. DONE! The executables can be found in the directory bin/.
+
+### OPTION B: full compilation via makeWAM.bash
+
+3. Adjust the linking of read subroutines IN the file makeWAM.bash (2nd part).
+   See step 3 of OPTION A for a linking example.
+
+4. Ensure executable permission is set for makeWAM.bash.
+   ```
+   [WAM] $ chmod -u+x makeWAM.bash
+   ```
+
+5. Compile the executables by executing
+   ```
+   [WAM] $ ./makeWAM.bash clean 
+   [WAM] $ ./makeWAM.bash SYSTEM TARGET
+   ```
+   The argument SYSTEM specifies the environment and compiler settings to 
+   compile with. Currently pre-defined environments for SYSTEM are:
+   * strand[-oneAPI|-GCC]
+   * levante[-oneAPI|-GCC]
+   If you are going to use WAM on a different system: Define the required 
+   environment in the preamble of makeWAM.bash by adding another elseif block 
+   for your SYSTEM, in which you define loaded modules, compiler settings, and 
+   library paths, in the first part of makeWAM.bash.
+
+   The optional argument TARGET specifies programm component to be compiled:
+   * all       : All of the below are compiled (DEFAULT)
+   * preproc   : Pre-processing program to create domain/grid files
+   * wam       : Main program running the wave model (stand-alone)
+   * oasis     : Main program running the wave model (coupled mode)
+   * pnetcdf   : Converter of binary wam output to NetCDF-format
+   * pgrid     : Post-processing program for !!! TODO !!!
+   * pspec     : Post-processing program for !!! TODO !!!
+   * ptime[_S] : Post-processing program for !!! TODO !!!
+   * psource   : Post-processing program for source-term output conversion
+ 
+   Notes:
+   - no TARGET is equivalent to TARGET=all. Thus, the command 
+     "./makeWAM.bash SYSTEM [all]" is equivalent to a "make [all]" in an 
+     accordingly prepared SYSTEM environment without any OASIS libraries and 
+     generally disabled OASIS coupling.
+   - A call of "./makeWAM.bash SYSTEM oasis" (re)bulids the executable wam with 
+     enabled OASIS coupling and is equivalent to a "make wam" in a prepared 
+     SYSTEM environment including installed OASIS libraries. In this case one 
+     needs to specify a path OASISDIR to the OASIS library in the OASIS 
+     environment section.
+
+6. DONE! The executables can be found in the directory bin.
 
 ################################################################################
 ## Execution (WAM stand-alone)
@@ -133,7 +149,7 @@ SWAMPtest/input/config.
 1. Copy the executable(s) and the parameter file(s) to any work directory of 
    your choice:
    ```
-   [WRKDIR] $ cp -ra PATH/TO/WAM/abs/BINNAME ./BINNAME.exe
+   [WRKDIR] $ cp -ra PATH/TO/WAM/bin/BINNAME ./BINNAME.exe
    [WRKDIR] $ cp -ra PATH/TO/WAM/const/BINNAME_User ./BINNAME_User
    ```
 
@@ -220,7 +236,8 @@ scripts for the Strand and Levante HPC environements:
   <https://www.ecmwf.int/en/elibrary/79883-wave-model>
 
 ################################################################################  
-Version 7.0.9  
+Version 7.0.10  
 Marcel Ricker   (marcel DOT ricker AT hereon DOT de)  
 Robert Hartmann (robert DOT hartmann AT hereon DOT de)  
-05 March 2025
+18 March 2025
+
