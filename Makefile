@@ -1,454 +1,341 @@
-#FC	= mpif90
-INC	= -I${OASISMOD}
+# Makefile for WAM Cycle7
+# created  27/02/2025
+# modified 27/02/2025
+#
+#===============================================================================
+# 1. Compiler Settings
+#===============================================================================
 
-NETCDF	= netcdf.inc netcdf.mod typesizes.mod
+#$(info !!! INFO: $(setENV) !!!)
 
-PREPROC	= wam_mpi_module.o wam_file_module.o wam_general_module.o wam_timopt_module.o wam_fre_dir_module.o \
-	wam_jonswap_module.o wam_tables_module.o wam_interface_module.o wam_grid_module.o wam_model_module.o \
-	wam_boundary_module.o preproc_module.o wam_special_module.o wam_oasis_module.o \
-	preproc_user_module.o wam_nest_module.o read_boundary_input.o wam_output_set_up_module.o \
-	preproc.o read_topography.o read_preproc_user.o wam_mpi_comp_module.o wam_coordinate_module.o \
-	wam_output_parameter_module.o read_ice_input.o wam_ice_module.o \
-	wam_current_module.o wam_topo_module.o wam_wind_module.o read_current_input.o read_topo_input.o read_wind_input.o
+ifdef setENV
+$(info !!! INFO: Compilation for pre-loaded environment setENV=$(setENV) !!!)
+$(info !!!       => Compilation starts without further variables/library setting !!!)
+ifeq ($(findstring GCC, $(setENV)),GCC)
+    MODOP=-J
+else
+    MODOP=-module 
+endif
 
-CHIEF	= wam_file_module.o wam_general_module.o wam_timopt_module.o wam_fre_dir_module.o \
-	wam_jonswap_module.o wam_tables_module.o wam_swell_module.o \
-	wam_interface_module.o wam_grid_module.o wam_current_module.o wam_model_module.o \
-	wam_ice_module.o wam_output_module.o wam_wind_module.o wam_boundary_module.o \
-	wam_flux_module.o wam_output_parameter_module.o \
-	wam_source_module.o wam_propagation_module.o preproc_module.o wam_coldstart_module.o \
-	wam_restart_module.o wam_initial_module.o wam_mpi_module.o wam_output_set_up_module.o \
-	wam_topo_module.o wam_radiation_module.o wam_nest_module.o wam_user_module.o \
-	wam_special_module.o read_topo_input.o chief.o wavemdl.o initmdl.o read_wam_user.o \
-	print_wam_status.o read_wind_input.o read_current_input.o wamodel.o read_boundary_input.o \
-	read_ice_input.o jafu.o wam_mpi_comp_module.o wam_assi_set_up_module.o wam_assi_module.o \
-	wam_coordinate_module.o readsat.o wam_source_output_module.o wam_oasis_module.o
 
-PGRID	= wam_general_module.o wam_print_module.o wam_file_module.o \
-	wam_coordinate_module.o wam_oasis_inactive_module.o \
-	wam_output_parameter_module.o \
-	wam_print_user_module.o print_grid_file.o read_grid_file.o read_grid_user.o
+else ifneq ($(MAKECMDGOALS),clean)
+$(info !!! WARNING: No environment specified !!!)
+$(info !!!          Compilation based on the calling SHELL environment and !!!)
+$(info !!!          Makefile-defined compiler variables and library paths  !!!)
 
-PNETCDF = wam_mpi_module.o wam_file_module.o wam_general_module.o wam_timopt_module.o \
-	wam_model_module.o wam_flux_module.o wam_source_module.o wam_fre_dir_module.o \
-	wam_jonswap_module.o wam_tables_module.o wam_interface_module.o ingrid.o \
-	wam_grid_module.o wam_current_module.o wam_special_module.o wam_nest_module.o \
-	wam_ice_module.o wam_swell_module.o wam_output_module.o wam_print_module.o \
-	wam_output_parameter_module.o wam_radiation_module.o wam_propagation_module.o \
-	wam_output_set_up_module.o wam_mpi_comp_module.o wam_netcdf_module.o wam_coordinate_module.o \
-	read_current_input.o read_ice_input.o wam_topo_module.o read_topo_input.o jafu.o \
-	make_netcdf.o wam_source_output_module.o wam_oasis_inactive_module.o dtsec.o
+#-------------------------------------------------------------------------------
+# Fortran compiler & Basic FC arguments
+#-------------------------------------------------------------------------------
+#FC = ifort
+FC = mpiifort
+#FC = gfortran
+#FC = mpifort
 
-PNETCDF_RAD = wam_mpi_module.o wam_file_module.o wam_general_module.o wam_timopt_module.o \
-	wam_model_module.o wam_flux_module.o wam_source_module.o wam_fre_dir_module.o \
-	wam_jonswap_module.o wam_tables_module.o wam_interface_module.o \
-	wam_grid_module.o wam_current_module.o wam_special_module.o wam_nest_module.o \
-	wam_ice_module.o wam_swell_module.o wam_output_module.o wam_print_module.o \
-	wam_output_set_up_module.o wam_mpi_comp_module.o wam_rad_netcdf_module.o wam_coordinate_module.o \
-	read_current_input.o read_ice_input.o wam_topo_module.o read_topo_input.o jafu.o \
-	make_rad_netcdf.o wam_oasis_inactive_module.o wam_source_output_module.o dtsec.o
+MODOP=-module 
+#MODOP=-J
 
-PRAD	= wam_general_module.o wam_print_module.o wam_file_module.o \
-	wam_print_user_module.o print_radiation_file.o read_radiation_file.o \
-	read_radiation_user.o wam_coordinate_module.o wam_oasis_inactive_module.o
+#-------------------------------------------------------------------------------
+# Advanced Fortran compiler options
+#-------------------------------------------------------------------------------
+FFLAGS = -heap-arrays 64
+FFLAGS+= -fp-model precise
+#FFLAGS+= -O0
+FFLAGS+= -O3
+#FFLAGS+= -march=native
+#FFLAGS+= -g -traceback -check all 
 
-PRAD_TIME = wam_general_module.o wam_print_module.o wam_file_module.o \
-	read_radiation_file.o \
-	wam_print_user_module.o print_rad_time.o read_time_user.o read_grid_file.o \
-	wam_oasis_inactive_module.o wam_coordinate_module.o
+#-------------------------------------------------------------------------------
+# System specific libraries
+#-------------------------------------------------------------------------------
+NCDFDIR=/project/opt/software/netcdf/4.9.2/intel_oneAPI
+NCDFIN=-I${NCDFDIR}/include
+NCDFLIB=-L${NCDFDIR}/lib
+NCDFFLAGS=-lnetcdf -lnetcdff
 
-PSOURCE = wam_general_module.o wam_print_module.o wam_file_module.o \
-	wam_output_parameter_module.o \
-	wam_print_user_module.o print_scr_file.o read_scr_file.o \
-	read_scr_user.o wam_oasis_inactive_module.o wam_coordinate_module.o
+LDOPT=${NCDFIN} ${NCDFLIB} ${NCDFFLAGS}
 
-PSPEC	= wam_general_module.o wam_print_module.o wam_file_module.o wam_output_parameter_module.o \
-	wam_print_user_module.o print_spectra_file.o read_spectra_file.o \
-	read_spectra_user.o wam_coordinate_module.o wam_oasis_inactive_module.o
+#HDF5DIR=/sw/spack-levante/hdf5-1.12.1-kxfaux/include
+#HDF5IN=-I${HDF5DIR}/include
+#HDF5LIB=-L${HDF5LIB}/lib
 
-PTIME	= wam_general_module.o wam_print_module.o wam_file_module.o wam_output_parameter_module.o \
-	wam_print_user_module.o print_time.o read_time_user.o read_grid_file.o \
-	wam_coordinate_module.o wam_oasis_inactive_module.o
+#LDOPT+= ${HDF5IN} ${HDF5LIB} ${HDFFLAGS}
 
-PTIME_S	= wam_general_module.o wam_print_module.o wam_file_module.o \
-	wam_print_user_module.o print_time_S.o read_time_user_S.o read_grid_file.o \
-	wam_coordinate_module.o wam_output_parameter_module.o wam_oasis_inactive_module.o
+#OASISDIR=/home/g/g260237/Codes/oasis3-mct_forGCOAST_MR/oasis3-mct_LEVANTE
+#OASISIN=-I${OASISDIR}/build/lib/psmile.MPI1
+#OASISLIB=-L${OASISDIR}/lib
+#OASISFLAGS=-lpsmile.MPI1 -lmct -lmpeu -lscrip
 
-BSFILE	= bsfile.o incdate.o
+#FFLAGS+= ${OASISIN}
+#LDOPT+= ${OASISLIB} ${OASISFLAGS}
 
-PRE_U10	= pre_u10.o incdate.o
 
-# targets
+endif
 
-../abs/wam:	$(CHIEF)
-	$(FC) $(FFLAGS) $(CHIEF) -o $@ $(LIBS)
-../abs/preproc:	$(PREPROC)
-	$(FC) $(FFLAGS) $(PREPROC) -o $@ $(LIBS)
-../abs/pgrid:	$(PGRID)
-	$(FC) $(FFLAGS) $(PGRID) -o $@
-../abs/pnetcdf:	$(PNETCDF)
-	$(FC) $(FFLAGS) $(PNETCDF) -o $@ $(LIBS)
-../abs/pnetcdf_rad: $(PNETCDF_RAD)
-	$(FC) $(FFLAGS) $(PNETCDF_RAD) -o $@ $(LIBS)
-../abs/prad:	$(PRAD)
-	$(FC) $(FFLAGS) $(PRAD) -o $@
-../abs/prad_time: $(PRAD_TIME)
-	$(FC) $(FFLAGS) $(PRAD_TIME) -o $@
-../abs/psource:	$(PSOURCE)
-	$(FC) $(FFLAGS) $(PSOURCE) -o $@
-../abs/pspec:	$(PSPEC)
-	$(FC) $(FFLAGS) $(PSPEC) -o $@
-../abs/ptime:	$(PTIME)
-	$(FC) $(FFLAGS) $(PTIME) -o $@
-../abs/ptime_S:	$(PTIME_S)
-	$(FC) $(FFLAGS) $(PTIME_S) -o $@
-../abs/bsfile:	$(BSFILE)
-	$(FC) $(FFLAGS) $(BSFILE) -o $@
-../abs/pre_u10:	$(PRE_U10)
-	$(FC) $(FFLAGS) $(PRE_U10) -o $@
-#all:	../abs/wam ../abs/preproc ../abs/pgrid ../abs/pnetcdf ../abs/pnetcdf_rad ../abs/prad \
-#	../abs/prad_time ../abs/pspec ../abs/psource ../abs/ptime ../abs/bsfile ../abs/pre_u10
-#all:	../abs/wam ../abs/preproc ../abs/pgrid ../abs/pnetcdf \
-#	../abs/pspec ../abs/psource ../abs/ptime ../abs/bsfile ../abs/pre_u10
-all:	../abs/wam ../abs/preproc ../abs/pgrid ../abs/pnetcdf \
-	../abs/pspec ../abs/ptime ../abs/ptime_S
-	exit
-netcdf.inc:	.
-	ln -sf ${NETCDFHOME}/include/$@
-netcdf.mod:	.
-	ln -sf ${NETCDFHOME}/include/$@
-typesizes.mod:	.
-	ln -sf ${NETCDFHOME}/include/$@
-mpif.h:	${MPIHOME}/include/mpif.h
-	ln -sf ${MPIHOME}/include/mpif.h
+
+#===============================================================================
+# 2. File & directory definitions
+#===============================================================================
+
+# Directories:
+SRCDIR=./src
+OBJDIR=./obj
+EXEDIR=./bin
+
+FFLAGS+=$(MODOP)$(OBJDIR)
+
+# Objects for preproc
+PREPROC_OBJS = \
+$(OBJDIR)/wam_mpi_module.o \
+$(OBJDIR)/wam_file_module.o \
+$(OBJDIR)/wam_coordinate_module.o \
+$(OBJDIR)/wam_general_module.o \
+$(OBJDIR)/wam_grid_module.o \
+$(OBJDIR)/wam_timopt_module.o \
+$(OBJDIR)/wam_fre_dir_module.o \
+$(OBJDIR)/wam_jonswap_module.o \
+$(OBJDIR)/wam_tables_module.o \
+$(OBJDIR)/wam_output_parameter_module.o \
+$(OBJDIR)/wam_special_module.o \
+$(OBJDIR)/wam_output_set_up_module.o \
+$(OBJDIR)/wam_interface_module.o \
+$(OBJDIR)/wam_model_module.o \
+$(OBJDIR)/wam_oasis_module.o \
+$(OBJDIR)/wam_nest_module.o \
+$(OBJDIR)/wam_mpi_comp_module.o \
+\
+$(OBJDIR)/preproc_module.o \
+$(OBJDIR)/preproc_user_module.o \
+\
+$(OBJDIR)/preproc.o \
+$(OBJDIR)/read_topography.o \
+$(OBJDIR)/read_preproc_user.o
+
+# Objects for wam
+WAM_OBJS = \
+$(OBJDIR)/wam_file_module.o \
+$(OBJDIR)/wam_coordinate_module.o \
+$(OBJDIR)/wam_general_module.o \
+$(OBJDIR)/wam_grid_module.o \
+$(OBJDIR)/wam_timopt_module.o \
+$(OBJDIR)/wam_fre_dir_module.o \
+$(OBJDIR)/wam_jonswap_module.o \
+$(OBJDIR)/wam_tables_module.o \
+$(OBJDIR)/wam_output_parameter_module.o \
+$(OBJDIR)/wam_mpi_module.o \
+$(OBJDIR)/wam_special_module.o \
+$(OBJDIR)/wam_output_set_up_module.o \
+$(OBJDIR)/wam_nest_module.o \
+$(OBJDIR)/wam_interface_module.o \
+$(OBJDIR)/wam_mpi_comp_module.o \
+$(OBJDIR)/wam_model_module.o \
+$(OBJDIR)/wam_current_module.o \
+$(OBJDIR)/wam_ice_module.o \
+$(OBJDIR)/wam_wind_module.o \
+$(OBJDIR)/wam_oasis_module.o \
+$(OBJDIR)/wam_boundary_module.o \
+$(OBJDIR)/wam_assi_set_up_module.o \
+\
+$(OBJDIR)/wam_swell_module.o \
+$(OBJDIR)/wam_topo_module.o \
+$(OBJDIR)/wam_propagation_module.o \
+$(OBJDIR)/wam_radiation_module.o \
+$(OBJDIR)/wam_flux_module.o \
+$(OBJDIR)/wam_source_output_module.o \
+$(OBJDIR)/wam_source_module.o \
+$(OBJDIR)/wam_output_module.o \
+$(OBJDIR)/preproc_module.o \
+$(OBJDIR)/wam_coldstart_module.o \
+$(OBJDIR)/wam_restart_module.o \
+$(OBJDIR)/wam_initial_module.o \
+$(OBJDIR)/wam_user_module.o \
+$(OBJDIR)/wam_assi_module.o \
+\
+$(OBJDIR)/read_topo_input.o \
+$(OBJDIR)/chief.o \
+$(OBJDIR)/wavemdl.o \
+$(OBJDIR)/initmdl.o \
+$(OBJDIR)/read_wam_user.o \
+$(OBJDIR)/print_wam_status.o \
+$(OBJDIR)/read_wind_input.o  \
+$(OBJDIR)/read_current_input.o \
+$(OBJDIR)/wamodel.o \
+$(OBJDIR)/read_boundary_input.o \
+$(OBJDIR)/read_ice_input.o \
+$(OBJDIR)/jafu.o \
+$(OBJDIR)/readsat.o 
+
+# Objects for pgrid
+PGRID_OBJS = \
+$(OBJDIR)/wam_file_module.o \
+$(OBJDIR)/wam_coordinate_module.o \
+$(OBJDIR)/wam_general_module.o \
+$(OBJDIR)/wam_output_parameter_module.o \
+$(OBJDIR)/wam_oasis_module.o \
+\
+$(OBJDIR)/wam_print_module.o \
+$(OBJDIR)/wam_print_user_module.o \
+\
+$(OBJDIR)/print_grid_file.o \
+$(OBJDIR)/read_grid_file.o \
+$(OBJDIR)/read_grid_user.o
+
+# Objects for pspec
+PSPEC_OBJS = \
+$(OBJDIR)/wam_file_module.o \
+$(OBJDIR)/wam_coordinate_module.o \
+$(OBJDIR)/wam_general_module.o \
+$(OBJDIR)/wam_output_parameter_module.o \
+$(OBJDIR)/wam_oasis_module.o \
+\
+$(OBJDIR)/wam_print_module.o \
+$(OBJDIR)/wam_print_user_module.o \
+\
+$(OBJDIR)/print_spectra_file.o \
+$(OBJDIR)/read_spectra_file.o \
+$(OBJDIR)/read_spectra_user.o
+
+# Objects for ptime
+PTIME_OBJS = \
+$(OBJDIR)/wam_file_module.o \
+$(OBJDIR)/wam_coordinate_module.o \
+$(OBJDIR)/wam_general_module.o \
+$(OBJDIR)/wam_output_parameter_module.o \
+$(OBJDIR)/wam_oasis_module.o \
+\
+$(OBJDIR)/wam_print_module.o \
+$(OBJDIR)/wam_print_user_module.o \
+\
+$(OBJDIR)/print_time.o \
+$(OBJDIR)/read_time_user.o \
+$(OBJDIR)/read_grid_file.o
+
+# Objects for ptime_S
+PTIMS_OBJS = \
+$(OBJDIR)/wam_file_module.o \
+$(OBJDIR)/wam_coordinate_module.o \
+$(OBJDIR)/wam_general_module.o \
+$(OBJDIR)/wam_output_parameter_module.o \
+$(OBJDIR)/wam_oasis_module.o \
+\
+$(OBJDIR)/wam_print_module.o \
+$(OBJDIR)/wam_print_user_module.o \
+\
+$(OBJDIR)/print_time_S.o \
+$(OBJDIR)/read_time_user_S.o \
+$(OBJDIR)/read_grid_file.o
+
+# Objects for pnetcdf (wam2netcdf)
+PNCDF_OBJS = \
+$(OBJDIR)/wam_mpi_module.o \
+$(OBJDIR)/wam_file_module.o \
+$(OBJDIR)/wam_coordinate_module.o \
+$(OBJDIR)/wam_general_module.o \
+$(OBJDIR)/wam_grid_module.o \
+$(OBJDIR)/wam_timopt_module.o \
+$(OBJDIR)/wam_model_module.o \
+$(OBJDIR)/wam_fre_dir_module.o \
+$(OBJDIR)/wam_jonswap_module.o \
+$(OBJDIR)/wam_tables_module.o \
+$(OBJDIR)/wam_output_parameter_module.o \
+$(OBJDIR)/wam_special_module.o \
+$(OBJDIR)/wam_output_set_up_module.o \
+$(OBJDIR)/wam_interface_module.o \
+$(OBJDIR)/wam_nest_module.o \
+$(OBJDIR)/wam_mpi_comp_module.o \
+$(OBJDIR)/wam_current_module.o \
+$(OBJDIR)/wam_ice_module.o \
+$(OBJDIR)/wam_oasis_module.o \
+\
+$(OBJDIR)/wam_flux_module.o \
+$(OBJDIR)/wam_topo_module.o \
+$(OBJDIR)/wam_source_output_module.o \
+$(OBJDIR)/wam_source_module.o \
+$(OBJDIR)/wam_swell_module.o \
+$(OBJDIR)/wam_propagation_module.o \
+$(OBJDIR)/wam_radiation_module.o \
+$(OBJDIR)/wam_output_module.o \
+$(OBJDIR)/wam_print_module.o \
+\
+$(OBJDIR)/read_current_input.o \
+$(OBJDIR)/read_ice_input.o \
+$(OBJDIR)/read_topo_input.o \
+$(OBJDIR)/jafu.o \
+\
+$(OBJDIR)/wam_netcdf_module.o \
+$(OBJDIR)/make_netcdf.o
+
+# Objects for psource
+PSRC_OBJS = \
+$(OBJDIR)/wam_file_module.o \
+$(OBJDIR)/wam_coordinate_module.o \
+$(OBJDIR)/wam_general_module.o \
+$(OBJDIR)/wam_output_parameter_module.o \
+$(OBJDIR)/wam_oasis_module.o \
+\
+$(OBJDIR)/wam_print_module.o \
+$(OBJDIR)/wam_print_user_module.o \
+\
+$(OBJDIR)/print_scr_file.o \
+$(OBJDIR)/read_scr_file.o \
+$(OBJDIR)/read_scr_user.o
+
+
+#===============================================================================
+# 3. Make rules
+#===============================================================================
+
+#-------------------------------------------------------------------------------
+# Make programs
+#-------------------------------------------------------------------------------
+
+all: preproc wam pgrid pspec ptime ptime_S pnetcdf psource
+
+preproc : directories $(PREPROC_OBJS)
+	$(FC) $(FFLAGS) $(PREPROC_OBJS) -o $(EXEDIR)/$@ $(LDOPT)
+
+wam     : directories $(WAM_OBJS)
+	$(FC) $(FFLAGS) $(WAM_OBJS)     -o $(EXEDIR)/$@ $(LDOPT)
+
+pgrid   : directories $(PGRID_OBJS)
+	$(FC) $(FFLAGS) $(PGRID_OBJS)   -o $(EXEDIR)/$@ $(LDOPT)
+
+pspec   : directories $(PSPEC_OBJS) 
+	$(FC) $(FFLAGS) $(PSPEC_OBJS)   -o $(EXEDIR)/$@ $(LDOPT)
+
+ptime   : directories $(PTIME_OBJS)
+	$(FC) $(FFLAGS) $(PTIME_OBJS)   -o $(EXEDIR)/$@ $(LDOPT)
+
+ptime_S : directories $(PTIMS_OBJS)
+	$(FC) $(FFLAGS) $(PTIMS_OBJS)   -o $(EXEDIR)/$@ $(LDOPT)
+
+pnetcdf : directories $(PNCDF_OBJS)
+	$(FC) $(FFLAGS) $(PNCDF_OBJS)   -o $(EXEDIR)/$@ $(LDOPT)
+
+psource : directories $(PSRC_OBJS)
+	$(FC) $(FFLAGS) $(PSRC_OBJS)    -o $(EXEDIR)/$@ $(LDOPT)
+
+#-------------------------------------------------------------------------------
+# Dependencies
+#-------------------------------------------------------------------------------
+$(OBJDIR)/%.o : $(SRCDIR)/mod/%.f90
+	$(FC) $(FFLAGS) -c $< $(LDOPT) -o $@
+$(OBJDIR)/%.o : $(SRCDIR)/chief/%.f90
+	$(FC) $(FFLAGS) -c $< $(LDOPT) -o $@
+$(OBJDIR)/%.o : $(SRCDIR)/preproc/%.f90
+	$(FC) $(FFLAGS) -c $< $(LDOPT) -o $@
+$(OBJDIR)/%.o : $(SRCDIR)/print/%.f90
+	$(FC) $(FFLAGS) -c $< $(LDOPT) -o $@
+
+#-------------------------------------------------------------------------------
+# Utilities
+#-------------------------------------------------------------------------------
+
+.PHONY: directories clean
+
+directories:
+	if [ ! -d $(OBJDIR) ]; then mkdir -p $(OBJDIR); fi
+	if [ ! -d $(EXEDIR) ]; then mkdir -p $(EXEDIR); fi
+
 clean:
-	rm *.o
-	rm *.mod
-realclean:	clean
-	rm *.f90 netcdf.inc mpif.h
+	rm $(EXEDIR)/* $(OBJDIR)/*
 
-# explicit rules
-
-$(PREPROC) $(CHIEF) $(PNETCDF) $(PNETCDF_RAD):	$(NETCDF)
-chief.o: chief.f90 wam_file_module.mod wam_general_module.mod \
-	wam_mpi_comp_module.mod wam_mpi_module.mod wam_oasis_module.mod \
-	wam_timopt_module.mod
-ingrid.o: ingrid.f90 wam_output_set_up_module.mod \
-	wam_print_module.mod
-initmdl.o initmdl.mod: initmdl.f90 wam_assi_set_up_module.mod \
-	wam_boundary_module.mod wam_file_module.mod \
-	wam_fre_dir_module.mod wam_general_module.mod wam_grid_module.mod \
-	wam_initial_module.mod wam_model_module.mod wam_mpi_comp_module.mod \
-	wam_mpi_module.mod wam_nest_module.mod wam_oasis_module.mod wam_output_module.mod \
-	wam_output_set_up_module.mod wam_propagation_module.mod \
-	wam_radiation_module.mod wam_restart_module.mod wam_source_module.mod \
-	wam_source_output_module.mod wam_timopt_module.mod
-make_netcdf.o: make_netcdf.f90 \
-	wam_coordinate_module.mod wam_general_module.mod wam_netcdf_module.mod \
-	wam_output_set_up_module.mod wam_print_module.mod
-make_rad_netcdf.o: make_rad_netcdf.f90 \
-	wam_coordinate_module.mod wam_general_module.mod \
-	wam_output_set_up_module.mod wam_print_module.mod \
-	wam_rad_netcdf_module.mod
-preproc.o: preproc.f90 preproc_module.mod \
-	wam_file_module.mod wam_tables_module.mod
-preproc_module.o preproc_module.mod: preproc_module.f90 \
-	wam_coordinate_module.mod wam_file_module.mod wam_fre_dir_module.mod \
-	wam_general_module.mod wam_grid_module.mod wam_nest_module.mod \
-	wam_tables_module.mod
-preproc_user_module.o preproc_user_module.mod: preproc_user_module.f90 \
-	preproc_module.mod wam_coordinate_module.mod wam_file_module.mod \
-	wam_fre_dir_module.mod wam_general_module.mod wam_nest_module.mod \
-	wam_tables_module.mod
-print_grid_file.o: print_grid_file.f90 \
-	wam_file_module.mod wam_general_module.mod wam_print_module.mod
-print_rad_time.o print_rad_time.mod: print_rad_time.f90 \
-	wam_coordinate_module.mod wam_file_module.mod wam_general_module.mod \
-	wam_print_module.mod
-print_radiation_file.o: \
-	print_radiation_file.f90 wam_file_module.mod wam_general_module.mod \
-	wam_print_module.mod
-print_scr_file.o: print_scr_file.f90 \
-	wam_file_module.mod wam_general_module.mod wam_print_module.mod
-print_spectra_file.o: print_spectra_file.f90 \
-	wam_coordinate_module.mod wam_file_module.mod wam_general_module.mod \
-	wam_print_module.mod
-print_time.o: print_time.f90 wam_coordinate_module.mod \
-	wam_file_module.mod wam_general_module.mod wam_print_module.mod
-print_time_S.o print_time_S.mod: print_time_S.f90 \
-	wam_coordinate_module.mod wam_file_module.mod wam_general_module.mod \
-	wam_print_module.mod
-print_wam_status.o print_wam_status.mod: print_wam_status.f90 \
-	wam_assi_set_up_module.mod wam_boundary_module.mod \
-	wam_coldstart_module.mod wam_current_module.mod wam_file_module.mod \
-	wam_fre_dir_module.mod wam_general_module.mod wam_grid_module.mod \
-	wam_ice_module.mod wam_nest_module.mod wam_output_set_up_module.mod \
-	wam_propagation_module.mod wam_radiation_module.mod \
-	wam_restart_module.mod wam_source_module.mod \
-	wam_source_output_module.mod wam_tables_module.mod \
-	wam_timopt_module.mod wam_topo_module.mod wam_wind_module.mod
-read_boundary_input.o: read_boundary_input.f90 \
-	wam_boundary_module.mod wam_file_module.mod wam_fre_dir_module.mod \
-	wam_general_module.mod wam_nest_module.mod
-read_current_input.o: read_current_input.f90 \
-	wam_current_module.mod wam_file_module.mod wam_general_module.mod
-read_current_input_arno.o: \
-	read_current_input_arno.f90 wam_current_module.mod wam_file_module.mod \
-	wam_general_module.mod
-read_current_input_getm.o: \
-	read_current_input_getm.f90 wam_current_module.mod \
-	wam_file_module.mod wam_general_module.mod
-read_grid_file.o: read_grid_file.f90 \
-	wam_file_module.mod wam_print_module.mod
-read_grid_user.o: read_grid_user.f90 \
-	wam_file_module.mod wam_general_module.mod wam_print_user_module.mod
-read_ice_input.o: read_ice_input.f90 \
-	wam_file_module.mod wam_general_module.mod wam_ice_module.mod
-read_preproc_user.o: read_preproc_user.f90 \
-	preproc_user_module.mod wam_file_module.mod wam_general_module.mod
-read_radiation_file.o: read_radiation_file.f90 \
-	wam_file_module.mod wam_print_module.mod
-read_radiation_user.o: read_radiation_user.f90 \
-	wam_file_module.mod wam_general_module.mod wam_print_user_module.mod
-read_scr_file.o: read_scr_file.f90 \
-	wam_file_module.mod wam_print_module.mod
-read_scr_user.o: read_scr_user.f90 \
-	wam_file_module.mod wam_general_module.mod wam_print_user_module.mod
-read_spectra_file.o: read_spectra_file.f90 \
-	wam_file_module.mod wam_general_module.mod wam_print_module.mod
-read_spectra_user.o: read_spectra_user.f90 \
-	wam_file_module.mod wam_general_module.mod wam_print_user_module.mod
-read_spectrum.o: read_spectrum.f90 \
-	wam_output_set_up_module.mod wam_print_module.mod
-read_time_user.o: read_time_user.f90 \
-	wam_file_module.mod wam_general_module.mod wam_print_user_module.mod
-read_time_user_S.o read_time_user_S.mod: read_time_user_S.f90 \
-	wam_file_module.mod wam_general_module.mod wam_print_user_module.mod
-read_topo_input.o: read_topo_input.f90 \
-	wam_file_module.mod wam_general_module.mod wam_topo_module.mod
-read_topo_input_arno.o: \
-	read_topo_input_arno.f90 wam_file_module.mod wam_general_module.mod \
-	wam_topo_module.mod
-read_topo_input_getm.o: \
-	read_topo_input_getm.f90 wam_file_module.mod \
-	wam_general_module.mod wam_topo_module.mod
-read_topography.o: read_topography.f90 \
-	preproc_module.mod wam_coordinate_module.mod wam_file_module.mod \
-	wam_general_module.mod
-read_topography_BSH.o read_topography_BSH.mod: read_topography_BSH.f90 \
-	preproc_module.mod wam_coordinate_module.mod wam_file_module.mod \
-	wam_general_module.mod
-read_topography_ETOPO.o read_topography_ETOPO.mod: \
-	read_topography_ETOPO.F90 preproc_module.mod wam_coordinate_module.mod \
-	wam_file_module.mod wam_general_module.mod
-read_topography_Heinz.o read_topography_Heinz.mod: \
-	read_topography_Heinz.f90 preproc_module.mod wam_coordinate_module.mod \
-	wam_file_module.mod wam_general_module.mod
-read_topography_arno.o: \
-	read_topography_arno.f90 preproc_module.mod wam_coordinate_module.mod \
-	wam_file_module.mod wam_general_module.mod
-read_topography_getm.o: \
-	read_topography_getm.f90 preproc_module.mod wam_coordinate_module.mod \
-	wam_file_module.mod wam_general_module.mod
-read_wam_user.o: read_wam_user.f90 \
-	wam_file_module.mod wam_general_module.mod wam_user_module.mod
-read_wind_input.o: read_wind_input.f90 \
-	wam_file_module.mod wam_general_module.mod wam_special_module.mod \
-	wam_timopt_module.mod wam_wind_module.mod
-read_wind_input_DWD.o: read_wind_input_DWD.f90 \
-	wam_file_module.mod wam_general_module.mod wam_special_module.mod \
-	wam_timopt_module.mod wam_wind_module.mod
-read_wind_input_DWD_LSM.o: \
-	read_wind_input_DWD_LSM.f90 wam_file_module.mod wam_general_module.mod \
-	wam_special_module.mod wam_timopt_module.mod wam_wind_module.mod
-read_wind_input_ecmwf.o: \
-	read_wind_input_ecmwf.f90 wam_file_module.mod \
-	wam_general_module.mod wam_special_module.mod wam_timopt_module.mod \
-	wam_wind_module.mod
-read_wind_input_swamp.o: \
-	read_wind_input_swamp.f90 wam_file_module.mod wam_general_module.mod \
-	wam_wind_module.mod
-wam_assi_module.o wam_assi_module.mod: wam_assi_module.f90 \
-	wam_assi_set_up_module.mod wam_coordinate_module.mod \
-	wam_file_module.mod wam_fre_dir_module.mod wam_general_module.mod \
-	wam_grid_module.mod wam_ice_module.mod wam_interface_module.mod \
-	wam_model_module.mod wam_mpi_comp_module.mod wam_mpi_module.mod \
-	wam_output_module.mod wam_output_set_up_module.mod \
-	wam_timopt_module.mod wam_topo_module.mod
-wam_assi_set_up_module.o wam_assi_set_up_module.mod: \
-	wam_assi_set_up_module.f90 wam_coordinate_module.mod \
-	wam_file_module.mod wam_general_module.mod wam_grid_module.mod \
-	wam_output_set_up_module.mod wam_timopt_module.mod
-wam_boundary_module.o wam_boundary_module.mod: wam_boundary_module.f90 \
-	wam_file_module.mod wam_fre_dir_module.mod wam_general_module.mod \
-	wam_grid_module.mod wam_interface_module.mod wam_model_module.mod \
-	wam_mpi_comp_module.mod wam_mpi_module.mod wam_nest_module.mod \
-	wam_output_set_up_module.mod wam_timopt_module.mod
-wam_coldstart_module.o wam_coldstart_module.mod: \
-	wam_coldstart_module.f90 wam_file_module.mod wam_fre_dir_module.mod \
-	wam_general_module.mod wam_grid_module.mod wam_jonswap_module.mod \
-	wam_model_module.mod wam_mpi_module.mod wam_oasis_module.mod \
-	wam_tables_module.mod wam_timopt_module.mod wam_wind_module.mod
-wam_coordinate_module.o wam_coordinate_module.mod: \
-	wam_coordinate_module.f90 wam_file_module.mod
-wam_current_module.o wam_current_module.mod: wam_current_module.f90 \
-	wam_coordinate_module.mod wam_file_module.mod wam_general_module.mod \
-	wam_grid_module.mod wam_mpi_comp_module.mod wam_model_module.mod \
-	wam_timopt_module.mod
-wam_fre_dir_module.o wam_fre_dir_module.mod: wam_fre_dir_module.f90 \
-	wam_file_module.mod wam_general_module.mod
-wam_general_module.o wam_general_module.mod: wam_general_module.f90 \
-	wam_coordinate_module.mod wam_file_module.mod
-wam_grid_module.o wam_grid_module.mod: wam_grid_module.f90 \
-	wam_coordinate_module.mod wam_file_module.mod wam_general_module.mod
-wam_ice_module.o wam_ice_module.mod: wam_ice_module.f90 \
-	wam_coordinate_module.mod wam_file_module.mod wam_fre_dir_module.mod \
-	wam_general_module.mod wam_grid_module.mod wam_mpi_module.mod \
-	wam_timopt_module.mod
-wam_initial_module.o wam_initial_module.mod: wam_initial_module.f90 \
-	wam_coldstart_module.mod wam_current_module.mod wam_file_module.mod \
-	wam_fre_dir_module.mod wam_general_module.mod wam_grid_module.mod \
-	wam_ice_module.mod wam_model_module.mod wam_mpi_module.mod \
-	wam_nest_module.mod wam_oasis_module.mod wam_propagation_module.mod \
-	wam_restart_module.mod wam_source_module.mod wam_special_module.mod \
-	wam_tables_module.mod wam_timopt_module.mod \
-	wam_topo_module.mod wam_wind_module.mod
-wam_interface_module.o wam_interface_module.mod: \
-	wam_interface_module.f90 wam_fre_dir_module.mod wam_general_module.mod \
-	wam_output_set_up_module.mod wam_tables_module.mod
-wam_jonswap_module.o wam_jonswap_module.mod: wam_jonswap_module.f90 \
-	wam_general_module.mod
-wam_mpi_comp_module.o wam_mpi_comp_module.mod: wam_mpi_comp_module.f90 \
-	wam_file_module.mod wam_fre_dir_module.mod wam_general_module.mod \
-	wam_grid_module.mod wam_mpi_module.mod wam_nest_module.mod \
-	wam_output_set_up_module.mod
-wam_nest_module.o wam_nest_module.mod: wam_nest_module.f90 \
-	wam_coordinate_module.mod wam_file_module.mod wam_general_module.mod \
-	wam_grid_module.mod
-wam_netcdf_module.o wam_netcdf_module.mod: wam_netcdf_module.f90 \
-	wam_file_module.mod wam_output_set_up_module.mod \
-	wam_print_module.mod
-wam_netcdf_module_arno.o wam_netcdf_module_arno.mod: \
-	wam_netcdf_module_arno.f90 wam_file_module.mod \
-	wam_output_set_up_module.mod wam_print_module.mod
-wam_netcdf_module_kw.o wam_netcdf_module_kw.mod: \
-	wam_netcdf_module_kw.f90 wam_file_module.mod \
-	wam_output_set_up_module.mod wam_print_module.mod
-wam_oasis_module.o wam_oasis_module.mod: wam_oasis_module.f90 \
-	wam_coordinate_module.mod wam_current_module.mod \
-	wam_file_module.mod wam_general_module.mod \
-	wam_grid_module.mod wam_model_module.mod wam_mpi_module.mod \
-	wam_output_parameter_module.mod wam_output_set_up_module.mod \
-	wam_timopt_module.mod wam_topo_module.mod wam_wind_module.mod
-wam_output_module.o wam_output_module.mod: wam_output_module.f90 \
-	wam_file_module.mod wam_fre_dir_module.mod wam_general_module.mod \
-	wam_grid_module.mod wam_ice_module.mod wam_interface_module.mod \
-	wam_model_module.mod wam_mpi_comp_module.mod wam_mpi_module.mod \
-	wam_output_parameter_module.mod wam_output_set_up_module.mod \
-	wam_radiation_module.mod wam_source_module.mod \
-	wam_special_module.mod wam_swell_module.mod wam_tables_module.mod \
-	wam_timopt_module.mod wam_topo_module.mod
-wam_output_set_up_module.o wam_output_set_up_module.mod: \
-	wam_output_set_up_module.f90 wam_output_parameter_module.mod \
-	wam_coordinate_module.mod \
-	wam_file_module.mod wam_general_module.mod wam_grid_module.mod \
-	wam_special_module.mod wam_timopt_module.mod
-wam_print_module.o wam_print_module.mod: wam_print_module.f90 \
-	wam_coordinate_module.mod wam_file_module.mod wam_general_module.mod \
-	wam_output_parameter_module.mod
-wam_print_user_module.o wam_print_user_module.mod: \
-	wam_print_user_module.f90 wam_coordinate_module.mod wam_file_module.mod \
-	wam_print_module.mod
-wam_propagation_module.o wam_propagation_module.mod: \
-	wam_propagation_module.f90 wam_file_module.mod wam_fre_dir_module.mod \
-	wam_general_module.mod wam_grid_module.mod wam_model_module.mod \
-	wam_mpi_comp_module.mod wam_mpi_module.mod wam_tables_module.mod \
-	wam_timopt_module.mod wam_topo_module.mod
-wam_propagation_module_hg.o wam_propagation_module_hg.mod: \
-	wam_propagation_module_hg.f90 wam_file_module.mod \
-	wam_fre_dir_module.mod wam_general_module.mod wam_grid_module.mod \
-	wam_model_module.mod wam_mpi_comp_module.mod wam_mpi_module.mod \
-	wam_timopt_module.mod
-wam_propagation_module_kw.o wam_propagation_module_kw.mod: \
-	wam_propagation_module_kw.f90 wam_file_module.mod \
-	wam_fre_dir_module.mod wam_general_module.mod wam_grid_module.mod \
-	wam_model_module.mod wam_mpi_comp_module.mod wam_mpi_module.mod \
-	wam_timopt_module.mod wam_topo_module.mod
-wam_rad_netcdf_module.o wam_rad_netcdf_module.mod: \
-	wam_rad_netcdf_module.f90 wam_file_module.mod \
-	wam_output_set_up_module.mod wam_print_module.mod
-wam_radiation_module.o wam_radiation_module.mod: \
-	wam_radiation_module.f90 wam_file_module.mod wam_flux_module.mod \
-	wam_fre_dir_module.mod wam_general_module.mod wam_grid_module.mod \
-	wam_ice_module.mod wam_interface_module.mod wam_model_module.mod \
-	wam_mpi_comp_module.mod wam_mpi_module.mod wam_nest_module.mod \
-	wam_output_set_up_module.mod wam_propagation_module.mod \
-	wam_tables_module.mod wam_timopt_module.mod wam_topo_module.mod
-wam_restart_module.o wam_restart_module.mod: wam_restart_module.f90 \
-	wam_file_module.mod wam_fre_dir_module.mod wam_general_module.mod \
-	wam_grid_module.mod wam_model_module.mod wam_mpi_comp_module.mod \
-	wam_mpi_module.mod wam_special_module.mod wam_timopt_module.mod
-wam_source_module.o wam_source_module.mod: wam_source_module.f90 \
-	wam_file_module.mod wam_flux_module.mod wam_fre_dir_module.mod \
-	wam_general_module.mod wam_interface_module.mod wam_mpi_module.mod \
-	wam_oasis_module.mod wam_source_output_module.mod wam_tables_module.mod \
-	wam_timopt_module.mod
-wam_source_output_module.o wam_source_output_module.mod: \
-	wam_source_output_module.f90 wam_file_module.mod wam_fre_dir_module.mod \
-	wam_general_module.mod wam_grid_module.mod wam_ice_module.mod \
-	wam_interface_module.mod wam_model_module.mod wam_mpi_comp_module.mod \
-	wam_mpi_module.mod wam_oasis_module.mod wam_output_set_up_module.mod \
-	wam_timopt_module.mod wam_topo_module.mod
-wam_special_module.o wam_special_module.mod: wam_special_module.f90 \
-	wam_file_module.mod wam_general_module.mod wam_mpi_module.mod
-wam_swell_module.o wam_swell_module.mod: wam_swell_module.f90 \
-	wam_file_module.mod wam_fre_dir_module.mod wam_general_module.mod \
-	wam_interface_module.mod wam_model_module.mod wam_mpi_module.mod \
-	wam_output_set_up_module.mod
-wam_tables_module.o wam_tables_module.mod: wam_tables_module.f90 \
-	wam_file_module.mod wam_fre_dir_module.mod wam_general_module.mod \
-	wam_grid_module.mod wam_jonswap_module.mod
-wam_timopt_module.o wam_timopt_module.mod: wam_timopt_module.f90 \
-	wam_file_module.mod wam_general_module.mod
-wam_topo_module.o wam_topo_module.mod: wam_topo_module.f90 \
-	wam_coordinate_module.mod wam_file_module.mod wam_fre_dir_module.mod \
-	wam_general_module.mod wam_grid_module.mod wam_model_module.mod \
-	wam_mpi_comp_module.mod wam_mpi_module.mod wam_tables_module.mod \
-	wam_timopt_module.mod
-wam_user_module.o wam_user_module.mod: wam_user_module.f90 \
-	wam_assi_set_up_module.mod wam_boundary_module.mod \
-	wam_coldstart_module.mod wam_coordinate_module.mod \
-	wam_current_module.mod wam_file_module.mod wam_ice_module.mod \
-	wam_nest_module.mod wam_oasis_module.mod wam_output_set_up_module.mod \
-	wam_radiation_module.mod wam_restart_module.mod \
-	wam_source_output_module.mod wam_timopt_module.mod wam_topo_module.mod \
-	wam_wind_module.mod
-wam_wind_module.o wam_wind_module.mod: wam_wind_module.f90 \
-	wam_coordinate_module.mod wam_file_module.mod wam_general_module.mod \
-	wam_grid_module.mod wam_model_module.mod wam_mpi_module.mod \
-	wam_special_module.mod wam_timopt_module.mod
-wamodel.o wamodel.mod: wamodel.f90 wam_assi_module.mod \
-	wam_assi_set_up_module.mod wam_boundary_module.mod \
-	wam_current_module.mod wam_file_module.mod wam_general_module.mod \
-	wam_grid_module.mod wam_ice_module.mod wam_model_module.mod \
-	wam_mpi_module.mod wam_nest_module.mod wam_oasis_module.mod \
-	wam_output_module.mod wam_output_set_up_module.mod \
-	wam_propagation_module.mod wam_radiation_module.mod \
-	wam_restart_module.mod wam_source_module.mod \
-	wam_source_output_module.mod wam_timopt_module.mod wam_topo_module.mod \
-	wam_wind_module.mod
-wavemdl.o: wavemdl.f90 wam_current_module.mod \
-	wam_file_module.mod wam_general_module.mod wam_oasis_module.mod \
-	wam_timopt_module.mod wam_topo_module.mod wam_wind_module.mod
-
-# pattern rules
-
-%.f90: ../src
-	find ../src -name $@ -exec ln -sf {} \;
-%.o: %.f90
-	$(FC) $(FFLAGS) -c $<
-%.mod: %.f90
-	$(FC) $(FFLAGS) -c $<
-.PRECIOUS:	%.f90
-.SILENT:	Makefile %.f90 .
-.SUFFIXES:
