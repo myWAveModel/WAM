@@ -10,16 +10,29 @@
 ##SBATCH --exclusive                  # To be enabled when run on more than one node
 #
 
+
+# ===================================================================
 #### STRAND - Intel 2020 ####
 #module purge
 #module load compilers/intel/2020.1.217
 #module load intelmpi/2020.1.217
 #module load netcdf
 
+# ===================================================================
 #### STRAND - oneAPI ####
 module purge
 module load compilers/intel/oneAPI/2021.2.0
 module load netcdf
+
+# ===================================================================
+#### STRAND - GCC 11.1.1 ####
+#module purge
+#module load compilers/gnu/11.1.1
+#module load netcdf/4.7.0
+
+# !!! SWITCH FROM srun TO mpirun BELOW !!!
+
+# ===================================================================
 
 
 WAMDIR='/gpfs/home/USER/PATH/TO/WAM_Cycle7'
@@ -45,9 +58,6 @@ fi
 if [ ! -d ${GRDDIR} ]; then
     mkdir -p ${GRDDIR}
 fi
-if [ ! -d ${RUNDIR}/WAMLOGS ]; then
-    mkdir -p ${RUNDIR}/WAMLOGS
-fi
 if [ ! -d ${OUTDIR}/coarse/data ]; then
     mkdir -p ${OUTDIR}/coarse/data
 fi
@@ -68,10 +78,11 @@ cd ${RUNDIR}
 echo '=== 1) WAM pre-processing preproc ==='
 #
 if [ $preproc = 'y' ]; then
-    cp -ra ${WAMDIR}/abs/preproc preproc.exe
+    cp -ra ${WAMDIR}/bin/preproc preproc.exe
     # Main Grid
     cp -ra ${INDIR}/config/Preproc_User .
     srun -n 1 --mpi=pmi2 ./preproc.exe
+    #mpirun -n 1 --mca pml ob1 --mca btl ^openib ./preproc.exe # TO BE USED WITH GCC !!!
     mv Preproc_Prot ${OUTDIR}/coarse/preproc_prot_coarse.log
     # Nested Grids
     if [ $nofnest != 0 ]; then
@@ -79,6 +90,7 @@ if [ $preproc = 'y' ]; then
         for ((i=1;$nofnest>=i;i++)); do
             cp -ra ${INDIR}/config/Preproc_User_N${i} ./Preproc_User
             srun -n 1 --mpi=pmi2 ./preproc.exe
+            #mpirun -n 1 --mca pml ob1 --mca btl ^openib ./preproc.exe # TO BE USED WITH GCC !!!
             mv Preproc_Prot ${OUTDIR}/nest${i}/preproc_prot_nest${i}.log
             echo '    --> nest '$i
         done
@@ -98,10 +110,11 @@ echo ' '
 # ===================================================================
 echo '=== 2) WAM model run ==='
 #
-cp -ra ${WAMDIR}/abs/wam wam.exe
+cp -ra ${WAMDIR}/bin/wam wam.exe
 # Main Grid
 cp -ra ${INDIR}/config/WAM_User .
 srun -n $nproc --mpi=pmi2 ./wam.exe
+#mpirun -n $nproc --mca pml ob1 --mca btl ^openib ./wam.exe # TO BE USED WITH GCC !!!
 if [ -f logfile.0 ]; then
     cp -ra logfile.0 ${OUTDIR}/coarse/wam_prot.log
     rm logfile.*
@@ -119,6 +132,7 @@ if [ $nofnest != 0 ]; then
     for ((i=1;$nofnest>=i;i++)); do
         cp -ra ${INDIR}/config/WAM_User_N${i} ./WAM_User
         srun -n $nproc --mpi=pmi2 ./wam.exe
+        #mpirun -n $nproc --mca pml ob1 --mca btl ^openib ./wam.exe # TO BE USED WITH GCC !!!
         if [ -f logfile.0 ]; then
             cp -ra logfile.0 ${OUTDIR}/nest${i}/wam_prot.log
             rm logfile.*
@@ -147,10 +161,11 @@ set -k
 #
 echo '--- i) NetCDF conversion ---'
 #
-cp -ra ${WAMDIR}/abs/pnetcdf pnetcdf.exe
+cp -ra ${WAMDIR}/bin/pnetcdf pnetcdf.exe
 # Main Grid
 cp -ra ${INDIR}/config/NETCDF_User .
 srun -n 1 --mpi=pmi2 ./pnetcdf.exe
+#mpirun -n 1 --mca pml ob1 --mca btl ^openib ./pnetcdf.exe # TO BE USED WITH GCC !!!
 mv pnetcdf_prot ${OUTDIR}/coarse/pnetcdf_prot.log
 mv WAVE* ${OUTDIR}/coarse/data/
 # Nested Grids
@@ -159,6 +174,7 @@ if [ $nofnest != 0 ]; then
     for ((i=1;$nofnest>=i;i++)); do
         cp -ra ${INDIR}/config/NETCDF_User_N${i} NETCDF_User
         srun -n 1 --mpi=pmi2 ./pnetcdf.exe
+        #mpirun -n 1 --mca pml ob1 --mca btl ^openib ./pnetcdf.exe # TO BE USED WITH GCC !!!
         mv pnetcdf_prot ${OUTDIR}/nest${i}/pnetcdf_prot.log
         mv WAVE* ${OUTDIR}/nest${i}/data/
         echo '    --> nest '$i
@@ -173,7 +189,7 @@ echo '    --> DONE.'
 # ===================================================================
 echo '--- ii) PTIME ---'
 #
-cp -ra ${WAMDIR}/abs/ptime ptime.exe
+cp -ra ${WAMDIR}/bin/ptime ptime.exe
 cp -ra ${INDIR}/config/Time_User .
 #
 ./ptime.exe
@@ -187,7 +203,7 @@ echo '    --> DONE.'
 # ===================================================================
 echo '--- iii) PGRID ---'
 #
-cp -ra ${WAMDIR}/abs/pgrid pgrid.exe
+cp -ra ${WAMDIR}/bin/pgrid pgrid.exe
 cp -ra ${INDIR}/config/Grid_User .
 #
 ./pgrid.exe
@@ -201,7 +217,7 @@ echo '    --> DONE.'
 # ===================================================================
 echo '--- iv) PSPEC ---'
 #
-cp -ra ${WAMDIR}/abs/pspec pspec.exe
+cp -ra ${WAMDIR}/bin/pspec pspec.exe
 cp -ra ${INDIR}/config/Spectra_User .
 #
 ./pspec.exe
@@ -217,7 +233,7 @@ echo '    --> DONE.'
 if [ $srcout = 'y' ]; then
     echo '--- v) PSOURCE ---'
 #
-    cp -ra ${WAMDIR}/abs/psource psource.exe
+    cp -ra ${WAMDIR}/bin/psource psource.exe
 # Main Grid
     cp -ra ${INDIR}/config/Scr_User .
     ./psource.exe

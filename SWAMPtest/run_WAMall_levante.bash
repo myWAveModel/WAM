@@ -10,7 +10,9 @@
 #SBATCH --error=WAMnested_o%j.log
 #
 
-#### LEVANTE - OpenMPI ####
+
+# ===================================================================
+#### LEVANTE - OpenMPI-intel ####
 module purge
 module load openmpi/4.1.2-intel-2021.5.0
 module load netcdf-c/4.8.1-openmpi-4.1.2-intel-2021.5.0
@@ -28,7 +30,26 @@ export UCX_TLS="shm,rc_mlx5,rc_x,self" # for jobs using LESS than 150 nodes
 #export UCX_TLS="shm,dc_mlx5,dc_x,self" # for jobs using MORE than 150 nodes
 export UCX_UNIFIED_MODE="y"            # JUST for homogeneous jobs on CPUs, do not use for GPU nodes
 
+# ===================================================================
+#### LEVANTE - OpenMPI-GCC ####
+#module purge
+#module load openmpi/4.1.2-gcc-11.2.0
+#module load netcdf-c/4.8.1-openmpi-4.1.2-gcc-11.2.0
+#module load netcdf-fortran/4.5.3-openmpi-4.1.2-gcc-11.2.0
+#
+## - Recommended minimal environmental setting by DKRZ
+#export OMPI_MCA_osc="ucx"
+#export OMPI_MCA_pml="ucx"
+#export OMPI_MCA_btl="self"
+#export UCX_HANDLE_ERRORS="bt"
+#export OMPI_MCA_pml_ucx_opal_mem_hooks=1
+## - Further recommended optimization settings by DKRZ
+#export OMPI_MCA_io="romio321"          # basic optimisation of I/O
+#export UCX_TLS="shm,rc_mlx5,rc_x,self" # for jobs using LESS than 150 nodes
+##export UCX_TLS="shm,dc_mlx5,dc_x,self" # for jobs using MORE than 150 nodes
+#export UCX_UNIFIED_MODE="y"            # JUST for homogeneous jobs on CPUs, do not use for GPU nodes
 
+# ===================================================================
 #### LEVANTE - oneAPI ####
 #module purge
 #module load intel-oneapi-compilers/2022.0.1-gcc-11.2.0
@@ -41,6 +62,7 @@ export UCX_UNIFIED_MODE="y"            # JUST for homogeneous jobs on CPUs, do n
 ##export I_MPI_PMI=pmi2
 ##export I_MPI_PMI_LIBRARY=/usr/lib64/libpmi2.so
 
+# ===================================================================
 
 # limit stacksize ... adjust to your programs need
 # and core file size
@@ -71,9 +93,6 @@ fi
 if [ ! -d ${GRDDIR} ]; then
     mkdir -p ${GRDDIR}
 fi
-if [ ! -d ${RUNDIR}/WAMLOGS ]; then
-    mkdir -p ${RUNDIR}/WAMLOGS
-fi
 if [ ! -d ${OUTDIR}/coarse/data ]; then
     mkdir -p ${OUTDIR}/coarse/data
 fi
@@ -94,7 +113,7 @@ cd ${RUNDIR}
 echo '=== 1) WAM pre-processing preproc ==='
 #
 if [ $preproc = 'y' ]; then
-    cp -ra ${WAMDIR}/abs/preproc preproc.exe
+    cp -ra ${WAMDIR}/bin/preproc preproc.exe
     # Main Grid
     cp -ra ${INDIR}/config/Preproc_User .
     srun -n 1 ./preproc.exe
@@ -126,7 +145,7 @@ echo ' '
 # ===================================================================
 echo '=== 2) WAM model run ==='
 #
-cp -ra ${WAMDIR}/abs/wam wam.exe
+cp -ra ${WAMDIR}/bin/wam wam.exe
 # Main Grid
 cp -ra ${INDIR}/config/WAM_User .
 srun -n $nproc ./wam.exe
@@ -177,7 +196,7 @@ set -k
 #
 echo '--- i) NetCDF conversion ---'
 #
-cp -ra ${WAMDIR}/abs/pnetcdf pnetcdf.exe
+cp -ra ${WAMDIR}/bin/pnetcdf pnetcdf.exe
 # Main Grid
 cp -ra ${INDIR}/config/NETCDF_User .
 srun -n 1 ./pnetcdf.exe
@@ -205,7 +224,7 @@ echo '    --> DONE.'
 # ===================================================================
 echo '--- ii) PTIME ---'
 #
-cp -ra ${WAMDIR}/abs/ptime ptime.exe
+cp -ra ${WAMDIR}/bin/ptime ptime.exe
 cp -ra ${INDIR}/config/Time_User .
 #
 ./ptime.exe
@@ -219,7 +238,7 @@ echo '    --> DONE.'
 # ===================================================================
 echo '--- iii) PGRID ---'
 #
-cp -ra ${WAMDIR}/abs/pgrid pgrid.exe
+cp -ra ${WAMDIR}/bin/pgrid pgrid.exe
 cp -ra ${INDIR}/config/Grid_User .
 #
 ./pgrid.exe
@@ -233,7 +252,7 @@ echo '    --> DONE.'
 # ===================================================================
 echo '--- iv) PSPEC ---'
 #
-cp -ra ${WAMDIR}/abs/pspec pspec.exe
+cp -ra ${WAMDIR}/bin/pspec pspec.exe
 cp -ra ${INDIR}/config/Spectra_User .
 #
 ./pspec.exe
@@ -249,7 +268,7 @@ echo '    --> DONE.'
 if [ $srcout = 'y' ]; then
     echo '--- v) PSOURCE ---'
 #
-    cp -ra ${WAMDIR}/abs/psource psource.exe
+    cp -ra ${WAMDIR}/bin/psource psource.exe
 # Main Grid
     cp -ra ${INDIR}/config/Scr_User .
     ./psource.exe
@@ -288,3 +307,4 @@ echo '    --> DONE.'
 echo '==> JOB FINALIZED.'
 rsync -au *.log ${STOREDIR}/
 #
+
