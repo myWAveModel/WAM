@@ -38,7 +38,7 @@ WAM. If not, see <http://www.gnu.org/licenses/>
 1. Install the following prerequisites of WAM on your system:
    * MPI
    * NetCDF
-   * OASIS 3 (if the OASIS coupling interface will be used)
+   * OASIS 3 MCT (if the OASIS coupling interface will be used)
 
 2. Download the repository: <https://github.com/mywave/WAM/tree/WAM_Cycle7>
 
@@ -60,16 +60,28 @@ WAM. If not, see <http://www.gnu.org/licenses/>
    [preproc] $ ln -sf read_topography_arno.f90     read_topography.f90
    ```
 
-4. Load the required modules (MPI, NetCDF, and potential prerequisites).
+4. Choose between activated or deactivated OASIS coupling interface by linking 
+   the corresponding module in directory src/mod.
+   * deactivated OASIS interface for stand-alone WAM:
+   ```
+   [mod] $ ln -sf wam_oasis_inactive_module.f90 wam_oasis_module.f90
+   ```
+   * activated OASIS interface for both, coupled and stand-alone WAM 
+     (requires OASIS 3 MCT library):
+   ```
+   [mod] $ ln -sf wam_oasis_active_module.f90   wam_oasis_module.f90
+   ```
+
+5. Load the required modules (MPI, NetCDF, and potential prerequisites).
    ```
    [WAM] $ module load NAMES
    ```
    Note: The exact NAMES can differ for each SYSTEM.
 
-5. Set the compiler specifications and library paths in the preamble of the
+6. Set the compiler specifications and library paths in the preamble of the
    Makefile.
 
-6. Compile the executables via make:
+7. Compile the executables via make:
    ```
    [WAM] $ make clean 
    [WAM] $ make TARGET
@@ -86,7 +98,7 @@ WAM. If not, see <http://www.gnu.org/licenses/>
    
    Note that no TARGET is equivalent to TARGET=all.
 
-7. DONE! The executables can be found in the directory bin/.
+8. DONE! The executables can be found in the directory bin/.
 
 ### OPTION B: full compilation via makeWAM.bash
 
@@ -239,5 +251,5 @@ scripts for the Strand and Levante HPC environements:
 Version 7.0.10  
 Marcel Ricker   (marcel DOT ricker AT hereon DOT de)  
 Robert Hartmann (robert DOT hartmann AT hereon DOT de)  
-18 March 2025
+10 April 2025
 
