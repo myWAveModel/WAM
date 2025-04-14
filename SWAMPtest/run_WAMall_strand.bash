@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=1            # Specify number of CPUs per task: KEEP AT 1 !!!
 #SBATCH --time=00:30:00              # Set a limit on the total run time
 #SBATCH --output=WAMnested_o%j.log
-#SBATCH --error=WAMnested_o%j.log
+#SBATCH --error=WAMnested_e%j.log
 ##SBATCH --exclusive                  # To be enabled when run on more than one node
 #
 
