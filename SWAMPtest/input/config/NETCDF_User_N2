@@ -1,6 +1,6 @@
 &nlnetcdf
 cdatea = '19780906060000',
-cdatee = '19780909060000',
+cdatee = '19780908060000',
 ideldo = 10800,                 !! output time step
 cflag_p = T,T,F,F,F,F,F,F, T,T,T,T,T,T,F,F, T,F,F,F,F,T,F,F, T,F,F,F,F,T,F,T, F,F,F,F,F,F,F,F,
           F,F,F,F,F,F,F,F,F,F, F,F,F,F,F,F,T,T,T,T,T,T,T,T,T,F, T,T,T,T
