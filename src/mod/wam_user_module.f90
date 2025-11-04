@@ -242,6 +242,7 @@ CHARACTER (LEN=14), DIMENSION(MOUTT) :: COUTT  !! SPECIFIED OUTPUT TIMES.
 
 LOGICAL, DIMENSION(NOUT_P) :: FFLAG_P         !! FILE PARAMETER OUTPUT FLAG.
 LOGICAL, DIMENSION(NOUT_P) :: PFLAG_P         !! PRINTER PARAMETER OUTPUT FLAG.
+LOGICAL, DIMENSION(NOUT_P) :: NFLAG_P         !! SERIAL NETCDF PARAMETER OUTPUT FLAG.
 logical :: orientation_of_directions          !! coming from or going to ?
 
 ! ---------------------------------------------------------------------------- !
@@ -368,7 +369,8 @@ NAMELIST /WAM_NAMELIST/                                                        &
 &       SPECTRA_OUTPUT_FILE_UNIT,   SPECTRA_OUTPUT_FILE_NAME,                  &
 &       OUTPUT_FILE_SAVE_TIMESTEP,  OUTPUT_FILE_SAVE_TIMESTEP_UNIT,            &
 &       COUTT,                                                                 &
-&       FFLAG_P,  PFLAG_P,  FFLAG_S,  PFLAG_S, orientation_of_directions,      &
+&       FFLAG_P,  PFLAG_P,  NFLAG_P,                                           &
+&       FFLAG_S,  PFLAG_S, orientation_of_directions,                          &
 &       OUTLAT,   OUTLONG,   NAME,                                             &
 &       SOURCE_OUTPUT_TIMESTEP,     SOURCE_OUTPUT_TIMESTEP_UNIT,               &  !! ModR05: Include SRC-OUT
 &       SOURCE_FILE_TIMESTEP,       SOURCE_FILE_TIMESTEP_UNIT,                 &  !! ModR05
@@ -584,6 +586,8 @@ COUTT = ' '           !! SPECIFIED OUTPUT TIMES.
 
 FFLAG_P     = .TRUE.  !! PARAMETER FILE OUTPUT FLAG.
 PFLAG_P     = .FALSE. !! PARAMETER PRINTER OUTPUT FLAG.
+NFLAG_P     = .FALSE. !! PARAMETER SERIAL NETCDF OUTPUT FLAG.
+
 orientation_of_directions = .true.   !! coming from or going to (default)
 
 FFLAG_S     = .TRUE.  !! SPECTRA FILE OUTPUT FLAG.
@@ -846,8 +850,8 @@ CALL SET_SPECTRA_FILE (NAME=SPECTRA_OUTPUT_FILE_NAME,                          &
 
 CALL SET_OUTPUT_TIMES (TIME=COUTT)
 
-CALL SET_PARAMETER_OUTPUT_FLAGS (PF=PFLAG_P, FF=FFLAG_P, od=                   &
-&                                orientation_of_directions)
+CALL SET_PARAMETER_OUTPUT_FLAGS (PF=PFLAG_P, FF=FFLAG_P, NF=NFLAG_P,           &
+&                                od=orientation_of_directions)
 CALL SET_SPECTRA_OUTPUT_FLAGS (PF=PFLAG_S, FF=FFLAG_S)
 
 CALL SET_OUTPUT_SITES (LONG=OUTLONG, LAT=OUTLAT, NA=NAME)

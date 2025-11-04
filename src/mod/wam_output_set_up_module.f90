@@ -85,6 +85,7 @@ CHARACTER( LEN=14), ALLOCATABLE :: COUTT(:)  !! OUTPUT TIMES.
 LOGICAL, DIMENSION(NOUT_P) :: FFLAG_P    !! FILE OUTPUT FLAG.
 LOGICAL, DIMENSION(NOUT_P) :: PFLAG_P    !! PRINTER OUTPUT FLAG.
 LOGICAL, DIMENSION(NOUT_P) :: CFLAG_P    !! COMPUTATION FLAG.
+LOGICAL, DIMENSION(nout_p) :: NFLAG_P    !! SERIAL NETCDF OUTPUT FLAG
 logical :: orientation_of_directions     !! coming from or going to ?
 
 LOGICAL :: FFLAG20 = .FALSE. !! .TRUE. IF FIELDS ARE WRITTEN TO FILE20.
@@ -304,10 +305,11 @@ end subroutine set_ready_outfile_directory
    
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
-SUBROUTINE SET_PARAMETER_OUTPUT_FLAGS (PF, FF, od)
+SUBROUTINE SET_PARAMETER_OUTPUT_FLAGS (PF, FF, NF, od)
 
 LOGICAL, INTENT(IN) :: PF(:)   !! PRINTER FLAGS.
 LOGICAL, INTENT(IN) :: FF(:)   !! FILE FLAGS.
+LOGICAL, INTENT(IN) :: NF(:)   !! NETCDF FILE FLAGS.
 logical, intent(in) :: od      !! flag for orientation of directions
 
 IF (SIZE(PF).NE.NOUT_P .OR. SIZE(FF).NE.NOUT_P) THEN
