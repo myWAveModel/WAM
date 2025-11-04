@@ -110,7 +110,7 @@ ELSE
    WRITE (IU06,*) ' +                                                  +'
    WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
-   CALL READ_WAM_NAMELIST (1, IOS)
+   CALL READ_WAM_NAMELIST (1, IOS) !! FIXME(Aparna): should be READ_WAM_NAMELIST (0, IOS) 
    IF (IOS.NE.0) THEN
       WRITE (IU06,*) ' ****************************************************'
       WRITE (IU06,*) ' *                                                  *'
@@ -410,8 +410,10 @@ DO I=1,NOUT_P,2                            !! INTEGRATED PARAMETERS.
    CALL F_NEW_DATA
    PFLAG_P(  I) = LINE( 2: 2).EQ.'T' .OR. LINE( 2: 2).EQ.'t'
    FFLAG_P(  I) = .NOT. (LINE( 4: 4).EQ.'F' .OR. LINE( 4: 4).EQ.'f')
-   PFLAG_P(I+1) = LINE(40:40).EQ.'T' .OR. LINE(40:40).EQ.'t'
-   FFLAG_P(I+1) = .NOT. (LINE(42:42).EQ.'F' .OR. LINE(42:42).EQ.'f')
+   NFLAG_P(  I) = LINE( 6: 6).EQ.'T' .OR. LINE( 6: 6).EQ.'t'
+   PFLAG_P(I+1) = LINE(41:41).EQ.'T' .OR. LINE(41:41).EQ.'t'
+   FFLAG_P(I+1) = .NOT. (LINE(43:43).EQ.'F' .OR. LINE(43:43).EQ.'f')
+   NFLAG_P(I+1) = LINE(45:45).EQ.'T' .OR. LINE(45:45).EQ.'t'
 END DO
 
 DO I=1,NOUT_S,2                              !! SPECTRA.
