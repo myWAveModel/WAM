@@ -109,7 +109,7 @@ ELSE
    WRITE (IU06,*) ' +                                                  +'
    WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
-   CALL READ_WAM_NAMELIST (1, IOS)
+   CALL READ_WAM_NAMELIST (0, IOS)
    IF (IOS.NE.0) THEN
       WRITE (IU06,*) ' ****************************************************'
       WRITE (IU06,*) ' *                                                  *'
