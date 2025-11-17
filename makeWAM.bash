@@ -111,6 +111,34 @@ elif [ "$1" == levante-GCC ]; then
         #export LDOPT="${NCDFIN} ${NCDFLIB} ${NCDFFLAGS} ${HDF5IN} ${HDF5LIB} ${HDFFLAGS}"
 
 
+elif [ "$1" == oman_nw ]; then
+        #### OMAN - oneAPI ####
+        source /opt/intel/oneapi/compiler/2022.2.0/env/vars.sh
+        set oman_nw
+
+        MPIFORT="/opt/openmpi/4.1.4/intel/bin"
+        export LD_LIBRARY_PATH=/home01/netcdf/4.8.1/intel-2021.3.0-1/lib64:/home01/netcdf-fortran/4.5.2/intel-2021.3.0/lib64:/opt/intel/oneapi/compiler/2021.3.0/linux/compiler/lib/intel64_lin:/usr/lib64:${LD_LIBRARY_PATH}
+        export PATH=/home01/netcdf/4.8.1/intel-2021.3.0-1/lib64:/home01/netcdf-fortran/4.5.2/intel-2021.3.0/lib64:/opt/intel/oneapi/compiler/2021.3.0/linux/compiler/lib/intel64_lin:/usr/lib64:${PATH}
+
+        export FC=${MPIFORT}/mpifort
+        export FFLAGS='-heap-arrays 64 -fp-model precise -O3'
+        OMPIDIR='/opt/openmpi/4.1.4/intel'
+        OMPIIN=-I${OMPIDIR}/include
+        OMPILIB=-L${OMPIDIR}/lib
+        NCDFDIR='/home01/netcdf-fortran/4.5.2/intel-2021.3.0'
+        NCDFIN=-I${NCDFDIR}/include
+        NCDFLIB=-L${NCDFDIR}/lib64
+        NCDFDIR2='/home01/netcdf/4.8.1/intel-2021.3.0-1'
+        NCDFIN2=-I${NCDFDIR2}/include
+        NCDFLIB2=-L${NCDFDIR2}/lib64
+        NCDFDIR3='/usr'
+        NCDFIN3=-I${NCDFDIR3}/include
+        NCDFLIB3=-L${NCDFDIR3}/lib64
+        NCDFFLAGS='-lnetcdf -lnetcdff'
+#         export LDOPT="${OMPIIN} ${OMPILIB} ${NCDFIN} ${NCDFLIB} ${NCDFFLAGS} "
+        export LDOPT="${OMPIIN} ${OMPILIB} ${NCDFIN} ${NCDFLIB} ${NCDFIN2} ${NCDFLIB2} ${NCDFIN3} ${NCDFLIB3} ${NCDFFLAGS} "
+
+
 elif [ "$1" == clean ]; then
         make clean
         exit
