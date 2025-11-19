@@ -33,6 +33,14 @@ You should have received a copy of the GNU General Public License along with
 WAM. If not, see <http://www.gnu.org/licenses/>
 
 ################################################################################
+## GPU WAM version
+
+A GPU version of WAM Cycle 6 can be found here:
+https://zenodo.org/records/13937876
+
+Yuan, Y., Yu, F., Chen, Z., Li, X., Hou, F., Gao, Y., Gao, Z., & Pang, R. (2024). Towards a real-time modeling of global ocean waves by the fully GPU-accelerated spectral wave model WAM6-GPU v1.0. Geoscientific Model Development, 17(16), 6123–6136. https://doi.org/10.5194/gmd-17-6123-2024
+
+################################################################################
 ## Installation - Quick build instructions
 
 1. Install the following prerequisites of WAM on your system:
