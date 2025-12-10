@@ -29,7 +29,7 @@ use wam_grid_module, only: NX, NY
 use wam_output_parameter_module, only: params
 
 IMPLICIT NONE
-public :: create_netcdf_output_file, write_variables_to_netcdf_output_file, check_inputs_for_netcdf
+public :: create_netcdf_output_file, write_variables_to_netcdf_output_file
 integer, parameter :: total_int_parameters = 70
 integer :: TIME_DIM_ID, LAT_DIM_ID, LON_DIM_ID, NETCDF_FILE_ID
 integer :: VARIABLE_IDS(total_int_parameters+3) = -1
