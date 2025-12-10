@@ -14,7 +14,7 @@ MODULE WAM_OUTPUT_PARAMETER_MODULE
 !     B. VARIABLES FROM OTHER MODULES.                                         !
 !                                                                              !
 ! ---------------------------------------------------------------------------- !
-
+USE WAM_FILE_MODULE,  ONLY: IU05, FILE05, IU06, FILE06, ITEST
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
 !     C. MODULE VARIABLES.                                                     !
@@ -22,6 +22,7 @@ MODULE WAM_OUTPUT_PARAMETER_MODULE
 ! ---------------------------------------------------------------------------- !
 
 IMPLICIT NONE
+
 public:: initialize_integrated_parameters
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -29,6 +30,7 @@ public:: initialize_integrated_parameters
 !        -------------------------------                                       !
 
 INTEGER, PARAMETER :: NOUT_P = 70
+logical            :: dir_true = .true. , dir_false = .false.
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -320,6 +322,7 @@ REAL, PARAMETER, DIMENSION(NOUT_SCR) :: SCAL_SCR = (/                          &
 &                      100000.            ,    &   !!  9
 &                      100000.            /)       !! 10
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !! End ModR05
+
 
 ! Derived type to hold all the metadata for the integrated parameters
 
