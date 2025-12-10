@@ -42,7 +42,8 @@ FFLAGS+= -fp-model precise
 #FFLAGS+= -O0
 FFLAGS+= -O3
 #FFLAGS+= -march=native
-#FFLAGS+= -g -traceback -check all 
+#FFLAGS+= -g -traceback -check all
+#FFLAGS+= -g
 
 #-------------------------------------------------------------------------------
 # System specific libraries
@@ -51,8 +52,9 @@ NCDFDIR=/project/opt/software/netcdf/4.9.2/intel_oneAPI
 NCDFIN=-I${NCDFDIR}/include
 NCDFLIB=-L${NCDFDIR}/lib
 NCDFFLAGS=-lnetcdf -lnetcdff
-
-LDOPT=${NCDFIN} ${NCDFLIB} ${NCDFFLAGS}
+#DDT_ROOT=/sw/spack-levante/linaro-forge-24.1-st2dso
+#MEMDBG="-L${DDT_ROOT}/lib/64 -ldmalloc -Wl,--allow-multiple-definition"
+#LDOPT=${NCDFIN} ${NCDFLIB} ${NCDFFLAGS}
 
 #HDF5DIR=/sw/spack-levante/hdf5-1.12.1-kxfaux/include
 #HDF5IN=-I${HDF5DIR}/include
@@ -96,6 +98,7 @@ $(OBJDIR)/wam_jonswap_module.o \
 $(OBJDIR)/wam_tables_module.o \
 $(OBJDIR)/wam_output_parameter_module.o \
 $(OBJDIR)/wam_special_module.o \
+$(OBJDIR)/wam_output_netcdf_module.o\
 $(OBJDIR)/wam_output_set_up_module.o \
 $(OBJDIR)/wam_interface_module.o \
 $(OBJDIR)/wam_model_module.o \
@@ -123,6 +126,7 @@ $(OBJDIR)/wam_tables_module.o \
 $(OBJDIR)/wam_output_parameter_module.o \
 $(OBJDIR)/wam_mpi_module.o \
 $(OBJDIR)/wam_special_module.o \
+$(OBJDIR)/wam_output_netcdf_module.o\
 $(OBJDIR)/wam_output_set_up_module.o \
 $(OBJDIR)/wam_nest_module.o \
 $(OBJDIR)/wam_interface_module.o \
@@ -133,7 +137,6 @@ $(OBJDIR)/wam_ice_module.o \
 $(OBJDIR)/wam_wind_module.o \
 $(OBJDIR)/wam_oasis_module.o \
 $(OBJDIR)/wam_boundary_module.o \
-$(OBJDIR)/wam_assi_set_up_module.o \
 \
 $(OBJDIR)/wam_swell_module.o \
 $(OBJDIR)/wam_topo_module.o \
@@ -142,6 +145,7 @@ $(OBJDIR)/wam_radiation_module.o \
 $(OBJDIR)/wam_flux_module.o \
 $(OBJDIR)/wam_source_output_module.o \
 $(OBJDIR)/wam_source_module.o \
+$(OBJDIR)/wam_assi_set_up_module.o \
 $(OBJDIR)/wam_output_module.o \
 $(OBJDIR)/preproc_module.o \
 $(OBJDIR)/wam_coldstart_module.o \
@@ -288,6 +292,7 @@ $(OBJDIR)/wam_jonswap_module.o \
 $(OBJDIR)/wam_tables_module.o \
 $(OBJDIR)/wam_output_parameter_module.o \
 $(OBJDIR)/wam_special_module.o \
+$(OBJDIR)/wam_output_netcdf_module.o\
 $(OBJDIR)/wam_output_set_up_module.o \
 $(OBJDIR)/wam_interface_module.o \
 $(OBJDIR)/wam_nest_module.o \
@@ -303,6 +308,7 @@ $(OBJDIR)/wam_source_module.o \
 $(OBJDIR)/wam_swell_module.o \
 $(OBJDIR)/wam_propagation_module.o \
 $(OBJDIR)/wam_radiation_module.o \
+$(OBJDIR)/wam_assi_set_up_module.o \
 $(OBJDIR)/wam_output_module.o \
 $(OBJDIR)/wam_print_module.o \
 \
