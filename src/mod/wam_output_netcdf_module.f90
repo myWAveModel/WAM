@@ -83,19 +83,19 @@ end subroutine
 
 subroutine write_variables_to_netcdf_output_file(integrated_parameter, id_int_params)
   
-  real, dimension(:), intent(in) :: integrated_parameter  
-  integer, intent(in) :: id_int_params
-  character(len=60) :: title_int_params
+!  real, dimension(:), intent(in) :: integrated_parameter  
+!  integer, intent(in) :: id_int_params
+!  character(len=60) :: title_int_params
   
-  title_int_params = params%get_title(id = id_int_params)
-  call check_status(nf90_open(path = "home/k/k202203/WAM/output/int_parameters.nc", mode = nf90_write, ncid = NETCDF_FILE_ID))
-  call check_status(nf90_redef(NETCDF_FILE_ID)) 
-  call check_status(nf90_def_var(NETCDF_FILE_ID, title_int_params, NF90_FLOAT, &
-  &                               (/LON_DIM_ID, LAT_DIM_ID, TIME_DIM_ID/),  &
-  &                                VARIABLE_IDS(id_int_params)))
-  call check_status(nf90_enddef(NETCDF_FILE_ID))
-  
-  call check_status(nf90_close(NETCDF_FILE_ID))
+!  title_int_params = params%get_title(id = id_int_params)
+!  call check_status(nf90_open(path = "home/k/k202203/WAM/output/int_parameters.nc", mode = nf90_write, ncid = NETCDF_FILE_ID))
+!  call check_status(nf90_redef(NETCDF_FILE_ID)) 
+!  call check_status(nf90_def_var(NETCDF_FILE_ID, title_int_params, NF90_FLOAT, &
+!  &                               (/LON_DIM_ID, LAT_DIM_ID, TIME_DIM_ID/),  &
+!  &                                VARIABLE_IDS(id_int_params)))
+!  call check_status(nf90_enddef(NETCDF_FILE_ID))
+!  
+!  call check_status(nf90_close(NETCDF_FILE_ID))
   
 end subroutine write_variables_to_netcdf_output_file
 end module wam_output_netcdf_module
