@@ -39,7 +39,7 @@ use wam_grid_module,    only: one_point
 use wam_special_module, only: ispec2d, ispecode
 use wam_mpi_module,     only: irank, nijs, nijl, petotal, IJ2NEWIJ,            &
 &                             NSTART, NEND, noutp_ga, ijar_ga, ngou_ga
-
+use wam_output_netcdf_module, only: create_netcdf_output_file, create_dimensions
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
 !     C. MODULE VARIABLES.                                                     !
@@ -85,12 +85,13 @@ CHARACTER( LEN=14), ALLOCATABLE :: COUTT(:)  !! OUTPUT TIMES.
 LOGICAL, DIMENSION(NOUT_P) :: FFLAG_P    !! FILE OUTPUT FLAG.
 LOGICAL, DIMENSION(NOUT_P) :: PFLAG_P    !! PRINTER OUTPUT FLAG.
 LOGICAL, DIMENSION(NOUT_P) :: CFLAG_P    !! COMPUTATION FLAG.
-LOGICAL, DIMENSION(nout_p) :: NFLAG_P    !! SERIAL NETCDF OUTPUT FLAG
+LOGICAL, DIMENSION(NOUT_P) :: NFLAG_P    !! SERIAL NETCDF OUTPUT FLAG
 logical :: orientation_of_directions     !! coming from or going to ?
 
 LOGICAL :: FFLAG20 = .FALSE. !! .TRUE. IF FIELDS ARE WRITTEN TO FILE20.
 LOGICAL :: PFLAG20 = .FALSE. !! .TRUE. IF FIELDS ARE PRINTED.
 LOGICAL :: CFLAG20 = .FALSE. !! .TRUE. IF ANY COMPUTATION OF FIELDS.
+LOGICAL :: NFLAG20 = .FALSE. !! .TRUE. IF FIELDS ARE WRITTEN TO NETCDF FILE
 
 integer, parameter :: npout  = 36
    
@@ -321,6 +322,7 @@ END IF
 
 PFLAG_P = PF
 FFLAG_P = FF
+NFLAG_P = NF
 orientation_of_directions = od
 
 FFLAG_P(24) = .FALSE.    !! CORRECT DUMMY PARAMETER.
@@ -333,10 +335,16 @@ PFLAG_P(50) = .FALSE.
 PFLAG_P(54) = .FALSE.
 PFLAG_P(66) = .FALSE.
 
-CFLAG_P = FFLAG_P.OR.PFLAG_P
+NFLAG_P(24) = .FALSE.
+NFLAG_P(50) = .FALSE.
+NFLAG_P(54) = .FALSE.
+NFLAG_P(66) = .FALSE.
+
+CFLAG_P = FFLAG_P.OR.PFLAG_P.OR.NFLAG_P
 FFLAG20 = ANY(FFLAG_P(:))
 PFLAG20 = ANY(PFLAG_P(:))
-CFLAG20 = FFLAG20.OR.PFLAG20
+NFLAG20 = ANY(NFLAG_P(:))
+CFLAG20 = FFLAG20.OR.PFLAG20.OR.NFLAG20
 
 END SUBROUTINE SET_PARAMETER_OUTPUT_FLAGS
 
@@ -475,7 +483,7 @@ IF (ONE_POINT) THEN
 END IF
 
 
-CFLAG_P(:) = FFLAG_P(:).OR.PFLAG_P(:)
+CFLAG_P(:) = FFLAG_P(:).OR.PFLAG_P(:).OR.NFLAG_P
 FFLAG20 = ANY(FFLAG_P(:))
 PFLAG20 = ANY(PFLAG_P(:))
 CFLAG20 = FFLAG20.OR.PFLAG20
@@ -1092,11 +1100,17 @@ IF (CDTPRO.LT.CDATEE) THEN
    IF (FFLAG20) THEN                              !! INTEGRATED PARAMETER FILE.
       CALL OPEN_FILE (IU06, IU_PA, FILE_PA, CDT_NEW, 'UNKNOWN', IFAIL)
       IF (IFAIL.NE.0) CALL ABORT1
+      call create_netcdf_output_file()
+      call create_dimensions()
    END IF
 
    IF (FFLAG25) THEN                              !! SPECTRA FILE.
       CALL OPEN_FILE (IU06, IU_SP, FILE_SP, CDT_NEW, 'UNKNOWN', IFAIL)
       IF (IFAIL.NE.0) CALL ABORT1
+   END IF
+
+   IF (NFLAG20) THEN
+      ! TODO(Aparna) : Move the netcdf calls to this location from ythe FFLAG20 IF condition 
    END IF
 END IF
 
