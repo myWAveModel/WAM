@@ -42,6 +42,7 @@ PRIVATE
 CHARACTER (LEN=80)   :: HEADER=' ' !! HEADER OF MODEL RUN.
 INTEGER              :: NX = -1    !! NUMBER OF LONGITUDES IN GRID.
 INTEGER              :: NY = -1    !! NUMBER OF LATITUDES  IN GRID.
+PUBLIC               :: NY         !! SA2025
 INTEGER              :: NSEA = -1  !! NUMBER OF SEA POINTS. 
 LOGICAL              :: IPER       !! .TRUE. IF GRID IS PERIODIC.
 LOGICAL              :: ONE_POINT  !! .TRUE. IF GRID HAS ONE POINT ONLY.
@@ -86,11 +87,12 @@ INTEGER, ALLOCATABLE :: KFROMIJ(:)  !! LATITUDE GRID INDEX FOR A GIVEN IJ
                                     !! WHICH IS DEFINED GLOBALLY, HENCE KXLG
                                     !! IS NOT VALID OVER THE HALO.
 
-PUBLIC :: HEADER, NX, NY, NSEA, NLON_RG, IPER, AMOWEP, AMOSOP, AMOEAP, AMONOP,&
+PUBLIC :: HEADER, NX, NSEA, NLON_RG, IPER, AMOWEP, AMOSOP, AMOEAP, AMONOP,&
 &         XDELLA, XDELLO, DELPHI, ZDELLO, DELLAM, SINPH, COSPH, DEPTH_B,      &
 &         IXLG, KXLT, KLAT, KLON, WLAT, IFROMIJ, KFROMIJ,                     &
 &         L_S_MASK, REDUCED_GRID, ONE_POINT
 
+!! SA2025 - NY IS REMOVED ABOVE AND MADE PUBLIC
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     2. OBSTRUCTION COEFICENTS.                                               !
