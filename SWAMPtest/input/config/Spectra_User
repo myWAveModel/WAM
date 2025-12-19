@@ -24,7 +24,7 @@ C       U       TIME UNIT: M OR m MINUTE; H OR h HOUR; DEFAULT H
 C                                                                               
 C        CDATEA          CDATEE   IDELDO  U                                           
 C--------------  --------------  -------  -
- 19780906060000  19780908060000        3  H
+ 20200101060000  20200104060000        6  H
 C
 C ------------------------------------------------------------------------------
 C
@@ -70,7 +70,10 @@ C------------- ------------- ---------+---------+
     10.00         4.00       Station 14
     10.00         5.00       Station 15
     10.00         6.00       Station 16
-    10.00        10.00       Station 17                                                                              
+    10.00        10.00       Station 17 
+     2.50         6.50       Station 18
+     9.50         2.50       Station 19
+                                                                             
 C                                                                               
  END      THE INPUT LIST HAS TO BE CLOSED BY THIS END LINE                                                      
 C                                                                               
@@ -82,8 +85,8 @@ C      P  PRINT OUTPUT:    N  OR n : NO OUTPUT ,      DEFAULT Y : OUTPUT
 C
 CP                                   P
 C-                                   -
- Y   SPECTRA OF TOTAL SEA            Y  SEA SPECTRA
- Y   SWELL SPECTRA                   N  DUMMY
+ Y   SPECTRA OF TOTAL SEA            N  SEA SPECTRA
+ N   SWELL SPECTRA                   N  DUMMY
 C
 C ------------------------------------------------------------------------------
 C                                                                               
@@ -95,7 +98,7 @@ C       U       TIME UNIT: M OR m MINUTE; H OR h HOUR;           DEFAULT H.
 C                                                                               
 C        CDATEF   IDELFI  U                                                   
 C--------------  -------  -                                                  
- 19780906060000       24  H                                                 
+ 20200101060000        6  H                                                 
 C                                                                               
 C           **** INPUT AND OUTPUT FILE NAMES ****    
 C
