@@ -275,10 +275,11 @@ USE WAM_TIMOPT_MODULE,        ONLY: CDATEE, CDTPRO, CDTSOU, IDELPRO, IDELT,    &
 &                                   CDCA, CURRENT_RUN, CD_CURR_NEW, cdtstop,   &
 &                                   LCFLX
 
-use wam_mpi_module,           only: nijs, nijl
-use wam_assi_set_up_module,   only: iassi, cdtass
+use wam_mpi_module,           only: nijs, nijl, irank
+use wam_assi_set_up_module,   only: iassi_altimeter, iassi_spectra, cdtass,    &
+&                                   cdtsps, IDELSPE, cdatse
 
-USE WAM_SOURCE_OUTPUT_MODULE, ONLY: CDT_SCR_OUT                                  !! ModR05: Include SRC-OUT
+USE WAM_SOURCE_OUTPUT_MODULE, ONLY: CDT_SCR_OUT                                 !! ModR05: Include SRC-OUT
 
 USE WAM_GRID_MODULE,          ONLY: ONE_POINT, DEPTH_B,                        & !! ModR04: Include OASIS
                                     AMOWEP, AMOSOP, AMOEAP, AMONOP,            &
@@ -359,7 +360,7 @@ PROP: DO KADV = 1,NADV
          WRITE (IU06,*) '   SUB. WAMODEL: MAKE_SHALLOW_SNL DONE '
       END IF
    END IF
-   
+
    NEW_CURR = .FALSE. !!ModR04
    IF (use_oasis_curr_in) THEN
       call Wam_oasis_rec_current(CDTPRO_S,NEW_CURR) !! ModR07
@@ -459,12 +460,12 @@ PROP: DO KADV = 1,NADV
    IF (USE_OASIS_ICE_IN) THEN           !! ModR07
       CALL Wam_oasis_rec_ice(CDTPRO_S)  !! ModR07
    ELSE IF (ICE_RUN) THEN
-      IF (CDTPRO.GT.CD_ICE_NEW) THEN
-         CALL GET_ICE                 !! NEW ICE DATA
+      IF (CDTPRO.GT.CD_ICE_NEW) THEN   !! SA2025 - Updating ice with the data
+         CALL GET_ICE                     !! NEW ICE DATA
          IF (ITEST.GE.2) THEN
             WRITE(IU06,*) '   SUB. WAMODEL: NEW ICE FIELD '
          END IF
-      END IF
+      END IF                            !! SA2025 - Updating ice with the data
    END IF                                        !! ModR04
    IF (ICE_RUN.OR.USE_OASIS_ICE_IN) THEN         !! ModR04
       CALL PUT_ICE (FL3, 0.)
@@ -484,12 +485,21 @@ PROP: DO KADV = 1,NADV
 !     3.0  DATA ASSIMILATION.                                                  !
 !          ------------------                                                  !
 
-   if (iassi==1) then
+   if (iassi_altimeter==1) then
       if (cdtass==cdtpro) then
          call wamassi (fl3)
-         if (itest>=2) write (iu06,*) '   SUB. WAMODEL: ASSIMILATION DONE'
+         if (itest>=2) write (iu06,*) '   SUB. WAMODEL: ALTIMETER ASSIMILATION DONE'
       endif
    endif   
+
+! ------- SA2025 ---------
+   if (iassi_spectra==1) then
+     if (cdtsps==cdtpro) then
+         call swimas
+         if (itest>=2) write (iu06,*) '   SUB. WAMODEL: SPECTRAL ASSIMILATION DONE'
+     endif    
+   endif 
+! ------- SA2025 ---------
      
 !     1.7 OUTPUT OF BOUNDARY POINTS.                                           !
 !        --------------------------                                            !

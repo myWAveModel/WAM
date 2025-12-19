@@ -10,6 +10,7 @@ SUBROUTINE READ_WAM_USER
 !                       NAMELIST user input                                    !
 !     ERIK MYKLEBUST                   NOVEMBER 2004                           !
 !     H. GUNTHER        GKSS           JANUARY 2010   CYCLE 4.5.3              !
+!     RUMEYSA YILMAZ    HEREON         2025           Spectral Assimilation    !
 !                                                                              !
 !     PURPOSE.                                                                 !
 !     --------                                                                 !
@@ -109,7 +110,7 @@ ELSE
    WRITE (IU06,*) ' +                                                  +'
    WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
-   CALL READ_WAM_NAMELIST (0, IOS)
+   CALL READ_WAM_NAMELIST (1, IOS)
    IF (IOS.NE.0) THEN
       WRITE (IU06,*) ' ****************************************************'
       WRITE (IU06,*) ' *                                                  *'
@@ -556,16 +557,59 @@ IF (IOS.NE.0) CALL ERROR_MESSAGE('wammax DY')                                   
 ! ---------------------------------------------------------------------------- !
 !
 !    15. ASSIMILATION OPTIONS.
-!
-     
+!    FIRST SPECTRAL ASSIMILATION FLAG, THEN ALTIMETER ASSIMILATION FLAG
+
+! SPECTRAL ASSIMILATION OPTION UPDATE - SA2025     
 CALL F_NEW_DATA
-IF (SCAN(LINE(2:8),'1').GT.0) THEN
-   assimilation_flag = 1
-   READ(LINE(11:17),'(F7.3)',IOSTAT=IOS) influence_radius
+IF (SCAN(LINE(2:18),'1').GT.0) THEN   
+   assimilation_flag_spectra = 1      
+   READ(LINE(21:30),'(I10)',IOSTAT=IOS) correlation_distance   
+   IF (IOS.NE.0) CALL ERROR_MESSAGE('correlation_distance')
+   READ(LINE(33:40),'(F8.3)',IOSTAT=IOS) sarcordia_coefficient 
+   IF (IOS.NE.0) CALL ERROR_MESSAGE('sarcordia_coefficient')
+   READ(LINE(43:50),'(F8.3)',IOSTAT=IOS) cross_correlation_coeff
+   IF (IOS.NE.0) CALL ERROR_MESSAGE('cross_correlation_coeff')
+   
+   CALL F_NEW_DATA
+   READ(LINE(2:18),'(I18)',IOSTAT=IOS) max_partitioning     
+   IF (IOS.NE.0) CALL ERROR_MESSAGE('max_partitioning')
+   READ(LINE(21:30),'(F8.3)',IOSTAT=IOS) lowest_threshold
+   IF (IOS.NE.0) CALL ERROR_MESSAGE('lowest_threshold')
+   READ(LINE(33:40),'(F8.3)',IOSTAT=IOS) a_level
+   IF (IOS.NE.0) CALL ERROR_MESSAGE('a_level')
+   READ(LINE(43:50),'(F8.3)',IOSTAT=IOS) cutoff_frequency
+   IF (IOS.NE.0) CALL ERROR_MESSAGE('cutoff_frequency')
+
+   CALL F_NEW_DATA
+   READ(LINE(2:15),'(A14)',IOSTAT=IOS) spectral_assimilation_start_date
+   IF (IOS.NE.0) CALL ERROR_MESSAGE('spectral_assimilation_start_date')
+   READ(LINE(18:31),'(A14)',IOSTAT=IOS) spectral_assimilation_end_date
+   IF (IOS.NE.0) CALL ERROR_MESSAGE('spectral_assimilation_end_date')
+   READ(LINE(34:40),'(I7)',IOSTAT=IOS) spectral_assimilation_time_step
+   IF (IOS.NE.0) CALL ERROR_MESSAGE('spectral_assimilation_time_step')
+   spectral_assimilation_time_step_unit = LINE(42:42)
+
+   CALL F_NEW_DATA
+   spectra_observation_filename    = line(2:80)    !!SPECTRAL OBSERVATION INPUT FILE IDENTIFIER
+
+ELSE                                  
+   assimilation_flag_spectra = 0      
+   CALL F_NEW_DATA   ! correlation_distance line
+   CALL F_NEW_DATA   ! max_partitioning line
+   CALL F_NEW_DATA   ! assimilation dates line
+ENDIF                                 
+! SPECTRAL ASSIMILATION OPTION UPDATE - SA2025     
+
+
+! ALTIMETER ASSIMILATION OPTION UPDATE - SA2025     
+CALL F_NEW_DATA
+IF (SCAN(LINE(2:18),'1').GT.0) THEN  
+   assimilation_flag_altimeter = 1     
+   READ(LINE(21:27),'(F7.3)',IOSTAT=IOS) influence_radius   
    IF (IOS.NE.0) CALL ERROR_MESSAGE('influence_radius')
-   READ(LINE(20:26),'(F7.3)',IOSTAT=IOS) observation_scatter
+   READ(LINE(30:36),'(F7.3)',IOSTAT=IOS) observation_scatter 
    IF (IOS.NE.0) CALL ERROR_MESSAGE('observation_scatter')
-   READ(LINE(29:35),'(F7.3)',IOSTAT=IOS) model_scatter
+   READ(LINE(39:45),'(F7.3)',IOSTAT=IOS) model_scatter       
    IF (IOS.NE.0) CALL ERROR_MESSAGE('model_scatter')
 
    CALL F_NEW_DATA
@@ -582,7 +626,7 @@ IF (SCAN(LINE(2:8),'1').GT.0) THEN
 &                             .OR. SCAN(LINE(2:10),'t').GT.0 )
 
    CALL F_NEW_DATA
-   observation_filename    = line(2:80)    !! OBSERVATION INPUT FILE IDENTIFIER
+   altimeter_observation_filename    = line(2:80)    !! OBSERVATION INPUT FILE IDENTIFIER
 
    CALL F_NEW_DATA
    first_guess_ip_filename = line(2:80)    !! INTEGRATED DATA FILE (UNFORM. OUTPUT)
@@ -590,9 +634,8 @@ IF (SCAN(LINE(2:8),'1').GT.0) THEN
    CALL F_NEW_DATA
    first_guess_sp_filename = line(2:80)    !! SPECTRA DATA FILE (UNFORM. OUTPUT)
 ELSE
-   assimilation_flag = 0
-END IF
-    
+   assimilation_flag_altimeter = 0        
+END IF    
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !    16. TRANSFER USER PARAMETER INTO MODULES.                                 !
