@@ -69,6 +69,8 @@ USE WAM_ICE_MODULE,       ONLY:  &
 &       SET_ICE,                 & !! ICE INPUT INTO MODULE.
 &       SET_ICE_HEADER             !! ICE INPUT HEADER INTO MODULE.
 
+USE WAM_ICE_GRID_MODULE, ONLY : ICE_GRID
+
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     MODULE VARIABLES.                                                        !
@@ -93,7 +95,7 @@ REAL (KIND=KIND_D)    :: SOUTH         !! SOUTH LATITUDE OF GRID [DEG].
 REAL (KIND=KIND_D)    :: NORTH         !! NORTH LATITUDE OF GRID [DEG].
 REAL (KIND=KIND_D)    :: WEST          !! WEST LONGITUDE OF GRID [DEG].
 REAL (KIND=KIND_D)    :: EAST          !! EAST LONGITUDE OF GRID [DEG].
-INTEGER, ALLOCATABLE  :: ICE_GRID(:,:) !! ICE MAP 
+!INTEGER, ALLOCATABLE  :: ICE_GRID(:,:) !! ICE MAP 
 CHARACTER (LEN=14)    :: CDATE         !! ICE DATE
 
 LOGICAL, SAVE         :: FRSTIME = .TRUE.
@@ -145,7 +147,7 @@ IF (FRSTIME) THEN
          WRITE(IU06,*) ' *   FATAL ERROR IN SUB. READ_ICE_INPUT    *'
          WRITE(IU06,*) ' *   ==================================    *'
          WRITE(IU06,*) ' *                                         *'
-         WRITE(IU06,*) ' * READ ERROR IN ICE GRID HEADER RECORD    *'
+         WRITE(IU06,*) ' * READ ERROR IN ICE GRID HEADER RECORD1   *'
          WRITE(IU06,*) ' * ERROR CODE IS IOSTAT = ', IOS
          WRITE(IU06,*) ' * UNIT IS         IU03 = ', IU03
          WRITE(IU06,*) ' * UNIT IS       FILE03 = ', TRIM(FILE03)
@@ -168,6 +170,7 @@ END IF
 
 IF (FORMATTED) THEN
    READ (UNIT=IU03, FMT='(A14,2I10)', IOSTAT=IOS) CDATE, NX_ICE, NY_ICE
+!   READ (IU03, *, IOSTAT=IOS) CDATE, NX_ICE, NY_ICE
 ELSE
    READ (UNIT=IU03, IOSTAT=IOS) CDATE, NX_ICE, NY_ICE
 END IF
@@ -177,7 +180,7 @@ IF (IOS.NE.0) THEN
    WRITE(IU06,*) ' *   FATAL ERROR IN SUB. READ_ICE_INPUT    *'
    WRITE(IU06,*) ' *   ==================================    *'
    WRITE(IU06,*) ' *                                         *'
-   WRITE(IU06,*) ' * READ ERROR IN ICE GRID HEADER RECORD    *'
+   WRITE(IU06,*) ' * READ ERROR IN ICE GRID HEADER RECORD2   *'
    WRITE(IU06,*) ' * ERROR CODE IS IOSTAT = ', IOS
    WRITE(IU06,*) ' * UNIT IS         IU03 = ', IU03
    WRITE(IU06,*) ' * UNIT IS       FILE03 = ', TRIM(FILE03)
@@ -192,6 +195,8 @@ END IF
 !                                                                              !
 !     3. READ ICE DATA.                                                        !
 !        --------------                                                        !
+
+IF (ALLOCATED(ICE_GRID)) DEALLOCATE (ICE_GRID)
 
 IF (.NOT.ALLOCATED(ICE_GRID)) ALLOCATE (ICE_GRID(1:NX_ICE,1:NY_ICE))
 
@@ -237,6 +242,6 @@ IF (ITEST.GE.1) THEN
    WRITE(IU06,*) '     SUB. READ_ICE_INPUT: FIELD FOR CDATE = ',CDATE
 END IF   
 
-IF (ALLOCATED(ICE_GRID)) DEALLOCATE (ICE_GRID)
+!IF (ALLOCATED(ICE_GRID)) DEALLOCATE (ICE_GRID)
 
 END SUBROUTINE READ_ICE_INPUT
