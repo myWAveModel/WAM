@@ -75,12 +75,15 @@ USE WAM_RESTART_MODULE,   ONLY:     &
 &       SET_RESTART_FILE_STEP         !! SETS RESTART FILE TIMESTEP.
 
 USE WAM_ASSI_SET_UP_MODULE, ONLY:   &
-&       SET_ASSIMILATION_OPTION,    & !! SETS ASSIMILATION OPTIONS.
-&       SET_ASSIMILATION_OUTPUT,    & !! SETS ASSIMILATION OUTPUT.
-&       SET_ASSIMILATION_PERIOD,    & !! SETS ASSIMILATION PERIOD AND TIMESTEP.
-&       SET_OBSERVATION_FILE,       & !! SETS OBSERVATION FILE IDENTIFIER.
-&       SET_ASSI_MAP_FILE,          & !! INTEGRATED DATA FILE (UNFORM. OUTPUT)
-&       SET_ASSI_SPECTRA_FILE         !! SPECTRA DATA FILE (UNFORM. OUTPUT)
+&       SET_ASSIMILATION_OPTION_ALTIMETER,    & !! SETS ASSIMILATION OPTIONS FOR ALTIMETER.
+&       SET_ASSIMILATION_OPTION_SPECTRA,      & !! SETS ASSIMILATION OPTIONS FOR SPECTRA
+&       SET_ASSIMILATION_OUTPUT,              & !! SETS ASSIMILATION OUTPUT.
+&       SET_ASSIMILATION_PERIOD,              & !! SETS ASSIMILATION PERIOD AND TIMESTEP.
+&       SET_ASSIMILATION_PERIOD_SPECTRA,      & !! SETS ASSIMILATION PERIOD AND TIMESTEP FOR SPECTRAL ASSIMILATION
+&       SET_ALTIMETER_OBSERVATION_FILE,       & !! SETS ALTIMETER OBSERVATION FILE IDENTIFIER.
+&       SET_SPECTRAL_OBSERVATION_FILE,        & !! SETS SPECTRAL OBSERVATION FILE IDENTIFIER.
+&       SET_ASSI_MAP_FILE,                    & !! INTEGRATED DATA FILE (UNFORM. OUTPUT)
+&       SET_ASSI_SPECTRA_FILE                   !! SPECTRA DATA FILE (UNFORM. OUTPUT)
 
 USE WAM_SOURCE_OUTPUT_MODULE, ONLY: & !! ModR05: Include SRC-OUT
 &       SET_SOURCE_OUTPUT_TIMES,    & !! SETS TIMES FOR SOURCE OUTPUT.
@@ -285,7 +288,12 @@ integer             :: hours_2d_spectra
 
 ! ---------------------------------------------------------------------------- !
 
-integer             :: assimilation_flag
+integer             :: assimilation_flag_spectra             !! SA2025
+character (len= 14) :: spectral_assimilation_start_date
+character (len= 14) :: spectral_assimilation_end_date
+integer             :: spectral_assimilation_time_step
+CHARACTER (LEN=1)   :: spectral_assimilation_time_step_UNIT
+integer             :: assimilation_flag_altimeter
 character (len= 14) :: assimilation_start_date
 character (len= 14) :: assimilation_end_date
 integer             :: assimilation_time_step
@@ -293,17 +301,26 @@ CHARACTER (LEN=1)   :: assimilation_time_step_UNIT
 
 
 
-INTEGER             :: observation_file_unit
-character (len= 80) :: observation_filename
+INTEGER             :: altimeter_observation_file_unit
+character (len= 80) :: altimeter_observation_filename
+INTEGER             :: spectra_observation_file_unit
+character (len= 80) :: spectra_observation_filename
 logical             :: first_guess_output_flag
 INTEGER             :: first_guess_ip_file_unit
 character (len= 80) :: first_guess_ip_filename
 INTEGER             :: first_guess_sp_file_unit
 character (len= 80) :: first_guess_sp_filename
 
+INTEGER             :: correlation_distance
+INTEGER             :: max_partitioning
+real                :: sarcordia_coefficient
+real                :: cross_correlation_coeff
 real                :: influence_radius
 real                :: observation_scatter
 real                :: model_scatter
+real                :: lowest_threshold
+real                :: a_level
+real                :: cutoff_frequency
 
 real                :: wammax_dur                                          !! WAM-MAX
 character (len=  5) :: wammax_dur_unit                                     !! WAM-MAX
@@ -363,11 +380,22 @@ NAMELIST /WAM_NAMELIST/                                                        &
 &       PREPROC_OUTPUT_FILE_UNIT,   PREPROC_OUTPUT_FILE_NAME,                  &
 &       wammax_dur,                 wammax_dx,                                 &  !! WAM-MAX
 &       wammax_dy,                                                             &  !! WAM-MAX
-&       assimilation_flag,          influence_radius,                          &
+&       assimilation_flag_spectra,                                             &  !! SA2025 (assimilaiton_flag_spectra)
+&       correlation_distance,       sarcordia_coefficient,                     &
+&       cross_correlation_coeff,    max_partitioning,                          &
+&       lowest_threshold,           a_level,                                   &
+&       cutoff_frequency,                                                      &
+&       spectral_assimilation_start_date,                                      &
+&       spectral_assimilation_end_date,                                        &
+&       spectral_assimilation_time_step,                                       &
+&       spectra_observation_file_unit,                                         &
+&       spectra_observation_filename,                                          &
+&       assimilation_flag_altimeter,influence_radius,                          &  !! SA2025 (assimilation_flag_altimeter)
 &       observation_scatter,        model_scatter,                             &
 &       assimilation_start_date,    assimilation_end_date,                     &
 &       assimilation_time_step,     first_guess_output_flag,                   &
-&       observation_file_unit,      observation_filename,                      &
+&       altimeter_observation_file_unit,                                       &
+&       altimeter_observation_filename,                                        &
 &       first_guess_ip_file_unit,   first_guess_ip_filename,                   &
 &       first_guess_sp_file_unit,   first_guess_sp_filename
 
@@ -595,8 +623,19 @@ spectral_code           = -1
 hours_2d_spectra        = -1
 
 ! ---------------------------------------------------------------------------- !
-   
-assimilation_flag           = 0      !! assimilation flag (1: assimilation)
+assimilation_flag_spectra        = 0
+correlation_distance             = 200000
+sarcordia_coefficient            = 1.6
+cross_correlation_coeff          = 0.02
+max_partitioning                 = 60
+lowest_threshold                 = 0.3
+a_level                          = 0.5
+cutoff_frequency                 = 0.151  
+spectral_assimilation_start_date = ' '
+spectral_assimilation_end_date   = ' '                                       
+spectral_assimilation_time_step  = 3
+spectral_assimilation_time_step_unit  = 'H'
+assimilation_flag_altimeter = 0      !! assimilation flag (1: assimilation)      !! SA2025
 assimilation_start_date     = ' '
 assimilation_end_date       = ' '
 assimilation_time_step      = 3
@@ -605,8 +644,10 @@ influence_radius            = 3.0
 observation_scatter         = 0.5
 model_scatter               = 0.5
 first_guess_output_flag     = .false.
-observation_file_unit       = 80
-observation_filename        = 'OBS'
+altimeter_observation_file_unit  = 80
+altimeter_observation_filename   = 'OBS'
+spectra_observation_file_unit    = 90
+spectra_observation_filename     = 'SWI'       
 first_guess_ip_file_unit    = 30
 first_guess_ip_filename     = 'MAPFG'
 first_guess_sp_file_unit    = 35
@@ -842,17 +883,31 @@ call set_spectral_code (ihour=hours_2d_spectra, icode=spectral_code)
 call set_wammax_options ( dt=wammax_dur, dx=wammax_dx, dy=wammax_dy)             !! WAM-MAX
 !                                                                                !! WAM-MAX
 ! ---------------------------------------------------------------------------- !
+!   ------- SPECTRA ASSIMILATION -------
+call set_assimilation_option_spectra (as_spec=assimilation_flag_spectra, cd = correlation_distance, &
+&                                     sc = sarcordia_coefficient, cc = cross_correlation_coeff,     &
+&                                     mp = max_partitioning, lt = lowest_threshold, al = a_level,   &
+&                                     f_cut = cutoff_frequency)     
+CALL CHANGE_TO_SECONDS (spectral_assimilation_time_step,                        &
+&                       spectral_assimilation_time_step_unit)                                   !! SA2025
+call set_assimilation_period_spectra (c=spectral_assimilation_start_date,       &
+&                             d=spectral_assimilation_end_date,                 &
+&                             step_spec=spectral_assimilation_time_step)
+call set_spectral_observation_file  (name_s=spectra_observation_filename,       &               !! SA2025
+&                                     unit_s=spectra_observation_file_unit)
+!   ------- SPECTRA ASSIMILATION -------
 
-call set_assimilation_option (as=assimilation_flag, ra=influence_radius,       &
-&                             so=observation_scatter, sm=model_scatter)
+call set_assimilation_option_altimeter (as=assimilation_flag_altimeter, ra=influence_radius, &  !! SA2025
+&                                       so=observation_scatter, sm=model_scatter)
 CALL CHANGE_TO_SECONDS (assimilation_time_step,                                &
 &                       assimilation_time_step_UNIT)
 call set_assimilation_period (b=assimilation_start_date,                       &
 &                             e=assimilation_end_date,                         &
 &                             step=assimilation_time_step)
 call set_assimilation_output (p=first_guess_output_flag)
-call set_observation_file  (name=observation_filename,                         &
-&                           unit=observation_file_unit)
+call set_altimeter_observation_file  (name=altimeter_observation_filename,     &
+&                                     unit=altimeter_observation_file_unit)
+
 call set_assi_map_file     (name=first_guess_ip_filename,                      &
 &                           unit=first_guess_ip_file_unit)
 call set_assi_spectra_file (name=first_guess_sp_filename,                      &
