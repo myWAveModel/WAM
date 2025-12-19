@@ -11,6 +11,7 @@ SUBROUTINE INITMDL
 !     A. Behrens      MSC/ARMN     October 2003  MPI parallelization
 !     E. Myklebust                 November 2004 MPI parallelization
 !     H. GUNTHER      GKSS         JANUARY 2010  CYCLE_4.5.3                   !
+!     R. YILMAZ       HEREON       2025          Spectral Assimilation         !
 !                                                                              !
 !     PURPOSE.                                                                 !
 !     --------                                                                 !
@@ -101,8 +102,9 @@ USE WAM_SOURCE_OUTPUT_MODULE,ONLY: & !! ModR05: Include SRC-OUT
 use wam_mpi_comp_module,     only: &
 &       mpi_decomp
 
-use wam_assi_set_up_module,  only: &
-&       prepare_assimilation         !! prepares the data assimilation
+use wam_assi_set_up_module,  only: & !!RY25 PREPARES DATA ASSIMILATION
+&       prepare_assimilation,      & !! SPECTRAL AND ALTIMETER ASSIMILATION
+&       prepare_spectral_assimilation       
 
 use WAM_OASIS_MODULE,	only:	Wam_oasis_write_part !! ModR04: Include OASIS
 ! ---------------------------------------------------------------------------- !
@@ -124,7 +126,7 @@ USE WAM_TIMOPT_MODULE,        ONLY: CDTPRO, IPHYS, SPHERICAL_RUN
 USE WAM_FRE_DIR_MODULE,       ONLY: ML
 use wam_mpi_module,           only: ninf,nsup, nijs, nijl
 use wam_model_module,         only: fl3, DEPTH
-use wam_assi_set_up_module,   only: iassi
+use wam_assi_set_up_module,   only: iassi_altimeter, iassi_spectra  !SA2025: Spectral Assimilation
 
 use WAM_OASIS_MODULE,	only:	use_oasis,use_oasis_bdy_in,use_oasis_nest_out, & !! ModR04: Include OASIS
 				USE_OASIS_FORCE_OUTPUT
@@ -262,10 +264,20 @@ END IF
 !    10. PREPARE ASSIMILATION.                                                 !
 !        ---------------------                                                 !
 
-if (iassi==1) then
+if (iassi_altimeter==1) then                                                   !! SA2025
    call prepare_assimilation
-   if (itest>=2) write (iu06,*) '    sub. initmdl: prepare_assimilation done'
+   if (itest>=2) write (iu06,*) '    sub. initmdl: prepare_assimilation done (altimeter)'
 endif
+
+!                                                                              !
+!    10.1. PREPARE SPECTRAL ASSIMILATION.                                      !! SA2025
+!        -------------------------------- 
+
+if (iassi_spectra==1) then  
+   call prepare_spectral_assimilation
+   if (itest>=2) write (iu06,*) '    sub. initmdl: prepare_assimilation done (spectral)'
+endif
+
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
