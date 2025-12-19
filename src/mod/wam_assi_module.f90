@@ -59,7 +59,7 @@ USE WAM_TOPO_MODULE,     ONLY: N_DRY
 
 USE WAM_OUTPUT_SET_UP_MODULE, ONLY: CDTINTT, CDTSPT, CDT_OUT, FFLAG20, FFLAG25
 USE WAM_ASSI_SET_UP_MODULE,   ONLY: &
-&                              IASSI, CDATAA, CDATAE, CDTASS, IDELASS,         &
+&                              IASSI_ALTIMETER, CDATAA, CDATAE, CDTASS, IDELASS,&  !SA2025
 &                              DIST, LMAX, SIGOBS, SIGMOD,                     &
 &                              LLON, LLAT, NDIM2,                              &
 &                              IU80, FILE80,                                   &
@@ -405,7 +405,7 @@ IF (ITEST.GE.3) WRITE(IU06,*) '      SUB. WAMASSI: WINDS REPLACED '
 CALL INCDATE (CDTASS, IDELASS)
 
 IF (CDTASS.GT.CDATAE) THEN
-   IASSI = 0
+   IASSI_ALTIMETER = 0  !SA2025
    WRITE(IU06,*) '   END OF ASSIMILATION FOR THIS MODEL RUN'
    IF (FFLAG20) CLOSE (UNIT=IU30, STATUS ="KEEP")
    IF (FFLAG25) CLOSE (UNIT=IU35, STATUS ="KEEP")
@@ -531,9 +531,6 @@ NUMBWH = 0
 NUMBUS = 0
 NR = 0
 
-!SWHO=0. !! ModR09: Bugfix (Alternative): Set init value SWHO=0 for 1st loop iteration
-!WSO=0.  !! ModR09: Bugfix (Alternative): Set init value WSO=0  for 1st loop iteration
-
 IOLD = 0
 JOLD = 0
 CDATEO = ' '
@@ -571,11 +568,6 @@ DATA_LOOP: DO
    CALL READSAT (IU80, CDATE, RLAT, RLON, SWH, WS, EOFD)
    M_RLAT = DEG_TO_M_SEC (RLAT) 
    M_RLON = DEG_TO_M_SEC (RLON)
-
-   IF (ICOUNTD.EQ.0) THEN !! ModR09: Bugfix: Set init values SWHO & WSO for 1st loop iteration
-      SWHO = SWH
-      WSO = WS
-   END IF                 !! End ModR09
 
    IF (EOFD) EXIT DATA_LOOP
 
