@@ -160,9 +160,59 @@ $(OBJDIR)/read_wind_input.o  \
 $(OBJDIR)/read_current_input.o \
 $(OBJDIR)/wamodel.o \
 $(OBJDIR)/read_boundary_input.o \
+$(OBJDIR)/wam_ice_grid_module.o \
 $(OBJDIR)/read_ice_input.o \
 $(OBJDIR)/jafu.o \
-$(OBJDIR)/readsat.o 
+$(OBJDIR)/readsat.o \
+\
+$(OBJDIR)/gstats.o \
+$(OBJDIR)/yowparam.o \
+$(OBJDIR)/yowmespas.o \
+$(OBJDIR)/yowsaras.o \
+$(OBJDIR)/yowfred.o \
+$(OBJDIR)/numofobservations.o \
+$(OBJDIR)/peakfr_sar.o \
+$(OBJDIR)/readswispec.o \
+$(OBJDIR)/findb.o \
+$(OBJDIR)/mpexchngsarin.o \
+$(OBJDIR)/rearrngsar.o \
+$(OBJDIR)/smoothsarspec.o \
+$(OBJDIR)/partitioning.o \
+$(OBJDIR)/onestepapart.o \
+$(OBJDIR)/sumenergy.o \
+$(OBJDIR)/docombine.o \
+$(OBJDIR)/windsea.o \
+$(OBJDIR)/lasttwobins.o \
+$(OBJDIR)/halfspread.o \
+$(OBJDIR)/threshhold.o \
+$(OBJDIR)/lowenergy.o \
+$(OBJDIR)/meansm10.o \
+$(OBJDIR)/combinepeaks.o \
+$(OBJDIR)/swellsep.o \
+$(OBJDIR)/crossas.o \
+$(OBJDIR)/dev.o \
+$(OBJDIR)/resize_getwspec.o \
+$(OBJDIR)/getwspec.o \
+$(OBJDIR)/mnintw.o \
+$(OBJDIR)/crossw.o \
+$(OBJDIR)/wam_syminv.o \
+$(OBJDIR)/optint_swim.o \
+$(OBJDIR)/yowgap.o \
+$(OBJDIR)/transpart.o \
+$(OBJDIR)/resize_gap_array.o \
+$(OBJDIR)/makeframes.o \
+$(OBJDIR)/avoidpeaks.o \
+$(OBJDIR)/pythag.o \
+$(OBJDIR)/svdcmp.o \
+$(OBJDIR)/svbksb.o \
+$(OBJDIR)/lsq.o \
+$(OBJDIR)/gapinterpol.o \
+$(OBJDIR)/fillgaps.o \
+$(OBJDIR)/transmeans10.o \
+$(OBJDIR)/tustreas.o \
+$(OBJDIR)/splitbl.o \
+$(OBJDIR)/mergesarcor.o \
+$(OBJDIR)/swimas.o 
 
 # Objects for pgrid
 PGRID_OBJS = \
@@ -257,6 +307,7 @@ $(OBJDIR)/wam_output_module.o \
 $(OBJDIR)/wam_print_module.o \
 \
 $(OBJDIR)/read_current_input.o \
+$(OBJDIR)/wam_ice_grid_module.o \
 $(OBJDIR)/read_ice_input.o \
 $(OBJDIR)/read_topo_input.o \
 $(OBJDIR)/jafu.o \
@@ -325,7 +376,8 @@ $(OBJDIR)/%.o : $(SRCDIR)/preproc/%.f90
 	$(FC) $(FFLAGS) -c $< $(LDOPT) -o $@
 $(OBJDIR)/%.o : $(SRCDIR)/print/%.f90
 	$(FC) $(FFLAGS) -c $< $(LDOPT) -o $@
-
+$(OBJDIR)/%.o : $(SRCDIR)/swimas/%.F
+	$(FC) $(FFLAGS) -c $< $(LDOPT) -o $@
 #-------------------------------------------------------------------------------
 # Utilities
 #-------------------------------------------------------------------------------
@@ -338,4 +390,4 @@ directories:
 
 clean:
 	rm $(EXEDIR)/* $(OBJDIR)/*
-
+	
