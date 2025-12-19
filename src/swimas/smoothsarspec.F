@@ -1,0 +1,127 @@
+       SUBROUTINE SMOOTHSARSPEC(LSPEC,NSPEC,NANG,NFRE,SPEC) 
+ 
+!---------------------------------------------------------------------
+
+!     PURPOSE
+!     -------
+!     TO SMOOTH SPECTRA THAT ARE USED IN THE PARTITIONING OF THE SAR
+!     ASSIMILATION.
+
+!     AUTHOR
+!     ------
+!     J. BIDLOT  ECMWF APRIL 2001.
+
+!     EXTERNALS
+!     ---------
+
+!**********************************************************************
+
+      USE WAM_FRE_DIR_MODULE,   ONLY : DFIM, DF
+
+! ----------------------------------------------------------------------
+
+      IMPLICIT NONE
+
+      INTEGER :: LSPEC,NSPEC,NANG,NFRE,ISPEC,K,M,KM,KP
+
+      REAL :: C16
+      REAL :: SPEC(LSPEC:NSPEC,NANG,NFRE)
+      REAL :: WORK(LSPEC:NSPEC,NANG,NFRE)
+      REAL, DIMENSION(LSPEC:NSPEC) ::  EM, EW, TEMP
+
+      REAL, PARAMETER :: EPSMIN=0.1E-32 
+
+!     COMPUTE THE ENERGY OF THE ORIGINAL SPECTRA
+
+      DO ISPEC = LSPEC,NSPEC 
+        EM(ISPEC) = EPSMIN 
+      ENDDO
+
+      DO M=1,NFRE
+        DO ISPEC = LSPEC,NSPEC 
+          TEMP(ISPEC) = 0.
+        ENDDO
+        DO K=1,NANG
+          DO ISPEC = LSPEC,NSPEC 
+            TEMP(ISPEC) = TEMP(ISPEC)+SPEC(ISPEC,K,M)
+          ENDDO
+        ENDDO
+        DO ISPEC = LSPEC,NSPEC 
+          EM(ISPEC) = EM(ISPEC)+DF(M)*TEMP(ISPEC) 
+!                                                 DFIM --> DF
+        ENDDO
+      ENDDO
+
+
+!     SMOOTH SPECTRA
+
+      DO K=1,NANG
+        KM  = K - 1
+        IF (KM .LT. 1) KM = NANG
+        KP = K + 1
+        IF (KP.GT. NANG) KP = 1
+
+        DO M=2,NFRE-1
+          DO ISPEC = LSPEC,NSPEC 
+            WORK(ISPEC,K,M) = SPEC(ISPEC,KM,M-1) +
+     &                     2.*SPEC(ISPEC,KM,M)   + 
+     &                        SPEC(ISPEC,KM,M+1) + 
+     &                     2.*SPEC(ISPEC,K,M-1)  + 
+     &                     4.*SPEC(ISPEC,K,M)    + 
+     &                     2.*SPEC(ISPEC,K,M+1)  + 
+     &                        SPEC(ISPEC,KP,M-1) + 
+     &                     2.*SPEC(ISPEC,KP,M)   + 
+     &                        SPEC(ISPEC,KP,M+1)
+          ENDDO
+        ENDDO
+      ENDDO
+
+      C16=1./16
+
+      DO K=1,NANG
+        KM  = K - 1
+        IF (KM .LT. 1) KM = NANG
+        KP = K + 1
+        IF (KP.GT. NANG) KP = 1
+
+        DO M=2,NFRE-1
+          DO ISPEC = LSPEC,NSPEC 
+            SPEC(ISPEC,K,M) = C16 * WORK(ISPEC,K,M)
+          ENDDO
+        ENDDO
+      ENDDO
+
+!     COMPUTE THE ENERGY OF THE SMOOTHED SPECTRA
+
+      DO ISPEC = LSPEC,NSPEC 
+        EW(ISPEC) = EPSMIN 
+      ENDDO
+
+      DO M=1,NFRE
+        DO ISPEC = LSPEC,NSPEC 
+          TEMP(ISPEC) = 0.
+        ENDDO
+        DO K=1,NANG
+          DO ISPEC = LSPEC,NSPEC 
+            TEMP(ISPEC) = TEMP(ISPEC)+SPEC(ISPEC,K,M)
+          ENDDO
+        ENDDO
+        DO ISPEC = LSPEC,NSPEC 
+          EW(ISPEC) = EW(ISPEC)+DF(M)*TEMP(ISPEC)
+!                                                 DFIM-->DF
+        ENDDO
+      ENDDO
+
+!     ENSURE THE ENERGY IS CONSERVED BETWEEN ORIGINAL AND SMOOTHED
+!     SPECTRA.
+
+      DO M=1,NFRE
+        DO K=1,NANG
+          DO ISPEC = LSPEC,NSPEC 
+            SPEC(ISPEC,K,M) = (EM(ISPEC)/EW(ISPEC))*SPEC(ISPEC,K,M)
+          ENDDO
+        ENDDO
+      ENDDO
+
+      RETURN
+      END SUBROUTINE SMOOTHSARSPEC 
