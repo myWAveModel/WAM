@@ -778,8 +778,12 @@ c$$$      ENDIF
          IASSI_SPECTRA = 0                            
          WRITE(IU06,*)'END OF SPECTRAL ASSIMILATION FOR THIS MODEL RUN'
       ELSE
-         WRITE(IU06,*)'END OF SPECTRAL ASSIMILATION' 
+         WRITE(IU06,*)'------------------------------------------------'
+         WRITE(IU06,*)''
+         WRITE(IU06,*)'END OF SPECTRAL ASSIMILATION AT ', CDTPRO 
          WRITE(IU06,*)'NEXT SPECTRAL ASSIMILATION AT ',CDTSPS
+         WRITE(IU06,*)''
+         WRITE(IU06,*)'------------------------------------------------'
       END IF
       WRITE (IU06,*) ' '
 
