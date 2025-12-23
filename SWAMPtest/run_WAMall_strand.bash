@@ -13,22 +13,26 @@
 
 # ===================================================================
 #### STRAND - Intel 2020 ####
-#module purge
-#module load compilers/intel/2020.1.217
-#module load intelmpi/2020.1.217
-#module load netcdf
-
-# ===================================================================
-#### STRAND - oneAPI ####
 module purge
 module load compilers/intel/2020.1.217
 module load intelmpi/2020.1.217
 module load netcdf
 
+# ===================================================================
 #### STRAND - oneAPI ####
 #module purge
 #module load compilers/intel/oneAPI/2021.2.0
 #module load netcdf
+
+# ===================================================================
+#### STRAND - GCC 11.1.1 ####
+#module purge
+#module load compilers/gnu/11.1.1
+#module load netcdf/4.7.0
+
+# !!! SWITCH FROM srun TO mpirun BELOW !!!
+
+# ===================================================================
 
 
 WAMDIR='/gpfs/work/yilmaz/WAM_new'
