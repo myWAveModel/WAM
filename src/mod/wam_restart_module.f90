@@ -550,7 +550,7 @@ integer :: ierr
 !!=== ModR07: Set filename for regular or debug case ===
 integer :: L1, L2
 character(LEN=*), intent(in) :: DBGID
-character(LEN=15) :: fnampref = ' '
+character(LEN=80) :: fnampref = ' '
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
