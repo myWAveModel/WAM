@@ -11,8 +11,8 @@ if [ "$1" == strand ]; then
         module load netcdf
 
         export FC=mpiifort
-        #export FFLAGS="-heap-arrays 64 -fp-model precise -O3"
-        export FFLAGS="-heap-arrays 64 -fp-model precise -O0 -g -fno-omit-frame-pointer -traceback -check bounds"
+        export FFLAGS="-heap-arrays 64 -fp-model precise -O3"
+        #export FFLAGS="-heap-arrays 64 -fp-model precise -O0 -g -fno-omit-frame-pointer -traceback -check bounds"
         NCDFDIR=/project/opt/software/netcdf/4.7.0/intel
         NCDFIN=-I${NCDFDIR}/include
         NCDFLIB=-L${NCDFDIR}/lib
