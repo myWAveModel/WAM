@@ -142,7 +142,7 @@
       ALLOCATE(NW1D(NINF-1:NSUP,NBLO))
 
       IF(XDELLA_REAL.LT.0.3) THEN
-        NSPECW=20000/NPROC        ! 20000 can be changed according to model domain and nproc
+        NSPECW=250000/NPROC        ! 20000 can be changed according to model domain and nproc
       ELSE
         NSPECW=INT((1.5/XDELLA_REAL)**2*9000./NPROC)
       ENDIF
