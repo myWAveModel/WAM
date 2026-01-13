@@ -1,4 +1,4 @@
-# WAM (Cycle7)
+# WAM (Cycle 7)
 
 Official repository of the third-generation spectral WAve Model WAM
 
@@ -15,8 +15,8 @@ New in Cycle 7:
   - source term output
   - ! UPDATED COUPLING INTERFACE FOLLOWING OASIS3-MCT CONVENTIONS (data exchange 
     at coupling times t=0,...,N-1 only; no data exchange at t=N) !
-  - Upgrade to modern Fortran 2008 MPI module mpi_f08
-  - Bug fix of uninitialized value in data assimilation routine
+  - upgrade to modern Fortran 2008 MPI module mpi_f08
+  - bug fix of uninitialised value in data assimilation routine
 
 ################################################################################
 ## License
@@ -258,6 +258,6 @@ scripts for the Strand and Levante HPC environements:
 ################################################################################  
 Version 7.0.10  
 Marcel Ricker   (marcel DOT ricker AT hereon DOT de)  
-Robert Hartmann (robert DOT hartmann AT hereon DOT de)  
-10 April 2025
+Arno Behrens (arno DOT behrens AT hereon DOT de)  
+13 January 2026
 
