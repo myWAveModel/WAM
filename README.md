@@ -1,4 +1,4 @@
-# WAM (Cycle7)
+# WAM (Cycle 7)
 
 Official repository of the third-generation spectral WAve Model WAM
 
