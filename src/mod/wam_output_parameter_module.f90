@@ -9,7 +9,6 @@ MODULE WAM_OUTPUT_PARAMETER_MODULE
 !     A.  EXTERNALS.                                                           !
 !                                                                              !
 ! ---------------------------------------------------------------------------- !
-
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
 !     B. VARIABLES FROM OTHER MODULES.                                         !
@@ -23,7 +22,7 @@ MODULE WAM_OUTPUT_PARAMETER_MODULE
 ! ---------------------------------------------------------------------------- !
 
 IMPLICIT NONE
-
+public:: initialize_integrated_parameters
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     1. NUMBER OF INTEGRATED PARAMETER.                                       !
@@ -321,5 +320,89 @@ REAL, PARAMETER, DIMENSION(NOUT_SCR) :: SCAL_SCR = (/                          &
 &                      100000.            ,    &   !!  9
 &                      100000.            /)       !! 10
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !! End ModR05
+
+! Derived type to hold all the metadata for the integrated parameters
+
+type t_integrated_parameters
+  integer             :: id(NOUT_P)
+  character(len=60)   :: title(NOUT_P)
+  real                :: scaling_factor(NOUT_P)
+  logical             :: direction_flag(NOUT_P)
+end type t_integrated_parameters
+
+type, extends(t_integrated_parameters) :: t_integrated_parameters_init
+  contains
+    procedure, pass(this) :: init
+    procedure, pass(this) :: set_title
+    procedure, pass(this) :: set_direction_flag
+    procedure, pass(this) :: get_title
+end type
+
+type(t_integrated_parameters_init), public :: params
+
+public  :: t_integrated_parameters_init
+logical :: dir_true = .true. , dir_false = .false.
+
+contains
+!
+  subroutine init(this)
+    class(t_integrated_parameters_init), intent(inout) :: this
+    integer :: i
+
+    !Fill ID values
+    DO i = 1,NOUT_P,1
+      this%id(i) = i
+    END DO
+
+    !----- Fill title using TITL_P variable
+    this%title=TITL_P
+
+    !---- Fill scaling factor using SCAL_P
+    this%scaling_factor = SCAL_P
+
+    !---- Fill direction flag with .FALSE.
+    this%direction_flag = dir_false
+    
+  end subroutine init
+
+  subroutine set_title(this, title, id)
+    class(t_integrated_parameters_init), intent(inout) :: this
+
+    character(len=60), intent(in) :: title
+    integer, intent(in) :: id
+    this%title(id) = title
+  end subroutine set_title
+
+  subroutine set_direction_flag(this, direction_flag, id)
+    class(t_integrated_parameters_init), intent(inout) :: this
+    logical, intent(in) :: direction_flag
+    integer, intent(in) :: id 
+    this%direction_flag(id) = direction_flag
+  end subroutine set_direction_flag
+
+  function get_title(this, id) result(title)
+    class(t_integrated_parameters_init), intent(in) :: this
+    integer, intent(in) :: id
+    character(len=60) :: title
+    title = this%title(id) 
+  end function
+
+  subroutine  initialize_integrated_parameters
+  
+    !set default parameter metadata values
+    call params%init()
+
+    !set parameter metadata - direction flags
+    call params%set_direction_flag(dir_true,id=2)
+    call params%set_direction_flag(dir_true,id=8)
+    call params%set_direction_flag(dir_true,id=14)
+    call params%set_direction_flag(dir_true,id=22)
+    call params%set_direction_flag(dir_true,id=30)
+    call params%set_direction_flag(dir_true,id=39)
+    call params%set_direction_flag(dir_true,id=43)
+    call params%set_direction_flag(dir_true,id=46)
+    call params%set_direction_flag(dir_true,id=49)
+
+  end subroutine initialize_integrated_parameters
 
 END MODULE WAM_OUTPUT_PARAMETER_MODULE
