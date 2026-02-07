@@ -259,8 +259,8 @@ scripts for the Strand and Levante HPC environements:
   <https://www.ecmwf.int/en/elibrary/79883-wave-model>
 
 ################################################################################  
-Version 7.1.1
-Marcel Ricker   (marcel DOT ricker AT hereon DOT de)  
-Arno Behrens (arno DOT behrens AT hereon DOT de)  
+Version 7.1.1  
+Marcel Ricker (marcel DOT ricker AT hereon DOT de)  
+Arno Behrens  (arno DOT behrens AT hereon DOT de)  
 13 January 2026
 
