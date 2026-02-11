@@ -659,7 +659,6 @@ end type
 type(t_integrated_parameters_init), public :: params
 
 public  :: t_integrated_parameters_init
-logical :: dir_true = .true. , dir_false = .false.
 
 contains
 !
