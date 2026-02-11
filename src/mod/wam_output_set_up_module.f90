@@ -33,13 +33,12 @@ USE WAM_TIMOPT_MODULE,  ONLY: CDATEA, CDATEE, IDELPRO, CDTPRO, l_decomp,       &
 &                             SHALLOW_RUN, REFRACTION_C_RUN, COLDSTART, LCFLX
 
 USE WAM_OUTPUT_PARAMETER_MODULE, ONLY:                                         &
-&            NOUT_P, TITL_P, NOUT_S, TITL_S
+&            NOUT_P, TITL_P, NOUT_S, TITL_S, initialize_integrated_parameters
 
 use wam_grid_module,    only: one_point
 use wam_special_module, only: ispec2d, ispecode
 use wam_mpi_module,     only: irank, nijs, nijl, petotal, IJ2NEWIJ,            &
-&                             NSTART, NEND, noutp_ga, ijar_ga, ngou_ga
-use wam_output_netcdf_module, only: create_netcdf_output_file, create_dimensions
+&                             NSTART, NEND, noutp_ga, ijar_ga, ngou_ga, i_out_par
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
 !     C. MODULE VARIABLES.                                                     !
@@ -754,6 +753,15 @@ END IF
 CALL SAVE_OUTPUT_FILES (IU20, FILE20, IU25, FILE25)
 CALL INCDATE(CDT_OUT ,IDEL_OUT)
 
+! ----------------------------------------------------------------------------
+!
+!  5.5 Initializes the integrated parameters attributes with appropriate values
+!  ----------------------------------------------------------------------------
+
+if(irank == i_out_par) then
+  call initialize_integrated_parameters()
+end if
+
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     6. Correct output text of directions if requested.                       !
@@ -1100,17 +1108,11 @@ IF (CDTPRO.LT.CDATEE) THEN
    IF (FFLAG20) THEN                              !! INTEGRATED PARAMETER FILE.
       CALL OPEN_FILE (IU06, IU_PA, FILE_PA, CDT_NEW, 'UNKNOWN', IFAIL)
       IF (IFAIL.NE.0) CALL ABORT1
-      call create_netcdf_output_file()
-      call create_dimensions()
    END IF
 
    IF (FFLAG25) THEN                              !! SPECTRA FILE.
       CALL OPEN_FILE (IU06, IU_SP, FILE_SP, CDT_NEW, 'UNKNOWN', IFAIL)
       IF (IFAIL.NE.0) CALL ABORT1
-   END IF
-
-   IF (NFLAG20) THEN
-      ! TODO(Aparna) : Move the netcdf calls to this location from ythe FFLAG20 IF condition 
    END IF
 END IF
 
