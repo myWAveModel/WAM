@@ -57,7 +57,7 @@ subroutine create_netcdf_output_file(output_date_time)
   character(len=*), intent(in) :: output_date_time
   integer :: status
   
-  filepath_name = '/home/k/k202203/WAM/SWAMPtest/WAM'//TRIM(output_date_time)//'.nc'
+  filepath_name = 'WAVE'//TRIM(output_date_time)//'.nc'
   NETCDF_FILE_ID = -1
   
   if (irank == i_out_par) then
