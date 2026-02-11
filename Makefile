@@ -44,7 +44,7 @@ FFLAGS+= -O3
 #FFLAGS+= -march=native
 #FFLAGS+= -g -traceback -check all
 #FFLAGS+= -g
-
+#FFLAGS+= -fnoinline-no-ip
 #-------------------------------------------------------------------------------
 # System specific libraries
 #-------------------------------------------------------------------------------
