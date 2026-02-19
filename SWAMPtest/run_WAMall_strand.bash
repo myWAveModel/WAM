@@ -35,13 +35,13 @@ module load netcdf
 # ===================================================================
 
 
-WAMDIR='/gpfs/work/yilmaz/WAM_new'
+WAMDIR='/gpfs/home/USER/PATH/TO/WAM_Cycle7.1'
 
 RUNDIR=.
 INDIR=${RUNDIR}/input
 OUTDIR=${RUNDIR}/output
 GRDDIR=${RUNDIR}/grid
-STOREDIR='./testrun'
+STOREDIR='/gpfs/work/USER/PATH/TO/DIRNAME'
 
 nproc=48
 preproc='y'
@@ -120,10 +120,10 @@ srun -n $nproc --mpi=pmi2 ./wam.exe
 #mpirun -n $nproc --mca pml ob1 --mca btl ^openib ./wam.exe # TO BE USED WITH GCC !!!
 if [ -f logfile.0 ]; then
     cp -ra logfile.0 ${OUTDIR}/coarse/wam_prot.log
-#    rm logfile.*
+    rm logfile.*
 elif [ -f WAMLOGS/logfile.0 ]; then
     cp -ra WAMLOGS/logfile.0 ${OUTDIR}/coarse/wam_prot.log
-#    rm WAMLOGS/logfile.*
+    rm WAMLOGS/logfile.*
 else
     cp -ra WAM_Prot ${OUTDIR}/coarse/wam_prot.log
     rm WAM_Prot
