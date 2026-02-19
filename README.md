@@ -8,6 +8,7 @@ For previous versions please visit: <https://github.com/mywave/WAM/>
 New in Cycle 7:
   - ST6 (BYDBR) physics (IPHYS = 2)
   - bug fix in normalised wave stress
+  - simplified usage of the SWAMP test case
   - betamax for ST4 adjustable via namelist
   - improved Netcdf conversion
   - ! IMPROVED COMPILATION VIA NEW MAKEFILE !
