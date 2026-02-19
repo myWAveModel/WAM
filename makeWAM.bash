@@ -12,7 +12,7 @@ if [ "$1" == strand ]; then
 
         export FC=mpiifort
         export FFLAGS="-heap-arrays 64 -fp-model precise -O3"
-        #export FFLAGS="-heap-arrays 64 -fp-model precise -O0 -g -fno-omit-frame-pointer -traceback -check bounds"
+        #export FFLAGS="-heap-arrays 64 -fp-model precise -O0 -g -fsanitize=address -fno-omit-frame-pointer -traceback -check bounds"
         NCDFDIR=/project/opt/software/netcdf/4.7.0/intel
         NCDFIN=-I${NCDFDIR}/include
         NCDFLIB=-L${NCDFDIR}/lib
@@ -38,10 +38,8 @@ elif [ "$1" == strand-oneAPI ]; then
 
 elif [ "$1" == strand-GCC ]; then
         #### STRAND - GCC ####
-        #### WARNING: COMPILING BUT NOT RUNNING YET!!! ####
         module purge
         module load compilers/gnu/11.1.1
-        #module load openmpi/4.0.1
         module load netcdf/4.7.0
 
         export FC=mpifort
@@ -100,8 +98,7 @@ elif [ "$1" == levante-GCC ]; then
         module load netcdf-fortran/4.5.3-openmpi-4.1.2-gcc-11.2.0
 
         export FC=mpifort
-        export FFLAGS=" -march=native" #"-g -traceback -check bounds"
-        #export FFLAGS="-fallow-argument-mismatch -march=native" #"-g -traceback -check bounds"
+        export FFLAGS=" " #"-march=native" #"-O3"
         NCDFDIR=/sw/spack-levante/netcdf-fortran-4.5.3-jlxcfz
         NCDFIN=-I${NCDFDIR}/include
         NCDFLIB="-L${NCDFDIR}/lib -Wl,-rpath,${NCDFDIR}/lib"
@@ -152,6 +149,22 @@ fi
 
 
 #===============================================================================
+# OASIS settings
+#===============================================================================
+if [ "$2" == oasis ]; then
+	# DEFINE THE PATH TO YOUR OASIS LIBRARY HERE !!
+        OASISDIR=/home/g/g260237/Codes/oasis3-mct_forGCOAST_MR/oasis3-mct_LEVANTE
+        
+	OASISIN=-I${OASISDIR}/build/lib/psmile.MPI1
+        OASISLIB=-L${OASISDIR}/lib
+        OASISFLAGS="-lpsmile.MPI1 -lmct -lmpeu -lscrip"
+
+        export FFLAGS="${FFLAGS} ${OASISIN}"
+        export LDOPT="${LDOPT} ${OASISLIB} ${OASISFLAGS}"
+fi
+
+
+#===============================================================================
 # A piori choice of Input Data Formats 
 #===============================================================================
 (cd src/chief
@@ -177,19 +190,11 @@ fi
 module list
 echo '==== Compilation Started ==='
 if [ "$2" == oasis ]; then
-        OASISDIR=/home/g/g260237/Codes/oasis3-mct_forGCOAST_MR/oasis3-mct_LEVANTE
-        OASISIN=-I${OASISDIR}/build/lib/psmile.MPI1
-        OASISLIB=-L${OASISDIR}/lib
-        OASISFLAGS="-lpsmile.MPI1 -lmct -lmpeu -lscrip"
-
-        export FFLAGS="${FFLAGS} ${OASISIN}"
-        export LDOPT="${LDOPT} ${OASISLIB} ${OASISFLAGS}"
-
 	rm ./obj/wam_oasis_module.*
 	(cd ./src/mod; ln -sf wam_oasis_active_module.f90 wam_oasis_module.f90)
         echo make wam "setENV=$1"
-        make wam "setENV=$1"
-        #make --debug=b wam "setENV=$1"
+        #make wam "setENV=$1"
+        make --debug=b wam "setENV=$1"
 
 elif [ -n "$2" ]; then
         (cd ./src/mod; ln -sf wam_oasis_inactive_module.f90 wam_oasis_module.f90)
