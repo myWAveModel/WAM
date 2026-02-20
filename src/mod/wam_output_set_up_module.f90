@@ -33,7 +33,8 @@ USE WAM_TIMOPT_MODULE,  ONLY: CDATEA, CDATEE, IDELPRO, CDTPRO, l_decomp,       &
 &                             SHALLOW_RUN, REFRACTION_C_RUN, COLDSTART, LCFLX
 
 USE WAM_OUTPUT_PARAMETER_MODULE, ONLY:                                         &
-&            NOUT_P, TITL_P, NOUT_S, TITL_S, initialize_integrated_parameters
+&            NOUT_P, TITL_P, NOUT_S, TITL_S, initialize_integrated_parameters, &
+&            params
 
 use wam_grid_module,    only: one_point
 use wam_special_module, only: ispec2d, ispecode
@@ -768,6 +769,8 @@ end if
 !        -----------------------------------------------                       !
 
 if (PFLAG20 .and. .not.(orientation_of_directions)) then
+  !TODO(Aparna/Marcel): Use setter functions here
+  
    titl_p(2)  = ' WIND DIRECTION ( DEGREE FROM NORTH FROM )'
    titl_p(8)  = ' CURRENT DIRECTION ( DEGREE FROM NORTH FROM )'
    titl_p(14) = ' WAVE DIRECTION ( DEGREE FROM NORTH FROM )'
