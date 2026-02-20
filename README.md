@@ -226,6 +226,8 @@ scripts for the Strand and Levante HPC environements:
    [SWAMPtest] $ diff -r[qs] ./grid ./ref_grid 
    [SWAMPtest] $ diff -r[qs] ./output ./ref_output 
    ```
+The content of the ref_output/ folder can accessed here:
+https://share.hereon.de/index.php/s/mLoy75QbNBLasBa
 
 4. Preview the data (with ncview):
    ```
