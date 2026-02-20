@@ -135,7 +135,7 @@ subroutine create_dimensions()
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), "calendar", "standard"))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), "axis", "T"))
 
-    call check_status(nf90_put_att(NETCDF_FILE_ID,0,"source", "WAM Cycle 7.2"))
+    call check_status(nf90_put_att(NETCDF_FILE_ID,0,"source", "WAM Cycle 7.1"))
     call check_status(nf90_put_att(NETCDF_FILE_ID,0,"conventions", "CF-1.6"))
     
     
