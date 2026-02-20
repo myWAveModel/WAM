@@ -99,8 +99,8 @@ $(OBJDIR)/wam_tables_module.o \
 $(OBJDIR)/wam_output_parameter_module.o \
 $(OBJDIR)/wam_special_module.o \
 $(OBJDIR)/wam_print_module.o\
-$(OBJDIR)/wam_output_netcdf_module.o\
 $(OBJDIR)/wam_output_set_up_module.o \
+$(OBJDIR)/wam_output_netcdf_module.o\
 $(OBJDIR)/wam_interface_module.o \
 $(OBJDIR)/wam_model_module.o \
 $(OBJDIR)/wam_oasis_module.o \
@@ -128,8 +128,8 @@ $(OBJDIR)/wam_output_parameter_module.o \
 $(OBJDIR)/wam_mpi_module.o \
 $(OBJDIR)/wam_special_module.o \
 $(OBJDIR)/wam_print_module.o\
-$(OBJDIR)/wam_output_netcdf_module.o\
 $(OBJDIR)/wam_output_set_up_module.o \
+$(OBJDIR)/wam_output_netcdf_module.o\
 $(OBJDIR)/wam_nest_module.o \
 $(OBJDIR)/wam_interface_module.o \
 $(OBJDIR)/wam_mpi_comp_module.o \
@@ -296,8 +296,8 @@ $(OBJDIR)/wam_tables_module.o \
 $(OBJDIR)/wam_output_parameter_module.o \
 $(OBJDIR)/wam_special_module.o \
 $(OBJDIR)/wam_print_module.o\
-$(OBJDIR)/wam_output_netcdf_module.o\
 $(OBJDIR)/wam_output_set_up_module.o \
+$(OBJDIR)/wam_output_netcdf_module.o\
 $(OBJDIR)/wam_interface_module.o \
 $(OBJDIR)/wam_nest_module.o \
 $(OBJDIR)/wam_mpi_comp_module.o \
