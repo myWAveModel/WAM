@@ -33,81 +33,81 @@ INTEGER, PARAMETER :: NOUT_P = 70
 logical            :: dir_true = .true. , dir_false = .false.
 
 CHARACTER(LEN=60), DIMENSION(NOUT_P) :: NAME_IP = (/ &
-& 'WIND SPEED U10 ' , & !!1
-& 'WIND DIRECTION ' , & !!2
-& 'FRICTION VELOCITY ' , & !!3
-& 'DRAG COEFFICIENT ' , & !!4
-& 'CHARNOCK PARAMETER ' , & !!5
-& 'WATER DEPTH ' , & !!6
-& 'CURRENT SPEED ' , & !!7
-& 'CURRENT DIRECTION ' , & !!8
-& 'SIGNIFICANT WAVE HEIGHT ' , & !!9
-& 'WAVE PEAK PERIOD ' , & !!10
-& 'WAVE MEAN PERIOD ' , & !!11
-& 'WAVE TM1 PERIOD ' , & !!12
-& 'WAVE TM2 PERIOD ' , & !!13
-& 'WAVE DIRECTION ' , & !!14
-& 'DIRECTIONAL SPREAD ' , & !!15
-& 'NORMALISED WAVE STRESS ' , & !!16
-& 'SEA SIGNIFICANT WAVE HEIGHT ' , & !!17
-& 'SEA PEAK PERIOD ' , & !!18
-& 'SEA MEAN PERIOD ' , & !!19
-& 'SEA TM1 PERIOD ' , & !!20
-& 'SEA TM2 PERIOD ' , & !!21
-& 'SEA DIRECTION ' , & !!22
-& 'SEA DIRECTIONAL SPREAD ' , & !!23
-& 'DUMMY ' , & !!24
-& 'SWELL SIGNIFICANT WAVE HEIGHT ' , & !!25
-& 'SWELL PEAK PERIOD ' , & !!26
-& 'SWELL MEAN PERIOD ' , & !!27
-& 'SWELL TM1 PERIOD ' , & !!28
-& 'SWELL TM2 PERIOD ' , & !!29
-& 'SWELL DIRECTION ' , & !!30
-& 'SWELL DIRECTIONAL SPREAD ' , & !!31
-& 'ROUGHNESS LENGTH Z0 ' , & !!32
-& 'GODA PEAKEDNESS PARAMETER ' , & !!33
+& 'WIND_SPEED_U10 ' , & !!1
+& 'WIND_DIRECTION ' , & !!2
+& 'FRICTION_VELOCITY ' , & !!3
+& 'DRAG_COEFFICIENT ' , & !!4
+& 'CHARNOCK_PARAMETER ' , & !!5
+& 'WATER_DEPTH ' , & !!6
+& 'CURRENT_SPEED ' , & !!7
+& 'CURRENT_DIRECTION ' , & !!8
+& 'SIGNIFICANT_WAVE_HEIGHT ' , & !!9
+& 'WAVE_PEAK_PERIOD ' , & !!10
+& 'WAVE_MEAN_PERIOD ' , & !!11
+& 'WAVE_TM1_PERIOD ' , & !!12
+& 'WAVE_TM2_PERIOD ' , & !!13
+& 'WAVE_DIRECTION ' , & !!14
+& 'DIRECTIONAL_SPREAD ' , & !!15
+& 'NORMALISED_WAVE_STRESS ' , & !!16
+& 'SEA_SIGNIFICANT_WAVE_HEIGHT ' , & !!17
+& 'SEA_PEAK_PERIOD ' , & !!18
+& 'SEA_MEAN_PERIOD ' , & !!19
+& 'SEA_TM1_PERIOD ' , & !!20
+& 'SEA_TM2_PERIOD ' , & !!21
+& 'SEA_DIRECTION ' , & !!22
+& 'SEA_DIRECTIONAL_SPREAD ' , & !!23
+& 'DUMMY1 ' , & !!24
+& 'SWELL_SIGNIFICANT_WAVE_HEIGHT ' , & !!25
+& 'SWELL_PEAK_PERIOD ' , & !!26
+& 'SWELL_MEAN_PERIOD ' , & !!27
+& 'SWELL_TM1_PERIOD ' , & !!28
+& 'SWELL_TM2_PERIOD ' , & !!29
+& 'SWELLDIRECTION ' , & !!30
+& 'SWELL_DIRECTIONAL_SPREAD ' , & !!31
+& 'ROUGHNESS_LENGTH_Z0 ' , & !!32
+& 'GODA_PEAKEDNESS_PARAMETER ' , & !!33
 & 'KURTOSIS ' , & !!34
-& 'BENJAMIN-FEIR INDEX ' , & !!35
-& 'NORMALIZED MAXIMUM WAVE HEIGHT ' , & !!36
-& 'MAXIMUM WAVE PERIOD ' , & !!37
-& 'PEAK FREQUENCY ' , & !!38
-& 'PEAK DIRECTION ' , & !!39
-& 'MEAN SQUARE SLOPE ' , & !!40
-& 'FIRST SWELL SIGNIFICANT WAVE HEIGHT ' , & !!41
-& 'FIRST SWELL TM1 PERIOD ' , & !!42
-& 'FIRST SWELL DIRECTION ' , & !!43
-& 'SECOND SWELL SIGNIFICANT WAVE HEIGHT ' , & !!44
-& 'SECOND SWELL TM1 PERIOD ' , & !!45
-& 'SECOND SWELL DIRECTION ' , & !!46
-& 'THIRD SWELL SIGNIFICANT WAVE HEIGHT ' , & !!47
-& 'THIRD SWELL TM1 PERIOD ' , & !!48
-& 'THIRD SWELL DIRECTION ' , & !!49
-& 'DUMMY ' , & !!50
-& 'RADIATION STRESS TENSOR SXX ' , & !!51
-& 'RADIATION STRESS TENSOR SYY ' , & !!52
-& 'RADIATION STRESS TENSOR SXY ' , & !!53
-& 'DUMMY ' , & !!54
-& 'X-COMP. WAVE FORCE PER SURFACE UNIT ' , & !!55
-& 'Y-COMP. WAVE FORCE PER SURFACE UNIT ' , & !!56
-& 'X-COMP. STOKES DRIFT ' , & !!57
-& 'Y-COMP. STOKES DRIFT ' , & !!58
-& 'ENERGY FLUX TO OCEAN ' , & !!59
-& 'TOTAL ENERGY FLUX FROM WIND TO WAVES ' , & !!60
-& 'X-COMP. MOMENTUM FLUX INTO OCEAN ' , & !!61
-& 'Y-COMP. MOMENTUM FLUX INTO OCEAN ' , & !!62
-& 'ENERGY FLUX FROM WAVES TO BOTTOM ' , & !!63
-& 'X-COMP. MOMENTUM FLUX FROM WAVES TO BOTTOM ' , & !!64
-& 'Y-COMP. MOMENTUM FLUX FROM WAVES TO BOTTOM ' , & !!65
-& 'DUMMY ' , & !!66
-& 'CREST MAX ' , & !!67
+& 'BENJAMIN-FEIR_INDEX ' , & !!35
+& 'NORMALIZED_MAXIMUM_WAVE_HEIGHT ' , & !!36
+& 'MAXIMUM_WAVE_PERIOD ' , & !!37
+& 'PEAK_FREQUENCY ' , & !!38
+& 'PEAK_DIRECTION ' , & !!39
+& 'MEAN_SQUARE_SLOPE ' , & !!40
+& 'FIRST_SWELL_SIGNIFICANT_WAVE_HEIGHT ' , & !!41
+& 'FIRST_SWELL_TM1_PERIOD ' , & !!42
+& 'FIRST_SWELL_DIRECTION ' , & !!43
+& 'SECOND_SWELL_SIGNIFICANT_WAVE_HEIGHT ' , & !!44
+& 'SECOND_SWELL_TM1_PERIOD ' , & !!45
+& 'SECOND_SWELL_DIRECTION ' , & !!46
+& 'THIRD_SWELL_SIGNIFICANT_WAVE_HEIGHT ' , & !!47
+& 'THIRD_SWELL_TM1_PERIOD ' , & !!48
+& 'THIRD_SWELL_DIRECTION ' , & !!49
+& 'DUMMY2' , & !!50
+& 'RADIATION_STRESS_TENSOR_SXX ' , & !!51
+& 'RADIATION_STRESS_TENSOR_SYY ' , & !!52
+& 'RADIATION_STRESS_TENSOR_SXY ' , & !!53
+& 'DUMMY3' , & !!54
+& 'X-COMP._WAVE_FORCE_PER_SURFACE_UNIT ' , & !!55
+& 'Y-COMP._WAVE_FORCE_PER_SURFACE_UNIT ' , & !!56
+& 'X-COMP._STOKES_DRIFT ' , & !!57
+& 'Y-COMP._STOKES_DRIFT ' , & !!58
+& 'ENERGY_FLUX_TO_OCEAN ' , & !!59
+& 'TOTAL_ENERGY_FLUX_FROM_WIND_TO_WAVES ' , & !!60
+& 'X-COMP._MOMENTUM_FLUX_INTO_OCEAN ' , & !!61
+& 'Y-COMP._MOMENTUM_FLUX_INTO_OCEAN ' , & !!62
+& 'ENERGY_FLUX_FROM_WAVES_TO_BOTTOM ' , & !!63
+& 'X-COMP._MOMENTUM_FLUX_FROM_WAVES_TO_BOTTOM ' , & !!64
+& 'Y-COMP._MOMENTUM_FLUX_FROM_WAVES_TO_BOTTOM ' , & !!65
+& 'DUMMY4' , & !!66
+& 'CREST_MAX ' , & !!67
 & 'HMAX ' , & !!68
-& 'MAXIMUM CREST H.- SPACE-TIME ' , & !!69
-& 'MAXIMUM WAVE H.- SPACE-TIME '/) !!70
+& 'MAXIMUM_CREST_H.-SPACE-TIME ' , & !!69
+& 'MAXIMUM_WAVE_H.-SPACE-TIME '/) !!70
 
 CHARACTER(LEN=15), DIMENSION(NOUT_P) :: UNITS_P = (/ &
-& 'm s-1 '  , & !! 1
+& 'm/s '  , & !! 1
 & 'degree '  , & !! 2
-& 'm s-1 '  , & !! 3
+& 'm/s '  , & !! 3
 & ' '  , & !! 4
 & ' '  , & !! 5
 & 'm '  , & !! 6
@@ -249,77 +249,76 @@ CHARACTER(LEN=100), DIMENSION(NOUT_P) :: STANDARD_NAME_P = (/ &
 & 'sea_surface_wave_maximum_height ' /)!!70
 
 CHARACTER(LEN=100), DIMENSION(NOUT_P) :: LONG_NAME_P = (/ &
-& 'Equivalent 10-m wind speed derived from altimeter', &
-& 'Wind degrees from north', &
-& 'Friction velocity at sea water surface', &
-& 'drag coefficient', &
-& 'Charnock coefficient', &
-& '', &
-& '', &
-& '', &
-& 'Spectral significant wave height (Hm0)', &
-& 'Wave period at spectral peak / peak period (Tp)', &
-& 'Spectral moments (-1,0) wave period (Tm-10)', &
-& 'Spectral moments (0,1) wave period (Tm01)', &
-& 'Spectral moments (0,2) wave period (Tm02)', &
-& 'Mean wave direction from (Mdir)', &
-& 'Total directional spreed', &
-& 'normalised_wave_stress', &
-& 'Spectral significant wind wave height', &
-& 'Sea peak period', &
-& 'Sea mean period', &
-& 'Spectral moments (0,1) wind wave period', &
-& 'Sea m2-period', &
-& 'Mean wind wave direction from', &
-& 'Sea directional spreed', &
-& '', &
-& 'Swell significant wave height', &
-& 'Swell peak period', &
-& 'Swell mean period', &
-& 'Swell m1-period', &
-& 'Swell tm2-period', &
-& 'Swell mean wave direction', &
-& 'Swell directional spread', &
-& 'Surface roughness length', &
-& 'goda peakness parameter', &
-& 'kurtosis', &
-& 'Benjamin Feir index', &
-& 'Maximum zero crossing wave height (Hmax)', &
-& 'Maximum wave period (Tmax)', &
-& 'interpolated peak frequency', &
-& 'Wave principal direction at spectral peak', &
-& 'mean square slope', &
-& 'Spectral significant primary swell wave height', &
-& 'Spectral moments (0,1) primary swell wave period', &
-& 'Mean primary swell wave direction from', &
-& 'Spectral significant secondary swell wave height', &
-& 'Spectral moments (0,1) secondary swell wave period', &
-& 'Mean secondary swell wave direction from', &
-& '', &
-& '', &
-& '', &
-& '', &
-& 'radiation stress tensor sxx', &
-& 'radiation stress tensor syy', &
-& 'radiation stress tensor sxy', &
-& '', &
-& 'x-comp. wave force per surface unit', &
-& 'y-comp. wave force per surface unit', &
-& 'Stokes drift U', &
-& 'Stokes drift V', &
-& 'Energy flux into ocean', &
-& 'normalized energy flux from wind to waves', &
-& 'Eastward wave momentum flux into sea water', &
-& 'Northward wave momentum flux into sea water', &
-& 'energy flux from waves to bottom', &
-& 'x-comp. momentum flux from waves into bottom', &
-& 'y-comp. momentum flux from waves into bottom', &
-& '', &
-& 'Height of the highest crest' , &             !! WAM-MAX
-& 'Maximum crest trough wave height (Hc,max)' , &  !! WAM-MAX
-& 'maximum crest height - space-time (stqd)' , &    !! WAM-MAX
-& 'maximum wave height - space-time (stqd)' /)    !! WAM-MAX
-
+& 'Equivalent 10-m wind speed derived from altimeter', &  !! 1
+& 'Wind degrees from north', &  !! 2
+& 'Friction velocity at sea water surface', &  !! 3
+& 'Drag coefficient', &  !! 4
+& 'Charnock coefficient', &  !! 5
+& 'Sea floor depth below sea surface', &  !! 6
+& 'Sea water velocity to direction', &  !! 7
+& 'Sea water speed', &  !! 8
+& 'Spectral significant wave height (Hm0)', &  !! 9
+& 'Wave period at spectral peak / peak period (Tp)', &  !! 10
+& 'Spectral moments (-1,0) wave period (Tm-10)', &  !! 11
+& 'Spectral moments (0,1) wave period (Tm01)', &  !! 12
+& 'Spectral moments (0,2) wave period (Tm02)', &  !! 13
+& 'Mean wave direction from (Mdir)', &  !! 14
+& 'Total directional spreed', &  !! 15
+& 'normalised_wave_stress', &  !! 16
+& 'Spectral significant wind wave height', &  !! 17
+& 'Sea peak period', &  !! 18
+& 'Sea mean period', &  !! 19
+& 'Spectral moments (0,1) wind wave period', &  !! 20
+& 'Sea m2-period', &  !! 21
+& 'Mean wind wave direction from', &  !! 22
+& 'Sea directional spreed', &  !! 23
+& 'Dummy', &  !! 24
+& 'Swell significant wave height', &  !! 25
+& 'Swell peak period', &  !! 26
+& 'Swell mean period', &  !! 27
+& 'Swell m1-period', &  !! 28
+& 'Swell tm2-period', &  !! 29
+& 'Swell mean wave direction', &  !! 30
+& 'Swell directional spread', &  !! 31
+& 'Surface roughness length', &  !! 32
+& 'goda peakness parameter', &  !! 33
+& 'kurtosis', &  !! 34
+& 'Benjamin Feir index', &  !! 35
+& 'Maximum zero crossing wave height (Hmax)', &  !! 36
+& 'Maximum wave period (Tmax)', &  !! 37
+& 'interpolated peak frequency', &  !! 38
+& 'Wave principal direction at spectral peak', &  !! 39
+& 'mean square slope', &  !! 40
+& 'Spectral significant primary swell wave height', &  !! 41
+& 'Spectral moments (0,1) primary swell wave period', &  !! 42
+& 'Mean primary swell wave direction from', &  !! 43
+& 'Spectral significant secondary swell wave height', &  !! 44
+& 'Spectral moments (0,1) secondary swell wave period', &  !! 45
+& 'Mean secondary swell wave direction from', &  !! 46
+& 'Sea surface tertiary swell wave significant height', &  !! 47
+& 'Sea surface tertiary swell wave mean period', &  !! 48
+& 'Sea surface tertiary swell wave to direction', &  !! 49
+& 'Dummy', &  !! 50
+& 'radiation stress tensor sxx', &  !! 51
+& 'radiation stress tensor syy', &  !! 52
+& 'radiation stress tensor sxy', &  !! 53
+& 'Dummy', &  !! 54
+& 'x-comp. wave force per surface unit', &  !! 55
+& 'y-comp. wave force per surface unit', &  !! 56
+& 'Stokes drift U', &  !! 57
+& 'Stokes drift V', &  !! 58
+& 'Energy flux into ocean', &  !! 59
+& 'normalized energy flux from wind to waves', &  !! 60
+& 'Eastward wave momentum flux into sea water', &  !! 61
+& 'Northward wave momentum flux into sea water', &  !! 62
+& 'energy flux from waves to bottom', &  !! 63
+& 'x-comp. momentum flux from waves into bottom', &  !! 64
+& 'y-comp. momentum flux from waves into bottom', &  !! 65
+& 'Dummy', &  !! 66
+& 'Height of the highest crest'  , &  !! WAM-MAX  !! 67
+& 'Maximum crest trough wave height (Hc,max)' , &  !! WAM-MAX  !! 68
+& 'maximum crest height - space-time (stqd)' , &   !! WAM-MAX  !! 69
+& 'maximum wave height - space-time (stqd)' /)    !! WAM-MAX  !! 70
 
 REAL, DIMENSION(NOUT_P) :: VARIABLE_MIN = (/ &
 0.,0.,0.,0.,0.,0.,-2.,0.,0.,1.,1.,1.,1.,0.,0.,0.,0.,1.,1.,1.,1.,0.,0.,0.,0., &
@@ -636,6 +635,8 @@ type t_integrated_parameters
   character(len=15)   :: units(NOUT_P)
   real                :: scaling_factor(NOUT_P)
   logical             :: direction_flag(NOUT_P)
+  real                :: fill_value(NOUT_P)
+  real                :: missing_value(NOUT_P)
   real                :: variable_min(NOUT_P)
   real                :: variable_max(NOUT_P)
 end type t_integrated_parameters
@@ -645,12 +646,15 @@ type, extends(t_integrated_parameters) :: t_integrated_parameters_init
     procedure, pass(this) :: init
     procedure, pass(this) :: set_name_ip
     procedure, pass(this) :: set_long_name
+    procedure, pass(this) :: set_standard_name
     procedure, pass(this) :: set_direction_flag
     procedure, pass(this) :: get_long_name
     procedure, pass(this) :: get_name_ip
     procedure, pass(this) :: get_scaling_factor
     procedure, pass(this) :: get_direction_flag
     procedure, pass(this) :: get_units
+    procedure, pass(this) :: get_fill_value
+    procedure, pass(this) :: get_missing_value
     procedure, pass(this) :: get_standard_name
     procedure, pass(this) :: get_vl_min
     procedure, pass(this) :: get_vl_max
@@ -688,6 +692,10 @@ contains
 
     !---- Fill direction flag with .FALSE.
     this%direction_flag = dir_false
+
+    !---- Fill _FillValue and missing_value
+    this%fill_value = -999
+    this%missing_value = -999
     
     !---- Fill vlmin and max
     this%variable_min = VARIABLE_MIN
@@ -711,6 +719,15 @@ contains
     integer, intent(in) :: id
     this%long_name(id) = long_name
   end subroutine set_long_name
+
+  subroutine set_standard_name(this, standard_name, id)
+    class(t_integrated_parameters_init), intent(inout) :: this
+
+    character(len=100), intent(in) :: standard_name
+    integer, intent(in) :: id
+    this%standard_name(id) = standard_name
+  end subroutine set_standard_name
+
 
   subroutine set_direction_flag(this, direction_flag, id)
     class(t_integrated_parameters_init), intent(inout) :: this
@@ -759,6 +776,20 @@ contains
     integer, intent(in) :: id
     character(len=100) :: standard_name
     standard_name = this%standard_name(id)
+  end function
+
+  function get_fill_value(this, id) result(fill_value)
+    class(t_integrated_parameters_init), intent(in) :: this
+    integer, intent(in) :: id
+    real :: fill_value
+    fill_value = this%fill_value(id)
+  end function
+  
+  function get_missing_value(this, id) result(missing_value)
+    class(t_integrated_parameters_init), intent(in) :: this
+    integer, intent(in) :: id
+    real :: missing_value
+    missing_value = this%missing_value(id)
   end function
 
   function get_vl_min(this, id) result(vl_min)
