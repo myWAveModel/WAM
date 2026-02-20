@@ -89,7 +89,8 @@ USE WAM_FLUX_MODULE,    ONLY: PHIOC, PHIAW, TAUOC_X, TAUOC_Y,                  &
 USE WAM_MODEL_MODULE,  ONLY: FL3, U10, UDIR, USTAR, TAUW, Z0, DEPTH, INDEP, U, V
 
 USE WAM_TIMOPT_MODULE, ONLY: IDELPRO, CDTPRO,                                  &
-&                            SHALLOW_RUN, REFRACTION_C_RUN, cdatea, cdatee     !! ModR07: Add CDATEE
+&                            SHALLOW_RUN, REFRACTION_C_RUN, cdatea, cdatee,    &
+&                            time_step_output                                 !! ModR07: Add CDATEE
 
 USE WAM_OUTPUT_PARAMETER_MODULE, ONLY:                                         &
 &            NOUT_P, TITL_P, SCAL_P, NOUT_S, TITL_S
@@ -98,7 +99,7 @@ USE WAM_OUTPUT_SET_UP_MODULE, ONLY:                                            &
 &       CDTINTT, CDTSPT, IDELINT, IDELSPT, NOUTT, COUTT, CDT_OUT,              &
 &       FFLAG_P, FFLAG20, PFLAG_P, PFLAG20, CFLAG_P, CFLAG20,                  &
 &       FFLAG_S, FFLAG25, PFLAG_S, PFLAG25, CFLAG_S, CFLAG25,                  &
-&       NFLAG_P, NFLAG20,                                                      &
+&       NFLAG_P, NFLAG20, IDEL_OUT,                                            &
 &       NOUTP, OUTLAT, OUTLONG, NAME, IJAR,                                    &
 &       ready_outf, owpath, orientation_of_directions,                         &
 &       ZMISS, ZMISS_ICE, ZMISS_DRY
@@ -843,10 +844,10 @@ INTEGER, INTENT(IN) :: IU20         !! PARAMETER UNIT NUMBER.
 !     LOCAL VARIABLE.                                                          !
 !     ---------------                                                          !
 
-INTEGER                          :: IP, ierr
+INTEGER                          :: IP, ierr, local_idelint
 REAL,ALLOCATABLE, DIMENSION(:,:) :: GRID        !! GRIDDED PARAMETER FIELD.
 REAL,ALLOCATABLE, DIMENSION(:)   :: BLOCK_TOTAL !! FULL PARAMETER FIELD.
-
+CHARACTER(LEN=60)                 :: filepath_name
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     1. WRITE INTEGRATED PARAMETER TO FILE HEADER.                            !
@@ -868,8 +869,15 @@ END IF
 
 IF (NFLAG20) THEN
   if (irank==i_out_par) then
-    call create_netcdf_output_file(CDTPRO)
-    call create_dimensions()
+    if (CDTINTT == CDT_OUT) then
+      time_step_output = 1
+      local_idelint = IDELINT * time_step_output
+      call create_netcdf_output_file(CDT_OUT)
+      call create_dimensions()
+    else
+      time_step_output = time_step_output +1
+      local_idelint = IDELINT * time_step_output
+    end if
   end if 
 END IF
 
@@ -930,9 +938,12 @@ DO IP = 1,NOUT_P
          IF (IP.EQ.5) GRID = MIN(GRID, 999.)
          CALL PRINT_ARRAY (IU06, CDTPRO, TITL_P(IP), GRID,                     &
 &              AMOWEP, AMOSOP, AMOEAP, AMONOP, SCAL_P(IP),ZMISS, NG_R=NLON_RG)
-      END IF 
+      END IF
+
       IF (NFLAG_P(IP)) THEN
-        call write_variables_to_netcdf_output_file(IP, GRID)
+          IF (local_idelint .LE. IDEL_OUT) THEN
+            call write_variables_to_netcdf_output_file(IP, GRID, time_step_output)
+          END IF
       END IF
    END IF
    
