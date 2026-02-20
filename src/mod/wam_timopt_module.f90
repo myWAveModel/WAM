@@ -38,7 +38,7 @@ INTEGER  :: IDELPRO     = -1 !! TIMESTEP WAM PROPAGATION IN SECONDS.
 INTEGER  :: IDELT       = -1 !! TIMESTEP SOURCE FUNCTION IN SECONDS.
 INTEGER  :: IDEL_WAM    = -1 !! TIMESTEP WAMODEL CALLS IN SECONDS.
 integer  :: ifcst       =  0 !! ready file time in days and hours
-
+integer  :: time_step_output = 0 !! time step to write output to a single file
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     2. OPTIONS.                                                              !
