@@ -52,7 +52,7 @@ Yuan, Y., Yu, F., Chen, Z., Li, X., Hou, F., Gao, Y., Gao, Z., & Pang, R. (2024)
    * NetCDF
    * OASIS 3 MCT (if the OASIS coupling interface will be used)
 
-2. Download the repository: <https://github.com/mywave/WAM/tree/WAM_Cycle7>
+2. Download the repository: <https://github.com/mywave/WAM/tree/WAM_Cycle7.1>
 
 ### OPTION A: individual compilation directly via make 
 
@@ -226,8 +226,8 @@ scripts for the Strand and Levante HPC environements:
    [SWAMPtest] $ diff -r[qs] ./grid ./ref_grid 
    [SWAMPtest] $ diff -r[qs] ./output ./ref_output 
    ```
-The content of the ref_output/ folder can accessed here:
-https://share.hereon.de/index.php/s/mLoy75QbNBLasBa
+The content of the ref_output/ folder can accessed here:  
+<https://share.hereon.de/index.php/s/mLoy75QbNBLasBa>
 
 4. Preview the data (with ncview):
    ```
