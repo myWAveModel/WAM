@@ -157,7 +157,6 @@ $(OBJDIR)/wam_user_module.o \
 $(OBJDIR)/wam_assi_module.o \
 \
 $(OBJDIR)/read_topo_input.o \
-$(OBJDIR)/wam_input_netcdf_creator.o \
 $(OBJDIR)/chief.o \
 $(OBJDIR)/wavemdl.o \
 $(OBJDIR)/initmdl.o \
