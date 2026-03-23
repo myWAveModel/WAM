@@ -715,7 +715,7 @@ contains
   subroutine set_long_name(this, long_name, id)
     class(t_integrated_parameters_init), intent(inout) :: this
 
-    character(len=100), intent(in) :: long_name
+    character(len=*), intent(in) :: long_name
     integer, intent(in) :: id
     this%long_name(id) = long_name
   end subroutine set_long_name
@@ -723,7 +723,7 @@ contains
   subroutine set_standard_name(this, standard_name, id)
     class(t_integrated_parameters_init), intent(inout) :: this
 
-    character(len=100), intent(in) :: standard_name
+    character(len=*), intent(in) :: standard_name
     integer, intent(in) :: id
     this%standard_name(id) = standard_name
   end subroutine set_standard_name

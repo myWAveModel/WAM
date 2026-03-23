@@ -34,7 +34,7 @@ USE WAM_TIMOPT_MODULE,  ONLY: CDATEA, CDATEE, IDELPRO, CDTPRO, l_decomp,       &
 
 USE WAM_OUTPUT_PARAMETER_MODULE, ONLY:                                         &
 &            NOUT_P, TITL_P, NOUT_S, TITL_S, initialize_integrated_parameters, &
-&            params
+&            params, dir_true, dir_false
 
 use wam_grid_module,    only: one_point
 use wam_special_module, only: ispec2d, ispecode
@@ -769,8 +769,51 @@ end if
 !        -----------------------------------------------                       !
 
 if (PFLAG20 .and. .not.(orientation_of_directions)) then
-  !TODO(Aparna/Marcel): Use setter functions here
-  
+  ! TODO(Aparna/Marcel): Use setter functions here
+  ! "from / to" convention needs to be changed for following ids
+  ! 2, 7?, 8, 14, 22, 30, 39?, 43, 46
+  ! Need to check with Marcel
+   
+   call params%set_long_name("Wind degrees from north",id=2)
+   call params%set_standard_name("wind_from_direction",id=2)
+   call params%set_direction_flag(dir_true,id=2)
+   
+   call params%set_long_name("Sea water velocity from direction",id=7)
+   call params%set_standard_name("sea_water_velocity_from_direction",id=7)
+   call params%set_direction_flag(dir_true,id=7)
+
+   call params%set_long_name("Sea water speed",id=8)
+   call params%set_standard_name("sea_water_speed",id=8)
+   call params%set_direction_flag(dir_true,id=8)
+   
+   call params%set_long_name("Mean wave direction from (Mdir)",id=14)
+   call params%set_standard_name("sea_surface_wave_from_direction",id=14)
+   call params%set_direction_flag(dir_true,id=14)
+   
+   call params%set_long_name("Mean wind wave direction from",id=22)
+   call params%set_standard_name("sea_surface_wind_wave_from_direction",id=22)
+   call params%set_direction_flag(dir_true,id=22)
+   
+   call params%set_long_name("Swell mean wave direction",id=30)
+   call params%set_standard_name("sea_surface_swell_wave_from_direction",id=30)
+   call params%set_direction_flag(dir_true,id=30)
+   
+   call params%set_long_name("Wave principal direction at spectral peak",id=39)
+   call params%set_standard_name("sea_surface_wave_from_direction_at_variance_spectral_density_maximum",id=39)
+   call params%set_direction_flag(dir_true,id=39)
+   
+   call params%set_long_name("Mean primary swell wave direction from",id=43)
+   call params%set_standard_name("sea_surface_primary_swell_wave_from_direction",id=43)
+   call params%set_direction_flag(dir_true,id=43)
+   
+   call params%set_long_name("Mean secondary swell wave direction from",id=46)
+   call params%set_standard_name("sea_surface_secondary_swell_wave_from_direction",id=46)
+   call params%set_direction_flag(dir_true,id=46)
+   
+   call params%set_long_name("Sea surface tertiary swell wave from direction",id=49)
+   call params%set_standard_name("sea_surface_tertiary_swell_wave_from_direction",id=49)
+   call params%set_direction_flag(dir_true,id=49)
+
    titl_p(2)  = ' WIND DIRECTION ( DEGREE FROM NORTH FROM )'
    titl_p(8)  = ' CURRENT DIRECTION ( DEGREE FROM NORTH FROM )'
    titl_p(14) = ' WAVE DIRECTION ( DEGREE FROM NORTH FROM )'
