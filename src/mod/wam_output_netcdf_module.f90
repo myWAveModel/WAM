@@ -134,12 +134,12 @@ subroutine create_dimensions()
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), "units", "seconds since 1950-01-01 00:00:00"))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), "calendar", "standard"))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), "axis", "T"))
-
+    
     call check_status(nf90_put_att(NETCDF_FILE_ID,0,"source", "WAM Cycle 7.1"))
-    call check_status(nf90_put_att(NETCDF_FILE_ID,0,"conventions", "CF-1.6"))
-    
-    
-    
+    call check_status(nf90_put_att(NETCDF_FILE_ID,0,"Conventions", "CF-1.6"))
+    call check_status(nf90_put_att(NETCDF_FILE_ID,0,"title", "Wave Model Data (2D) - Instantaneous Field"))
+    call check_status(nf90_put_att(NETCDF_FILE_ID,0,"history", " "))
+
     DO i=1,total_int_parameters
       
       IF (NFLAG_P(i)) THEN
