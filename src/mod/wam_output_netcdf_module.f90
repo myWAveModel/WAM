@@ -36,7 +36,7 @@ integer, parameter :: total_int_parameters = 70
 integer :: TIME_DIM_ID, LAT_DIM_ID, LON_DIM_ID, NETCDF_FILE_ID
 integer :: VARIABLE_IDS(total_int_parameters+3) = -1
 character(len=:), allocatable :: filepath_name
-real, allocatable, dimension(:) :: longitude_grid, latitude_grid
+real*8, allocatable, dimension(:) :: longitude_grid, latitude_grid
 integer :: i
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
@@ -186,7 +186,7 @@ subroutine write_variables_to_netcdf_output_file(id_int_params, grid_values, tim
   integer, intent(in) :: time_step
   !character(len=*), intent(in) :: local_filepath_name
 
-  real, dimension(NX, NY) :: local_grid_values
+  real*8, dimension(NX, NY) :: local_grid_values
   character(len=100)   :: long_name_int_params
   character(len=100)   :: std_name_int_params
   character(len=60)   :: name_int_params
