@@ -139,6 +139,7 @@ $(OBJDIR)/wam_ice_module.o \
 $(OBJDIR)/wam_wind_module.o \
 $(OBJDIR)/wam_oasis_module.o \
 $(OBJDIR)/wam_boundary_module.o \
+$(OBJDIR)/wam_netcdf_input_reader.o \
 \
 $(OBJDIR)/wam_swell_module.o \
 $(OBJDIR)/wam_topo_module.o \
