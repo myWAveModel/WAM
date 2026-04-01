@@ -106,7 +106,8 @@ USE WAM_OUTPUT_SET_UP_MODULE, ONLY:                                            &
 
 USE WAM_OUTPUT_NETCDF_MODULE, ONLY: create_netcdf_output_file,                 &
 &                                   create_dimensions,                         &
-&                                   write_variables_to_netcdf_output_file
+&                                   write_variables_to_netcdf_output_file,     &
+&                                   write_time_vector_to_netcdf_output_file
 USE WAM_ICE_MODULE,    ONLY: ICE_RUN
 
 USE WAM_NEST_MODULE,   ONLY: FINE, NBOUNF, IJARF
@@ -880,6 +881,10 @@ IF (NFLAG20) THEN
     end if
   end if 
 END IF
+
+if (irank==i_out_par) then
+  call write_time_vector_to_netcdf_output_file(CDTPRO, time_step_output)
+end if
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !

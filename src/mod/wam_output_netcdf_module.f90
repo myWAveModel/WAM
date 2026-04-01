@@ -28,6 +28,7 @@ use wam_grid_module, only: NX, NY, XDELLA, XDELLO, AMOWEP, AMOSOP
 use wam_output_parameter_module, only: params
 use wam_coordinate_module, only: M_DEGREE_R
 use wam_output_set_up_module, only: NFLAG_P
+use wam_timopt_module, only: time_conversion
 
 IMPLICIT NONE
 public :: create_netcdf_output_file
@@ -116,19 +117,19 @@ subroutine create_dimensions()
     call check_status(nf90_def_dim(NETCDF_FILE_ID,'longitude', NX, LON_DIM_ID))
     call check_status(nf90_def_dim(NETCDF_FILE_ID,'latitude', NY, LAT_DIM_ID))
     
-    call check_status(nf90_def_var(NETCDF_FILE_ID,'longitude', NF90_FLOAT, LON_DIM_ID, VARIABLE_IDS(total_int_parameters+1)))
+    call check_status(nf90_def_var(NETCDF_FILE_ID,'longitude', NF90_DOUBLE, LON_DIM_ID, VARIABLE_IDS(total_int_parameters+1)))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+1), "standard_name", "longitude"))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+1), "long_name", "longitude"))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+1), "units", "degrees_east"))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+1), "axis", "X"))
 
-    call check_status(nf90_def_var(NETCDF_FILE_ID,'latitude', NF90_FLOAT, LAT_DIM_ID, VARIABLE_IDS(total_int_parameters+2)))
+    call check_status(nf90_def_var(NETCDF_FILE_ID,'latitude', NF90_DOUBLE, LAT_DIM_ID, VARIABLE_IDS(total_int_parameters+2)))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+2), "standard_name", "latitude"))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+2), "long_name", "latitude"))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+2), "units", "degrees_north"))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+2), "axis", "Y"))
 
-    call check_status(nf90_def_var(NETCDF_FILE_ID,'time', NF90_FLOAT, TIME_DIM_ID, VARIABLE_IDS(total_int_parameters+3)))
+    call check_status(nf90_def_var(NETCDF_FILE_ID,'time', NF90_DOUBLE, TIME_DIM_ID, VARIABLE_IDS(total_int_parameters+3)))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), "standard_name", "time"))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), "long_name", "time"))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), "units", "seconds since 1950-01-01 00:00:00"))
@@ -179,6 +180,20 @@ subroutine create_dimensions()
   end if
 
 end subroutine
+
+subroutine write_time_vector_to_netcdf_output_file(CDTPRO, time_step)
+    character(len=*), intent(in) :: CDTPRO
+    integer, intent(in) :: time_step
+    real(kind=8) :: time_vector
+    integer :: start(1)
+    time_vector = 0.0d0
+
+    call time_conversion(time_vector, CDTPRO)
+    call check_status(nf90_open(path = filepath_name, mode = ior(nf90_write, nf90_share), ncid = NETCDF_FILE_ID))
+    call check_status(nf90_put_var(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), time_vector, start=(/time_step/)))
+    call check_status(nf90_close(NETCDF_FILE_ID))
+
+end subroutine write_time_vector_to_netcdf_output_file
 
 subroutine write_variables_to_netcdf_output_file(id_int_params, grid_values, time_step)
   integer, intent(in) :: id_int_params

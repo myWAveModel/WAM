@@ -389,4 +389,52 @@ END SUBROUTINE SET_START_OPTION
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
+subroutine time_conversion(time_vector,time_string)
+
+  IMPLICIT NONE
+
+  CHARACTER(len=800) , intent(in)    :: time_string !! CDTPRO - Propagation time
+  REAL*8, intent(out) :: time_vector !! time value seconds since 1950-01-01 
+  CHARACTER(len=800) :: CDUMMY
+  INTEGER :: MDAYS,yy,mo,RYY,RMO,RDY,EYY,EMO,EDY
+  REAL*8  :: RRC, REC, xhour
+  xhour = 3600.
+
+  CDUMMY = 'seconds'
+  !! Year, Month and Day values for target time system
+  !! seconds since 1950-01-01 00:00:00
+  EYY = 1950
+  EMO = 01
+  EDY = 01
+  REC = 1.0d0*(24.0d0*xhour)
+
+  READ(time_string(1:8),'(I4.4,I2.2,I2.2)') RYY,RMO,RDY
+  RRC = 1.0d0/(24.0d0*xhour)
+
+      IF(RRC/=0.0d0 .AND. REC/=0.0d0) THEN
+      MDAYS=0
+      DO yy=MIN(RYY,EYY),MAX(RYY,EYY)-1
+      DO mo=1,12
+        IF(mo==4 .OR. mo==6 .OR.mo==9 .OR. mo==11)          THEN; MDAYS=MDAYS+SIGN(30,RYY-EYY)
+        ELSEIF(mo==2 .AND. (MOD(yy,4)==0 .AND. (MOD(yy,100)/=0 .OR.  MOD(yy,400)==0))) THEN; MDAYS=MDAYS+SIGN(29,RYY-EYY)
+        ELSEIF(mo==2 .AND. (MOD(yy,4)/=0 .OR.  (MOD(yy,100)==0 .AND. MOD(yy,400)/=0))) THEN; MDAYS=MDAYS+SIGN(28,RYY-EYY)
+        ELSE                                                        ; MDAYS=MDAYS+SIGN(31,RYY-EYY)
+        END IF
+      END DO
+      END DO
+      DO mo=MIN(RMO,EMO),MAX(RMO,EMO)-1
+        IF(mo==4 .OR. mo==6 .OR.mo==9 .OR. mo==11)            THEN; MDAYS=MDAYS+SIGN(30,RMO-EMO)
+        ELSEIF(mo==2 .AND. (MOD(EYY,4)==0 .AND. (MOD(yy,100)/=0 .OR.  MOD(EYY,400)==0))) THEN; MDAYS=MDAYS+SIGN(29,RMO-EMO)
+        ELSEIF(mo==2 .AND. (MOD(EYY,4)/=0 .OR.  (MOD(yy,100)==0 .AND. MOD(EYY,400)/=0))) THEN; MDAYS=MDAYS+SIGN(28,RMO-EMO)
+        ELSE                                                          ; MDAYS=MDAYS+SIGN(31,RMO-EMO)
+        END IF
+      END DO
+      MDAYS=MDAYS+RDY-EDY
+          time_vector= (REAL(MDAYS))*REC
+      ELSE
+           WRITE(*,*) 'TIME REFERENCE NOT RECOGNIZED!'
+      END IF
+    RETURN
+end subroutine
+
 END MODULE WAM_TIMOPT_MODULE
