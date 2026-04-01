@@ -778,12 +778,8 @@ if (PFLAG20 .and. .not.(orientation_of_directions)) then
    call params%set_standard_name("wind_from_direction",id=2)
    call params%set_direction_flag(dir_true,id=2)
    
-   call params%set_long_name("Sea water velocity from direction",id=7)
-   call params%set_standard_name("sea_water_velocity_from_direction",id=7)
-   call params%set_direction_flag(dir_true,id=7)
-
-   call params%set_long_name("Sea water speed",id=8)
-   call params%set_standard_name("sea_water_speed",id=8)
+   call params%set_long_name("Sea water velocity from direction",id=8)
+   call params%set_standard_name("sea_water_velocity_from_direction",id=8)
    call params%set_direction_flag(dir_true,id=8)
    
    call params%set_long_name("Mean wave direction from (Mdir)",id=14)

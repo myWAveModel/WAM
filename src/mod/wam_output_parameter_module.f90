@@ -178,13 +178,13 @@ CHARACTER(LEN=15), DIMENSION(NOUT_P) :: UNITS_P = (/ &
 
 CHARACTER(LEN=100), DIMENSION(NOUT_P) :: STANDARD_NAME_P = (/ &
 & 'wind_speed ' , & !!1
-& 'wind_from_direction ' , & !!2
+& 'wind_to_direction ' , & !!2
 & 'friction_velocity_at_sea_water_surface ' , & !!3
 & 'surface_drag_coefficient_in_air ' , & !!4
 & 'charnock_coefficient_for_surface_roughness_length_for_momentum_in_air ' , & !!5
 & 'sea_floor_depth_below_sea_surface ' , & !!6
-& 'sea_water_velocity_to_direction ' , & !!7
-& 'sea_water_speed ' , & !!8
+& 'sea_water_speed' , & !!7
+& 'sea_water_velocity_to_direction ' , & !!8
 & 'sea_surface_wave_significant_height ' , & !!9
 & 'sea_surface_wave_period_at_variance_spectral_density_maximum ' , & !!10
 & 'sea_surface_wave_mean_period_from_variance_spectral_density_inverse_frequency_moment ' , & !!11
@@ -215,7 +215,7 @@ CHARACTER(LEN=100), DIMENSION(NOUT_P) :: STANDARD_NAME_P = (/ &
 & 'sea_surface_wave_maximum_height ' , & !!36
 & 'sea_surface_wave_maximum_period ' , & !!37
 & 'sea_surface_wave_frequency_at_variance_spectral_density_maximum ' , & !!38
-& 'sea_surface_wave_from_direction_at_variance_spectral_density_maximum ' , & !!39
+& 'sea_surface_wave_to_direction_at_variance_spectral_density_maximum ' , & !!39
 & 'sea_surface_wave_mean_square_slope ' , & !!40
 & 'sea_surface_primary_swell_wave_significant_height ' , & !!41
 & 'sea_surface_primary_swell_wave_mean_period ' , & !!42
@@ -255,14 +255,14 @@ CHARACTER(LEN=100), DIMENSION(NOUT_P) :: LONG_NAME_P = (/ &
 & 'Drag coefficient', &  !! 4
 & 'Charnock coefficient', &  !! 5
 & 'Sea floor depth below sea surface', &  !! 6
-& 'Sea water velocity to direction', &  !! 7
-& 'Sea water speed', &  !! 8
+& 'Sea water speed', &  !! 7
+& 'Sea water velocity to direction', &  !! 8
 & 'Spectral significant wave height (Hm0)', &  !! 9
 & 'Wave period at spectral peak / peak period (Tp)', &  !! 10
 & 'Spectral moments (-1,0) wave period (Tm-10)', &  !! 11
 & 'Spectral moments (0,1) wave period (Tm01)', &  !! 12
 & 'Spectral moments (0,2) wave period (Tm02)', &  !! 13
-& 'Mean wave direction from (Mdir)', &  !! 14
+& 'Mean wave direction to (Mdir)', &  !! 14
 & 'Total directional spreed', &  !! 15
 & 'normalised_wave_stress', &  !! 16
 & 'Spectral significant wind wave height', &  !! 17
@@ -270,7 +270,7 @@ CHARACTER(LEN=100), DIMENSION(NOUT_P) :: LONG_NAME_P = (/ &
 & 'Sea mean period', &  !! 19
 & 'Spectral moments (0,1) wind wave period', &  !! 20
 & 'Sea m2-period', &  !! 21
-& 'Mean wind wave direction from', &  !! 22
+& 'Mean wind wave direction to', &  !! 22
 & 'Sea directional spreed', &  !! 23
 & 'Dummy', &  !! 24
 & 'Swell significant wave height', &  !! 25
@@ -291,10 +291,10 @@ CHARACTER(LEN=100), DIMENSION(NOUT_P) :: LONG_NAME_P = (/ &
 & 'mean square slope', &  !! 40
 & 'Spectral significant primary swell wave height', &  !! 41
 & 'Spectral moments (0,1) primary swell wave period', &  !! 42
-& 'Mean primary swell wave direction from', &  !! 43
+& 'Mean primary swell wave direction to', &  !! 43
 & 'Spectral significant secondary swell wave height', &  !! 44
 & 'Spectral moments (0,1) secondary swell wave period', &  !! 45
-& 'Mean secondary swell wave direction from', &  !! 46
+& 'Mean secondary swell wave direction to', &  !! 46
 & 'Sea surface tertiary swell wave significant height', &  !! 47
 & 'Sea surface tertiary swell wave mean period', &  !! 48
 & 'Sea surface tertiary swell wave to direction', &  !! 49
