@@ -396,9 +396,10 @@ subroutine time_conversion(time_vector,time_string)
   CHARACTER(len=800) , intent(in)    :: time_string !! CDTPRO - Propagation time
   REAL*8, intent(out) :: time_vector !! time value seconds since 1950-01-01 
   CHARACTER(len=800) :: CDUMMY
-  INTEGER :: MDAYS,yy,mo,RYY,RMO,RDY,EYY,EMO,EDY
-  REAL*8  :: RRC, REC, xhour
+  INTEGER :: MDAYS,yy,mo,RYY,RMO,RDY,EYY,EMO,EDY,RHH,RMM,RSS
+  REAL*8  :: RRC, REC, xhour, xmin
   xhour = 3600.
+  xmin = 60
 
   CDUMMY = 'seconds'
   !! Year, Month and Day values for target time system
@@ -409,6 +410,7 @@ subroutine time_conversion(time_vector,time_string)
   REC = 1.0d0*(24.0d0*xhour)
 
   READ(time_string(1:8),'(I4.4,I2.2,I2.2)') RYY,RMO,RDY
+  READ(time_string(9:14),'(I2.2,I2.2,I2.2)') RHH,RMM,RSS
   RRC = 1.0d0/(24.0d0*xhour)
 
       IF(RRC/=0.0d0 .AND. REC/=0.0d0) THEN
@@ -430,7 +432,7 @@ subroutine time_conversion(time_vector,time_string)
         END IF
       END DO
       MDAYS=MDAYS+RDY-EDY
-          time_vector= (REAL(MDAYS))*REC
+          time_vector= (REAL(MDAYS))*REC + (RHH*xhour) + (RMM*xmin) + RSS
       ELSE
            WRITE(*,*) 'TIME REFERENCE NOT RECOGNIZED!'
       END IF
