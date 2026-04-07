@@ -882,7 +882,7 @@ IF (NFLAG20) THEN
   end if 
 END IF
 
-if (irank==i_out_par) then
+if (irank==i_out_par .AND. NFLAG20) then
   call write_time_vector_to_netcdf_output_file(CDTPRO, time_step_output)
 end if
 
