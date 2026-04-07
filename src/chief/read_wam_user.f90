@@ -491,6 +491,16 @@ END DO
 
 CALL F_NEW_DATA
 CMEMS_OUTPUT_FLAG = LINE( 2: 2).EQ.'T' .OR. LINE( 2: 2).EQ.'t'
+
+! ----------------------------------
+!   13.5 INPUT FILE TYPE SELECTION
+! ----------------------------------
+
+CALL F_NEW_DATA
+IF ( LINE(2:17).NE.' ') THEN
+  READ(LINE( 2:2),'(I2)',IOSTAT=IOS) INPUT_FILE_TYPE
+  IF (IOS.NE.0) CALL ERROR_MESSAGE('INPUT_FILE_TYPE')
+END IF
 ! ---------------------------------------------------------------------------- !! End ModR05
 !                                                                              !
 !    14. MODEL FILES.                                                          !

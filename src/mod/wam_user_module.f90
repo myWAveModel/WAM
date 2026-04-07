@@ -163,6 +163,8 @@ CHARACTER (LEN=1)  :: PROPAGATION_TIMESTEP_UNIT
 INTEGER            :: SOURCE_TIMESTEP
 CHARACTER (LEN=1)  :: SOURCE_TIMESTEP_UNIT
 
+!----------------------------------------------------------------------------- !
+INTEGER            :: INPUT_FILE_TYPE
 ! ---------------------------------------------------------------------------- !
 
 INTEGER            :: RESTART_SAVE_TIMESTEP
