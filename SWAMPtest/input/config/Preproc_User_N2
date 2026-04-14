@@ -33,7 +33,7 @@ C     IREF      INTEGER    FREQUENCY BIN NUMBER OF REFERENCE FREQU. (DEFAULT 1)
 C
 C   ML    KL      FR(1)  IREF
 C----- ----- ---------- -----
-    25    12  .04177248      
+    25    24  .04177248      
 C                                                                               
 C ------------------------------------------------------------------------------
 C
