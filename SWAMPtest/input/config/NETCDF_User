@@ -1,7 +1,7 @@
 &nlnetcdf
 cdatea = '20200101060000',
 cdatee = '20200104060000',
-ideldo = 21600,                 !! output time step
+ideldo = 10800,                 !! output time step
 cflag_p = T,T,F,F,F,F,F,F, T,T,T,T,T,T,F,F, T,F,F,F,F,T,F,F, T,F,F,F,F,T,F,T, F,F,F,F,F,F,T,F,
           F,F,F,F,F,F,F,F,F,F, F,F,F,F,F,F,T,T,T,T,T,T,T,T,T,F, T,T,T,T
 cdtfile = '20200101060000',
