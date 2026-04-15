@@ -525,7 +525,7 @@ C
 C        CDATAA          CDATAE  IDELASS U
 C--------------  --------------  ------- -
 C 19780906090000  19780906120000        3 H
- 20200101060000  20200101120000        3 H  
+ 20200101060000  20200101120000        6 H  
 C
 C
 C    FG_OUTPUT   FIRST GUESS OUTPUT: string contains T or t
