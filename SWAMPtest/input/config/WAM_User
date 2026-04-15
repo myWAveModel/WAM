@@ -76,7 +76,7 @@ C    DECOMP  MPI DECOMPOSITION IS 1D (DEFAULT);       2D: string contains F or F
 C
 C  SPHER  SHALLOW  REFRA_D  REFRA_C R_FACTOR   DECOMP 
 C-------  -------  -------  -------  -------  ------- 
-       T        T        F        F        F        F
+       T        T        T        T        F        F
 C
 C    IPHYS   PHYSICS PARAMETERISATION FOR INPUT AND OPEN OCEAN DISSIPATION
 C                                0 : ECMWF CY45R1 (CYCLE 4.6.2.2 (HZG)) (DEFAULT) (ST3)
@@ -167,7 +167,7 @@ C     U        CHARACTER  TIME UNIT: M OR m MINUTE; H OR h HOUR; DEFAULT SECOND 
 C
 C IDELWO U   IDELWI U   IDELTO U   IDELTI U   IDELCO U   IDELCI U   IDELII U
 C------- -  ------- -  ------- -  ------- -  ------- -  ------- -  ------- -
-       6 H        6 H        6 H        6 H        6 H       6  H        6 H                                     
+       6 H        6 H        6 H        6 H        6 H        6 H        6 H                                     
 C
 C ------------------------------------------------------------------------------
 C
