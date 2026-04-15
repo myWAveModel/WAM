@@ -46,7 +46,7 @@ STOREDIR='/gpfs/work/USER/PATH/TO/DIRNAME'
 nproc=48
 preproc='y'
 srcout='y'
-nofnest=0
+nofnest=2
 #
 if [ ! -d ${INDIR}/wam ] || [ ! -d ${INDIR}/config ]; then
     echo '!!!      ERROR: Input directories/files missing      !!!'
