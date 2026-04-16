@@ -24,7 +24,7 @@ module wam_output_netcdf_module
 use netcdf
 use wam_mpi_module, only: irank, petotal, i_out_par 
 use wam_file_module, only: IU06
-use wam_grid_module, only: NX, NY, XDELLA, XDELLO, AMOWEP, AMOSOP
+use wam_grid_module, only: NX, NY, AMOWEP, AMOSOP, AMOEAP, AMONOP
 use wam_output_parameter_module, only: params
 use wam_coordinate_module, only: M_DEGREE_R
 use wam_output_set_up_module, only: NFLAG_P
@@ -38,6 +38,7 @@ integer :: TIME_DIM_ID, LAT_DIM_ID, LON_DIM_ID, NETCDF_FILE_ID
 integer :: VARIABLE_IDS(total_int_parameters+3) = -1
 character(len=:), allocatable :: filepath_name
 real*8, allocatable, dimension(:) :: longitude_grid, latitude_grid
+real*8  :: xdello, xdella
 integer :: i
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
@@ -80,20 +81,21 @@ subroutine create_lon_lat_arrays()
   ! -- Initial lon lat values 
   longitude_grid(1) = AMOWEP
   latitude_grid(1) = AMOSOP
-
+  
+  xdello = (AMOEAP - AMOWEP)/float(NX-1)
+  xdella = (AMONOP - AMOSOP)/float(NY-1)
+  
   ! -- Longitude loop
   DO i=2,NX
-    longitude_grid(i) = longitude_grid(i-1) + XDELLO
+    longitude_grid(i) = longitude_grid(i-1) + xdello
   END DO
 
   DO i=2,NY
-    latitude_grid(i) = latitude_grid(i-1) + XDELLA
+    latitude_grid(i) = latitude_grid(i-1) + xdella
   END DO
 
   longitude_grid = longitude_grid/M_DEGREE_R
   latitude_grid = latitude_grid/M_DEGREE_R
-  
-  WRITE(IU06,*) "lon_grid:", longitude_grid
 
 end subroutine
 subroutine create_dimensions()
@@ -172,8 +174,7 @@ subroutine create_dimensions()
     call check_status(nf90_enddef(NETCDF_FILE_ID))
     
     call check_status(nf90_put_var(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+1), longitude_grid)) 
-    call check_status(nf90_put_var(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+2), latitude_grid))
-    
+    call check_status(nf90_put_var(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+2), latitude_grid)) 
      
     call check_status(nf90_close(NETCDF_FILE_ID))
     deallocate(longitude_grid, latitude_grid)
@@ -189,6 +190,7 @@ subroutine write_time_vector_to_netcdf_output_file(CDTPRO, time_step)
     time_vector = 0.0d0
 
     call time_conversion(time_vector, CDTPRO)
+
     call check_status(nf90_open(path = filepath_name, mode = ior(nf90_write, nf90_share), ncid = NETCDF_FILE_ID))
     call check_status(nf90_put_var(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), time_vector, start=(/time_step/)))
     call check_status(nf90_close(NETCDF_FILE_ID))
@@ -199,7 +201,6 @@ subroutine write_variables_to_netcdf_output_file(id_int_params, grid_values, tim
   integer, intent(in) :: id_int_params
   real, dimension(NX, NY), intent(in) :: grid_values
   integer, intent(in) :: time_step
-  !character(len=*), intent(in) :: local_filepath_name
 
   real*8, dimension(NX, NY) :: local_grid_values
   character(len=100)   :: long_name_int_params
