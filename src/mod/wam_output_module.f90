@@ -90,7 +90,7 @@ USE WAM_MODEL_MODULE,  ONLY: FL3, U10, UDIR, USTAR, TAUW, Z0, DEPTH, INDEP, U, V
 
 USE WAM_TIMOPT_MODULE, ONLY: IDELPRO, CDTPRO,                                  &
 &                            SHALLOW_RUN, REFRACTION_C_RUN, cdatea, cdatee,    &
-&                            time_step_output                                 !! ModR07: Add CDATEE
+&                            time_step_output, COLDSTART                                 !! ModR07: Add CDATEE
 
 USE WAM_OUTPUT_PARAMETER_MODULE, ONLY:                                         &
 &            NOUT_P, TITL_P, SCAL_P, NOUT_S, TITL_S
@@ -848,7 +848,7 @@ INTEGER, INTENT(IN) :: IU20         !! PARAMETER UNIT NUMBER.
 INTEGER                          :: IP, ierr, local_idelint
 REAL,ALLOCATABLE, DIMENSION(:,:) :: GRID        !! GRIDDED PARAMETER FIELD.
 REAL,ALLOCATABLE, DIMENSION(:)   :: BLOCK_TOTAL !! FULL PARAMETER FIELD.
-CHARACTER(LEN=60)                 :: filepath_name
+LOGICAL, SAVE                    :: first_time = .true. 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     1. WRITE INTEGRATED PARAMETER TO FILE HEADER.                            !
@@ -867,24 +867,23 @@ END IF
 !
 !   1.5 CREATE NETCDF OUTPUT FILES AND INSERT BASIC DIMENSIONS
 !   ----------------------------------------------------------
-
-IF (NFLAG20) THEN
-  if (irank==i_out_par) then
+if (irank==i_out_par .AND. NFLAG20) then 
+    if (first_time .AND. (.NOT. COLDSTART)) then
+      time_step_output = 0
+      call create_netcdf_output_file(CDATEA)
+      call create_dimensions()
+      first_time = .FALSE.
+    end if
     if (CDTINTT == CDT_OUT) then
-      time_step_output = 1
-      local_idelint = IDELINT * time_step_output
+      time_step_output = 0
       call create_netcdf_output_file(CDT_OUT)
       call create_dimensions()
-    else
-      time_step_output = time_step_output +1
-      local_idelint = IDELINT * time_step_output
     end if
-  end if 
-END IF
-
-if (irank==i_out_par .AND. NFLAG20) then
-  call write_time_vector_to_netcdf_output_file(CDTPRO, time_step_output)
+    time_step_output = time_step_output +1
+    local_idelint = IDELINT * time_step_output
+    call write_time_vector_to_netcdf_output_file(CDTPRO, time_step_output)
 end if
+
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -896,7 +895,6 @@ IF (irank==i_out_par) THEN
    ALLOCATE (GRID(1:NX,1:NY))
    GRID = ZMISS
 END IF
-
 DO IP = 1,NOUT_P
    IF (.NOT. FFLAG_P(IP) .AND. .NOT. PFLAG_P(IP) ) CYCLE
 
@@ -946,9 +944,7 @@ DO IP = 1,NOUT_P
       END IF
 
       IF (NFLAG_P(IP)) THEN
-          IF (local_idelint .LE. IDEL_OUT) THEN
-            call write_variables_to_netcdf_output_file(IP, GRID, time_step_output)
-          END IF
+        call write_variables_to_netcdf_output_file(IP, GRID, time_step_output)
       END IF
    END IF
    
