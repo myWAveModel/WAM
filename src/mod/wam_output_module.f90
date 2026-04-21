@@ -870,7 +870,7 @@ END IF
 if (irank==i_out_par .AND. NFLAG20) then 
     if (first_time .AND. (.NOT. COLDSTART)) then
       time_step_output = 0
-      call create_netcdf_output_file(CDATEA)
+      call create_netcdf_output_file(CDTINTT)
       call create_dimensions()
       first_time = .FALSE.
     end if
