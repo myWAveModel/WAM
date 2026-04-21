@@ -769,10 +769,6 @@ end if
 !        -----------------------------------------------                       !
 
 if (PFLAG20 .and. .not.(orientation_of_directions)) then
-  ! TODO(Aparna/Marcel): Use setter functions here
-  ! "from / to" convention needs to be changed for following ids
-  ! 2, 7?, 8, 14, 22, 30, 39?, 43, 46
-  ! Need to check with Marcel
    
    call params%set_long_name("Wind degrees from north",id=2)
    call params%set_standard_name("wind_from_direction",id=2)
