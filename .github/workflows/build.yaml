@@ -1,0 +1,46 @@
+name: build
+
+on: pull_request
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        run: |
+          sudo apt update -y
+          sudo apt install -y openmpi-bin libopenmpi-dev libnetcdf-dev libnetcdff-dev environment-modules
+      
+      - name: Build
+        run: |
+          source /etc/profile.d/modules.sh
+          
+          export FC=mpifort
+          export FFLAGS="-O2"
+          export NCDFDIR=$(nc-config --prefix)
+          export NCDFFDIR=$(nf-config --prefix)
+          export LDOPT="-I${NCDFFDIR}/include -L${NCDFFDIR}/lib -L${NCDFDIR}/lib -lnetcdf -lnetcdff"
+          #Compilation
+          
+          cd src/chief/
+          ln -sf read_wind_input_arno.f90     read_wind_input.f90
+          ln -sf read_topo_input_arno.f90     read_topo_input.f90
+          ln -sf read_current_input_arno.f90  read_current_input.f90
+          ln -sf read_boundary_input_arno.f90 read_boundary_input.f90
+          ln -sf read_ice_input_arno.f90      read_ice_input.f90
+
+          cd ../preproc/
+          ln -sf read_topography_arno.f90     read_topography.f90
+
+          #deactivate OASIS
+          
+          cd ../mod/
+          ln -sf wam_oasis_inactive_module.f90 wam_oasis_module.f90
+          
+          #make
+          cd ../../
+          make all setENV=ci-GCC
+          
