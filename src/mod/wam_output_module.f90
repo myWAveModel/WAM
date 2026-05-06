@@ -89,7 +89,8 @@ USE WAM_FLUX_MODULE,    ONLY: PHIOC, PHIAW, TAUOC_X, TAUOC_Y,                  &
 USE WAM_MODEL_MODULE,  ONLY: FL3, U10, UDIR, USTAR, TAUW, Z0, DEPTH, INDEP, U, V
 
 USE WAM_TIMOPT_MODULE, ONLY: IDELPRO, CDTPRO,                                  &
-&                            SHALLOW_RUN, REFRACTION_C_RUN, cdatea, cdatee     !! ModR07: Add CDATEE
+&                            SHALLOW_RUN, REFRACTION_C_RUN, cdatea, cdatee,    &
+&                            time_step_output, COLDSTART                                 !! ModR07: Add CDATEE
 
 USE WAM_OUTPUT_PARAMETER_MODULE, ONLY:                                         &
 &            NOUT_P, TITL_P, SCAL_P, NOUT_S, TITL_S
@@ -98,10 +99,15 @@ USE WAM_OUTPUT_SET_UP_MODULE, ONLY:                                            &
 &       CDTINTT, CDTSPT, IDELINT, IDELSPT, NOUTT, COUTT, CDT_OUT,              &
 &       FFLAG_P, FFLAG20, PFLAG_P, PFLAG20, CFLAG_P, CFLAG20,                  &
 &       FFLAG_S, FFLAG25, PFLAG_S, PFLAG25, CFLAG_S, CFLAG25,                  &
+&       NFLAG_P, NFLAG20, IDEL_OUT,                                            &
 &       NOUTP, OUTLAT, OUTLONG, NAME, IJAR,                                    &
 &       ready_outf, owpath, orientation_of_directions,                         &
 &       ZMISS, ZMISS_ICE, ZMISS_DRY
 
+USE WAM_OUTPUT_NETCDF_MODULE, ONLY: create_netcdf_output_file,                 &
+&                                   create_dimensions,                         &
+&                                   write_variables_to_netcdf_output_file,     &
+&                                   write_time_vector_to_netcdf_output_file
 USE WAM_ICE_MODULE,    ONLY: ICE_RUN
 
 USE WAM_NEST_MODULE,   ONLY: FINE, NBOUNF, IJARF
@@ -795,7 +801,6 @@ IF (CDTINTT.EQ.CDTPRO) THEN
       close (iu67)
    endif
 END IF
-
 END SUBROUTINE WRITE_MODEL_OUTPUT
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
@@ -833,7 +838,6 @@ SUBROUTINE WRITE_INT_PAR_OUTPUT (IU20)
 !                                                                              !
 !     INTERFACE VARIABLES.                                                     !
 !     --------------------                                                     !
-
 INTEGER, INTENT(IN) :: IU20         !! PARAMETER UNIT NUMBER.
 !                                                                              !
 ! ---------------------------------------------------------------------------- !
@@ -841,10 +845,10 @@ INTEGER, INTENT(IN) :: IU20         !! PARAMETER UNIT NUMBER.
 !     LOCAL VARIABLE.                                                          !
 !     ---------------                                                          !
 
-INTEGER                          :: IP, ierr
+INTEGER                          :: IP, ierr, local_idelint
 REAL,ALLOCATABLE, DIMENSION(:,:) :: GRID        !! GRIDDED PARAMETER FIELD.
 REAL,ALLOCATABLE, DIMENSION(:)   :: BLOCK_TOTAL !! FULL PARAMETER FIELD.
-
+LOGICAL, SAVE                    :: first_time = .true. 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     1. WRITE INTEGRATED PARAMETER TO FILE HEADER.                            !
@@ -859,6 +863,28 @@ IF (FFLAG20) THEN
    endif
 END IF
 
+! ----------------------------------------------------------------------------
+!
+!   1.5 CREATE NETCDF OUTPUT FILES AND INSERT BASIC DIMENSIONS
+!   ----------------------------------------------------------
+if (irank==i_out_par .AND. NFLAG20) then 
+    if (first_time .AND. (.NOT. COLDSTART)) then
+      time_step_output = 0
+      call create_netcdf_output_file(CDTINTT)
+      call create_dimensions()
+      first_time = .FALSE.
+    end if
+    if (CDTINTT == CDT_OUT) then
+      time_step_output = 0
+      call create_netcdf_output_file(CDT_OUT)
+      call create_dimensions()
+    end if
+    time_step_output = time_step_output +1
+    local_idelint = IDELINT * time_step_output
+    call write_time_vector_to_netcdf_output_file(CDTPRO, time_step_output)
+end if
+
+
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     2.  STORE INTEGRATED PARAMETERS OF TOTAL SEA IN GRID ARRAYS.             !
@@ -869,14 +895,13 @@ IF (irank==i_out_par) THEN
    ALLOCATE (GRID(1:NX,1:NY))
    GRID = ZMISS
 END IF
-
 DO IP = 1,NOUT_P
    IF (.NOT. FFLAG_P(IP) .AND. .NOT. PFLAG_P(IP) ) CYCLE
 
 !     2.1 GATHER PARAMETER BLOCKS ON ONE PROCESSOR FOR EACH BLOCK.             !
 !         --------------------------------------------------------             !
 
-   if (irank==i_out_par) then
+   if (irank==i_out_par) then 
       CALL mpi_gather_block(i_out_par, BLOCK(:,IP), BLOCK_TOTAL)
    else
       CALL mpi_gather_block(i_out_par, BLOCK(:,IP))
@@ -885,9 +910,7 @@ DO IP = 1,NOUT_P
 
 !     2.1 INSERT ICE AND DRY POINT.                                            !
 !         -------------------------                                            !
-
-   if (irank==i_out_par) then
-
+   IF (irank==i_out_par) THEN
       IF ( ICE_RUN .OR. N_DRY.GT.0 ) THEN
          IF (IP.EQ.3 .OR.IP.EQ.4 .OR.IP.GT.8) THEN
             IF (ICE_RUN)    CALL PUT_ICE (BLOCK_TOTAL(:), ZMISS_ICE)
@@ -896,8 +919,8 @@ DO IP = 1,NOUT_P
          IF (IP.EQ.5) THEN
             IF (ICE_RUN)    CALL PUT_ICE (BLOCK_TOTAL(:), RCHAR)
             IF (N_DRY.GT.0) CALL PUT_DRY (BLOCK_TOTAL(:), RCHAR)
-        END IF
-     END IF
+         END IF
+      END IF
 
 !     2.2 MAKE GRID FIELD.                                                     !
 !        -----------------                                                     !
@@ -911,16 +934,23 @@ DO IP = 1,NOUT_P
 !     2.3 WRITE OUTPUT.                                                        !
 !         -------------                                                        !
 
-      IF (FFLAG_P(IP)) WRITE (IU20) GRID
+      IF (FFLAG_P(IP)) THEN
+        WRITE (IU20) GRID
+      END IF
       IF (PFLAG_P(IP)) THEN
          IF (IP.EQ.5) GRID = MIN(GRID, 999.)
          CALL PRINT_ARRAY (IU06, CDTPRO, TITL_P(IP), GRID,                     &
 &              AMOWEP, AMOSOP, AMOEAP, AMONOP, SCAL_P(IP),ZMISS, NG_R=NLON_RG)
+      END IF
 
+      IF (NFLAG_P(IP)) THEN
+        call write_variables_to_netcdf_output_file(IP, GRID, time_step_output)
       END IF
    END IF
    
 END DO
+
+call mpi_barrier (localcomm, ierr)
 
 IF (ALLOCATED(BLOCK_TOTAL)) DEALLOCATE(BLOCK_TOTAL)
 IF (ALLOCATED(GRID)       ) DEALLOCATE(GRID)

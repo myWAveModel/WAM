@@ -163,6 +163,7 @@ TIME = MPI_WTIME()-TIME0
 IF(use_oasis)THEN                !! ModR04: Include OASIS
   CALL Wam_oasis_terminate(ierr)
 ELSE
+  call MPI_barrier(localcomm, ierr)
   call MPI_finalize (ierr)
 ENDIF                            !! End ModR04
 if (ierr==0) then

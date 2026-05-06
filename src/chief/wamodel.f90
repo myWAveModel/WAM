@@ -542,7 +542,7 @@ PROP: DO KADV = 1,NADV
 !     1.10 PRINT TIME.                                                         !
 !          -----------                                                         !
 
-   WRITE (IU06,'(/,3X,''!!!!!!!!!!!!!! WAVE FIELDS INTEGRATED  DATE IS: '',    &
+   WRITE (IU06,'(/,3X,''!!!!!!!!!!!!!! WAVE FIELDS INTEGRATED DATE IS: '',    &
 &                A14,''  !!!!!!!!!!!!!! '')') CDTPRO
 
    call flush1 (iu06)

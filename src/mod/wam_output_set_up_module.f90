@@ -33,13 +33,13 @@ USE WAM_TIMOPT_MODULE,  ONLY: CDATEA, CDATEE, IDELPRO, CDTPRO, l_decomp,       &
 &                             SHALLOW_RUN, REFRACTION_C_RUN, COLDSTART, LCFLX
 
 USE WAM_OUTPUT_PARAMETER_MODULE, ONLY:                                         &
-&            NOUT_P, TITL_P, NOUT_S, TITL_S
+&            NOUT_P, TITL_P, NOUT_S, TITL_S, initialize_integrated_parameters, &
+&            params, dir_true, dir_false
 
 use wam_grid_module,    only: one_point
 use wam_special_module, only: ispec2d, ispecode
 use wam_mpi_module,     only: irank, nijs, nijl, petotal, IJ2NEWIJ,            &
-&                             NSTART, NEND, noutp_ga, ijar_ga, ngou_ga
-
+&                             NSTART, NEND, noutp_ga, ijar_ga, ngou_ga, i_out_par
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
 !     C. MODULE VARIABLES.                                                     !
@@ -85,11 +85,13 @@ CHARACTER( LEN=14), ALLOCATABLE :: COUTT(:)  !! OUTPUT TIMES.
 LOGICAL, DIMENSION(NOUT_P) :: FFLAG_P    !! FILE OUTPUT FLAG.
 LOGICAL, DIMENSION(NOUT_P) :: PFLAG_P    !! PRINTER OUTPUT FLAG.
 LOGICAL, DIMENSION(NOUT_P) :: CFLAG_P    !! COMPUTATION FLAG.
+LOGICAL, DIMENSION(NOUT_P) :: NFLAG_P    !! SERIAL NETCDF OUTPUT FLAG
 logical :: orientation_of_directions     !! coming from or going to ?
 
 LOGICAL :: FFLAG20 = .FALSE. !! .TRUE. IF FIELDS ARE WRITTEN TO FILE20.
 LOGICAL :: PFLAG20 = .FALSE. !! .TRUE. IF FIELDS ARE PRINTED.
 LOGICAL :: CFLAG20 = .FALSE. !! .TRUE. IF ANY COMPUTATION OF FIELDS.
+LOGICAL :: NFLAG20 = .FALSE. !! .TRUE. IF FIELDS ARE WRITTEN TO NETCDF FILE
 
 integer, parameter :: npout  = 36
    
@@ -304,10 +306,11 @@ end subroutine set_ready_outfile_directory
    
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
-SUBROUTINE SET_PARAMETER_OUTPUT_FLAGS (PF, FF, od)
+SUBROUTINE SET_PARAMETER_OUTPUT_FLAGS (PF, FF, NF, od)
 
 LOGICAL, INTENT(IN) :: PF(:)   !! PRINTER FLAGS.
 LOGICAL, INTENT(IN) :: FF(:)   !! FILE FLAGS.
+LOGICAL, INTENT(IN) :: NF(:)   !! NETCDF FILE FLAGS.
 logical, intent(in) :: od      !! flag for orientation of directions
 
 IF (SIZE(PF).NE.NOUT_P .OR. SIZE(FF).NE.NOUT_P) THEN
@@ -319,6 +322,7 @@ END IF
 
 PFLAG_P = PF
 FFLAG_P = FF
+NFLAG_P = NF
 orientation_of_directions = od
 
 FFLAG_P(24) = .FALSE.    !! CORRECT DUMMY PARAMETER.
@@ -331,10 +335,16 @@ PFLAG_P(50) = .FALSE.
 PFLAG_P(54) = .FALSE.
 PFLAG_P(66) = .FALSE.
 
-CFLAG_P = FFLAG_P.OR.PFLAG_P
+NFLAG_P(24) = .FALSE.
+NFLAG_P(50) = .FALSE.
+NFLAG_P(54) = .FALSE.
+NFLAG_P(66) = .FALSE.
+
+CFLAG_P = FFLAG_P.OR.PFLAG_P.OR.NFLAG_P
 FFLAG20 = ANY(FFLAG_P(:))
 PFLAG20 = ANY(PFLAG_P(:))
-CFLAG20 = FFLAG20.OR.PFLAG20
+NFLAG20 = ANY(NFLAG_P(:))
+CFLAG20 = FFLAG20.OR.PFLAG20.OR.NFLAG20
 
 END SUBROUTINE SET_PARAMETER_OUTPUT_FLAGS
 
@@ -473,7 +483,7 @@ IF (ONE_POINT) THEN
 END IF
 
 
-CFLAG_P(:) = FFLAG_P(:).OR.PFLAG_P(:)
+CFLAG_P(:) = FFLAG_P(:).OR.PFLAG_P(:).OR.NFLAG_P
 FFLAG20 = ANY(FFLAG_P(:))
 PFLAG20 = ANY(PFLAG_P(:))
 CFLAG20 = FFLAG20.OR.PFLAG20
@@ -744,12 +754,58 @@ END IF
 CALL SAVE_OUTPUT_FILES (IU20, FILE20, IU25, FILE25)
 CALL INCDATE(CDT_OUT ,IDEL_OUT)
 
+! ----------------------------------------------------------------------------
+!
+!  5.5 Initializes the integrated parameters attributes with appropriate values
+!  ----------------------------------------------------------------------------
+
+if(irank == i_out_par) then
+  call initialize_integrated_parameters()
+end if
+
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     6. Correct output text of directions if requested.                       !
 !        -----------------------------------------------                       !
 
 if (PFLAG20 .and. .not.(orientation_of_directions)) then
+   
+   call params%set_long_name("Wind degrees from north",id=2)
+   call params%set_standard_name("wind_from_direction",id=2)
+   call params%set_direction_flag(dir_true,id=2)
+   
+   call params%set_long_name("Sea water velocity from direction",id=8)
+   call params%set_standard_name("sea_water_velocity_from_direction",id=8)
+   call params%set_direction_flag(dir_true,id=8)
+   
+   call params%set_long_name("Mean wave direction from (Mdir)",id=14)
+   call params%set_standard_name("sea_surface_wave_from_direction",id=14)
+   call params%set_direction_flag(dir_true,id=14)
+   
+   call params%set_long_name("Mean wind wave direction from",id=22)
+   call params%set_standard_name("sea_surface_wind_wave_from_direction",id=22)
+   call params%set_direction_flag(dir_true,id=22)
+   
+   call params%set_long_name("Swell mean wave direction",id=30)
+   call params%set_standard_name("sea_surface_swell_wave_from_direction",id=30)
+   call params%set_direction_flag(dir_true,id=30)
+   
+   call params%set_long_name("Wave principal direction at spectral peak",id=39)
+   call params%set_standard_name("sea_surface_wave_from_direction_at_variance_spectral_density_maximum",id=39)
+   call params%set_direction_flag(dir_true,id=39)
+   
+   call params%set_long_name("Mean primary swell wave direction from",id=43)
+   call params%set_standard_name("sea_surface_primary_swell_wave_from_direction",id=43)
+   call params%set_direction_flag(dir_true,id=43)
+   
+   call params%set_long_name("Mean secondary swell wave direction from",id=46)
+   call params%set_standard_name("sea_surface_secondary_swell_wave_from_direction",id=46)
+   call params%set_direction_flag(dir_true,id=46)
+   
+   call params%set_long_name("Sea surface tertiary swell wave from direction",id=49)
+   call params%set_standard_name("sea_surface_tertiary_swell_wave_from_direction",id=49)
+   call params%set_direction_flag(dir_true,id=49)
+
    titl_p(2)  = ' WIND DIRECTION ( DEGREE FROM NORTH FROM )'
    titl_p(8)  = ' CURRENT DIRECTION ( DEGREE FROM NORTH FROM )'
    titl_p(14) = ' WAVE DIRECTION ( DEGREE FROM NORTH FROM )'
