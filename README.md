@@ -6,8 +6,8 @@ This branch is the most recent offical stand-alone version of WAM.
 For previous versions please visit: <https://github.com/mywave/WAM/>
 
 New in Cycle 7.1:
-  - assimilation of 2D wave spectra (IASSI_SPECTRA = 1)
-  - direct NetCDF4 output of integrated parameters
+  - assimilation of 2D wave spectra (IASSI_SPECTRA = 1) - kindly supported by the DAWN project
+  - direct NetCDF4 output of integrated parameters      - kindly supported by the natESM project
 
 New in Cycle 7:
   - ST6 (BYDBR) physics (IPHYS = 2)
