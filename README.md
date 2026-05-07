@@ -6,14 +6,15 @@ This branch is the most recent offical stand-alone version of WAM.
 For previous versions please visit: <https://github.com/mywave/WAM/>
 
 New in Cycle 7.1:
-  - Assimilation of 2D wave spectra (IASSI_SPECTRA = 1)
+  - assimilation of 2D wave spectra (IASSI_SPECTRA = 1)
+  - direct NetCDF4 output of integrated parameters
 
 New in Cycle 7:
   - ST6 (BYDBR) physics (IPHYS = 2)
   - bug fix in normalised wave stress
   - simplified usage of the SWAMP test case
   - betamax for ST4 adjustable via namelist
-  - improved Netcdf conversion
+  - improved Netcdf conversion (in post-processing)
   - ! IMPROVED COMPILATION VIA NEW MAKEFILE !
   - merge with OASIS branch
   - source term output
