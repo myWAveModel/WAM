@@ -37,10 +37,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wam-binary-gcc
-          path: bin/wam_gcc
+          path: bin/
   build-intel:
     runs-on: ubuntu-latest
-    needs: build-gcc              #waits until gcc step is done
+    needs: [] #change to build-gcc to build sequentionally, not in parallel 
     container: intel/oneapi-hpckit:latest
     steps:
       - name: Checkout 
@@ -86,4 +86,95 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wam-binary-intel
-          path: bin/wam_intel
+          path: bin/
+  run-gcc:
+    runs-on: ubuntu-latest
+    needs: build-gcc
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download gcc binaries 
+        uses: actions/download-artifact@v4
+        with: 
+          name: wam-binary-gcc
+          path: bin/
+      - name: Setup runtime dependencies
+        run: |
+          sudo apt update -y
+          sudo apt install -y openmpi-bin libopenmpi-dev libnetcdf-dev libnetcdff-dev environment-modules
+          #pwd
+          #ls -l bin/
+      - name: Run test
+        run: |
+          cd SWAMPtest/
+          #Copy needed executables and parameter files
+          cp ../bin/preproc ./preproc.exe
+          cp ../bin/wam ./wam.exe
+          cp input/config/Preproc_User ./
+          cp input/config/WAM_User ./
+          #edit 
+          sed -i '174s|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' Preproc_User
+          sed -i '362s|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' WAM_User
+          #run pre-processing
+          chmod +x preproc.exe
+          if ./preproc.exe; then
+            echo "Pre-processing ran successfully!"
+          else
+            echo "Pre-processsing run failed!"
+            exit 1
+          fi
+          chmod +x wam.exe
+          if mpirun --allow-run-as-root -n 2 ./wam.exe; then
+            echo "WAM ran successfully!"
+          else
+            echo "WAM run failed!"
+            exit 1
+          fi
+  run-intel:
+    runs-on: ubuntu-latest
+    needs: build-intel
+    container: intel/oneapi-hpckit:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install nodejs
+        shell: bash
+        run: |
+          apt-get update -y
+          apt-get install -y nodejs
+      - name: Download Intel binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: wam-binary-intel
+          path: bin/
+      - name: Setup runtime dependencies
+        shell: bash
+        run: |
+          apt-get update -y
+          apt-get install -y libnetcdf-dev libnetcdff-dev
+      - name: Run test
+        shell: bash
+        run: |
+          source /opt/intel/oneapi/setvars.sh --force
+          cd SWAMPtest/
+          cp ../bin/preproc ./preproc.exe
+          cp ../bin/wam ./wam.exe
+          cp input/config/Preproc_User ./
+          cp input/config/WAM_User ./
+          sed -i '174s|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' Preproc_User
+          sed -i '362s|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' WAM_User
+          chmod +x preproc.exe wam.exe
+          if ./preproc.exe; then
+            echo "Pre-processing ran successfully!"
+          else
+            echo "Pre-processing run failed!"
+            exit 1
+          fi
+          if mpirun -n 2 ./wam.exe; then
+            echo "WAM ran successfully!"
+          else
+            echo "WAM run failed!"
+            exit 1
+          fi
+
+
