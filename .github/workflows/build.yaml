@@ -1,5 +1,11 @@
 name: build
-on: pull_request
+on: 
+  push:
+    branches:
+      - WAM_Cycle7.1
+  pull_request:
+    branches:
+      - WAM_Cycle7.1
 jobs:
   build-gcc:
     runs-on: ubuntu-latest
