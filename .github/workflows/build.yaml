@@ -15,10 +15,9 @@ jobs:
       - name: Setup GCC
         run: |
           sudo apt update -y
-          sudo apt install -y openmpi-bin libopenmpi-dev libnetcdf-dev libnetcdff-dev environment-modules
+          sudo apt install -y openmpi-bin libopenmpi-dev libnetcdf-dev libnetcdff-dev 
       - name: Build GCC
         run: |
-          source /etc/profile.d/modules.sh
           export FC=mpifort
           export FFLAGS="-O2"
           export NCDFDIR=$(nc-config --prefix)
@@ -38,6 +37,7 @@ jobs:
           ln -sf wam_oasis_inactive_module.f90 wam_oasis_module.f90
           #make
           cd ../../
+          #setENV=ci-GCC changes the Makefile logic so internal settings (FC, flags) are skipped, ensurring that all the settings are configured externally, so here.
           make all setENV=ci-GCC
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -46,7 +46,7 @@ jobs:
           path: bin/
   build-intel:
     runs-on: ubuntu-latest
-    needs: [] #change to build-gcc to build sequentionally, not in parallel 
+      #if: false
     container: intel/oneapi-hpckit:latest
     steps:
       - name: Checkout 
@@ -87,6 +87,7 @@ jobs:
           ln -sf wam_oasis_inactive_module.f90 wam_oasis_module.f90
           cd ../../
           #make
+          #setENV=ci-GCC changes the Makefile logic so internal settings (FC, flags) are skipped, ensurring that all the settings are configured externally, so here.
           make all setENV=ci-Intel 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -107,7 +108,7 @@ jobs:
       - name: Setup runtime dependencies
         run: |
           sudo apt update -y
-          sudo apt install -y openmpi-bin libopenmpi-dev libnetcdf-dev libnetcdff-dev environment-modules
+          sudo apt install -y openmpi-bin libopenmpi-dev libnetcdf-dev libnetcdff-dev
           #pwd
           #ls -l bin/
       - name: Run test
@@ -119,8 +120,8 @@ jobs:
           cp input/config/Preproc_User ./
           cp input/config/WAM_User ./
           #edit 
-          sed -i '174s|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' Preproc_User
-          sed -i '362s|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' WAM_User
+          sed -i 's|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' Preproc_User
+          sed -i 's|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' WAM_User
           #run pre-processing
           chmod +x preproc.exe
           if ./preproc.exe; then
@@ -139,6 +140,7 @@ jobs:
   run-intel:
     runs-on: ubuntu-latest
     needs: build-intel
+      #if: false
     container: intel/oneapi-hpckit:latest
     steps:
       - name: Checkout
@@ -167,8 +169,8 @@ jobs:
           cp ../bin/wam ./wam.exe
           cp input/config/Preproc_User ./
           cp input/config/WAM_User ./
-          sed -i '174s|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' Preproc_User
-          sed -i '362s|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' WAM_User
+          sed -i 's|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' Preproc_User
+          sed -i 's|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' WAM_User
           chmod +x preproc.exe wam.exe
           if ./preproc.exe; then
             echo "Pre-processing ran successfully!"
