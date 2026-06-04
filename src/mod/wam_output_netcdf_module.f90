@@ -134,7 +134,8 @@ subroutine create_dimensions()
     call check_status(nf90_def_var(NETCDF_FILE_ID,'time', NF90_DOUBLE, TIME_DIM_ID, VARIABLE_IDS(total_int_parameters+3)))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), "standard_name", "time"))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), "long_name", "time"))
-    call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), "units", "seconds since 1950-01-01 00:00:00"))
+    call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), & 
+                                  "units", "seconds since 1950-01-01 00:00:00"))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), "calendar", "standard"))
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), "axis", "T"))
     

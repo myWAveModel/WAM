@@ -1,0 +1,188 @@
+name: build
+on: 
+  push:
+    branches:
+      - WAM_Cycle7.1
+  pull_request:
+    branches:
+      - WAM_Cycle7.1
+jobs:
+  build-gcc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup GCC
+        run: |
+          sudo apt update -y
+          sudo apt install -y openmpi-bin libopenmpi-dev libnetcdf-dev libnetcdff-dev 
+      - name: Build GCC
+        run: |
+          export FC=mpifort
+          export FFLAGS="-O2"
+          export NCDFDIR=$(nc-config --prefix)
+          export NCDFFDIR=$(nf-config --prefix)
+          export LDOPT="-I${NCDFFDIR}/include -L${NCDFFDIR}/lib -L${NCDFDIR}/lib -lnetcdf -lnetcdff"
+          #Compilation        
+          cd src/chief/
+          ln -sf read_wind_input_arno.f90     read_wind_input.f90
+          ln -sf read_topo_input_arno.f90     read_topo_input.f90
+          ln -sf read_current_input_arno.f90  read_current_input.f90
+          ln -sf read_boundary_input_arno.f90 read_boundary_input.f90
+          ln -sf read_ice_input_arno.f90      read_ice_input.f90
+          cd ../preproc/
+          ln -sf read_topography_arno.f90     read_topography.f90
+          #deactivate OASIS          
+          cd ../mod/
+          ln -sf wam_oasis_inactive_module.f90 wam_oasis_module.f90
+          #make
+          cd ../../
+          #setENV=ci-GCC changes the Makefile logic so internal settings (FC, flags) are skipped, ensurring that all the settings are configured externally, so here.
+          make all setENV=ci-GCC
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wam-binary-gcc
+          path: bin/
+  build-intel:
+    runs-on: ubuntu-latest
+      #if: false
+    container: intel/oneapi-hpckit:latest
+    steps:
+      - name: Checkout 
+        uses: actions/checkout@v4
+      - name: Setup NetCDF
+        shell: bash
+        run: |
+          source /opt/intel/oneapi/setvars.sh --force
+          apt-get update -y
+          apt-get install -y nodejs libnetcdf-dev zlib1g-dev m4 wget
+          # Build NetCDF-Fortran with Intel compiler
+          wget https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v4.6.1.tar.gz
+          tar xf v4.6.1.tar.gz
+          cd netcdf-fortran-4.6.1
+          FC=mpiifx CC=icx CPPFLAGS=-I/usr/include LDFLAGS=-L/usr/lib ./configure --prefix=/opt/netcdf-intel
+          make -j4
+          make install                  
+      - name: Build Intel
+        shell: bash
+        run: |
+          source /opt/intel/oneapi/setvars.sh --force
+          export FC=mpiifx
+          export FFLAGS="-heap-arrays 64 -fp-model precise -O3"
+          export NCDFFDIR=/opt/netcdf-intel
+          export NCDFDIR=$(nc-config --prefix)
+          export LDOPT="-I${NCDFFDIR}/include -I${NCDFDIR}/include -L${NCDFFDIR}/lib -L${NCDFDIR}/lib -lnetcdf -lnetcdff"
+          #Compilation
+          cd src/chief/
+          ln -sf read_wind_input_arno.f90     read_wind_input.f90
+          ln -sf read_topo_input_arno.f90     read_topo_input.f90
+          ln -sf read_current_input_arno.f90  read_current_input.f90
+          ln -sf read_boundary_input_arno.f90 read_boundary_input.f90
+          ln -sf read_ice_input_arno.f90      read_ice_input.f90
+          cd ../preproc/
+          ln -sf read_topography_arno.f90     read_topography.f90       
+          #deactivate OASIS
+          cd ../mod/
+          ln -sf wam_oasis_inactive_module.f90 wam_oasis_module.f90
+          cd ../../
+          #make
+          #setENV=ci-GCC changes the Makefile logic so internal settings (FC, flags) are skipped, ensurring that all the settings are configured externally, so here.
+          make all setENV=ci-Intel 
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wam-binary-intel
+          path: bin/
+  run-gcc:
+    runs-on: ubuntu-latest
+    needs: build-gcc
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download gcc binaries 
+        uses: actions/download-artifact@v4
+        with: 
+          name: wam-binary-gcc
+          path: bin/
+      - name: Setup runtime dependencies
+        run: |
+          sudo apt update -y
+          sudo apt install -y openmpi-bin libopenmpi-dev libnetcdf-dev libnetcdff-dev
+          #pwd
+          #ls -l bin/
+      - name: Run test
+        run: |
+          cd SWAMPtest/
+          #Copy needed executables and parameter files
+          cp ../bin/preproc ./preproc.exe
+          cp ../bin/wam ./wam.exe
+          cp input/config/Preproc_User ./
+          cp input/config/WAM_User ./
+          #edit 
+          sed -i 's|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' Preproc_User
+          sed -i 's|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' WAM_User
+          #run pre-processing
+          chmod +x preproc.exe
+          if ./preproc.exe; then
+            echo "Pre-processing ran successfully!"
+          else
+            echo "Pre-processsing run failed!"
+            exit 1
+          fi
+          chmod +x wam.exe
+          if mpirun --allow-run-as-root -n 2 ./wam.exe; then
+            echo "WAM ran successfully!"
+          else
+            echo "WAM run failed!"
+            exit 1
+          fi
+  run-intel:
+    runs-on: ubuntu-latest
+    needs: build-intel
+      #if: false
+    container: intel/oneapi-hpckit:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install nodejs
+        shell: bash
+        run: |
+          apt-get update -y
+          apt-get install -y nodejs
+      - name: Download Intel binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: wam-binary-intel
+          path: bin/
+      - name: Setup runtime dependencies
+        shell: bash
+        run: |
+          apt-get update -y
+          apt-get install -y libnetcdf-dev libnetcdff-dev
+      - name: Run test
+        shell: bash
+        run: |
+          source /opt/intel/oneapi/setvars.sh --force
+          cd SWAMPtest/
+          cp ../bin/preproc ./preproc.exe
+          cp ../bin/wam ./wam.exe
+          cp input/config/Preproc_User ./
+          cp input/config/WAM_User ./
+          sed -i 's|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' Preproc_User
+          sed -i 's|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' WAM_User
+          chmod +x preproc.exe wam.exe
+          if ./preproc.exe; then
+            echo "Pre-processing ran successfully!"
+          else
+            echo "Pre-processing run failed!"
+            exit 1
+          fi
+          if mpirun -n 2 ./wam.exe; then
+            echo "WAM ran successfully!"
+          else
+            echo "WAM run failed!"
+            exit 1
+          fi
+
+
