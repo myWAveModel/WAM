@@ -69,7 +69,7 @@ CHARACTER(LEN=60), DIMENSION(NOUT_P) :: NAME_IP = (/ &
 & 'GODA_PEAKEDNESS_PARAMETER                    ' , & !!33
 & 'KURTOSIS                                     ' , & !!34
 & 'BENJAMIN-FEIR_INDEX                          ' , & !!35
-& 'NORMALIZED_MAXIMUM_WAVE_HEIGHT               ' , & !!36
+& 'MAXIMUM_WAVE_HEIGHT                          ' , & !!36
 & 'MAXIMUM_WAVE_PERIOD                          ' , & !!37
 & 'PEAK_FREQUENCY                               ' , & !!38
 & 'PEAK_DIRECTION                               ' , & !!39
@@ -144,7 +144,7 @@ CHARACTER(LEN=15), DIMENSION(NOUT_P) :: UNITS_P = (/ &
 & ' '  , & !! 35
 & 'm '  , & !! 36
 & 's '  , & !! 37
-& 's '  , & !! 38
+& '1/s '  , & !! 38
 & 'degree '  , & !! 39
 & ' '  , & !! 40
 & 'm '  , & !! 41
