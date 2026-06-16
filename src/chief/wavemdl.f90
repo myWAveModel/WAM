@@ -70,6 +70,7 @@ USE WAM_OASIS_MODULE,      ONLY: use_oasis_elev_in,use_oasis_curr_in,		& !! ModR
 				 use_oasis_wind_in,				&
 				 use_oasis_bdy_in,Wam_oasis_rec_boundary,	&
 				 use_oasis_nest_out,wam_oasis_send_nest
+USE WAM_USER_MODULE, ONLY: INPUT_FILE_TYPE, WIND_INPUT_FILE_IDENTIFIER
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     LOCAL VARIABLES.                                                         !
@@ -103,7 +104,7 @@ IF(use_oasis_wind_in) THEN                           !! ModR04: Include OASIS !!
    WRITE(IU06,*) '      wind fields:'
    WRITE(IU06,*) '      no further preparation needed'
 ELSE
-   CALL PREPARE_WIND
+   CALL PREPARE_WIND(INPUT_FILE_TYPE, WIND_INPUT_FILE_IDENTIFIER)
    IF (ITEST.GE.1) WRITE(IU06,*) ' SUB. WAVEMDL: PREPARE_WIND DONE'
 END IF
 
