@@ -62,7 +62,6 @@ USE WAM_WIND_MODULE,       ONLY: &
 &       SET_WIND_FIELD,          & !! SETS WIND FIELD 
 &       PRINT_WIND_STATUS          !! PRINTS WIND MODULE STATUS
 
-USE wam_netcdf_input_reader, only: read_wind_header_data
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     MODULE VARIABLES.                                                        !
@@ -79,7 +78,6 @@ IMPLICIT NONE
 
 
 INTEGER, PARAMETER :: KIND_D = 8
-
 INTEGER, SAVE         :: ICODE = 3  !! WIND CODE: 1= USTAR; 2= USTRESS; 3= U10
 INTEGER, SAVE         :: N_LON      !! NUMBER OF LONGITUDES IN GRID.
 INTEGER, SAVE         :: N_LAT      !! NUMBER OF LATITUDES IN GRID.
@@ -181,7 +179,6 @@ IF (FORMATTED) THEN
 ELSE
    CALL READ_WIND_UNFORMATTED
 END IF
-call read_wind_header_data()
 CALL SET_WIND_FIELD (CDTWIR, U_MAP, V_MAP)
 
 ! ---------------------------------------------------------------------------- !
