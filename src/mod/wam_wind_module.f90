@@ -33,7 +33,6 @@ USE WAM_MODEL_MODULE,   ONLY: U10, UDIR
 USE WAM_TIMOPT_MODULE,  ONLY: CDA, CDATEE, IDEL_WAM
 USE WAM_MPI_MODULE,     ONLY: NIJS, NIJL
 use wam_special_module, only: readyf
-
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
 !     C. MODULE VARIABLES.                                                     !
@@ -60,7 +59,8 @@ INTEGER :: NORTH_IN =-1    !! NORTH LATITUDE OF GRID [M_SEC].
 INTEGER :: WEST_IN =-1     !! WEST LONGITUDE OF GRID [M_SEC].
 INTEGER :: EAST_IN =-1     !! EAST LONGITUDE OF GRID [M_SEC].
 LOGICAL :: EQUAL_GRID =.FALSE. !! .TRUE. IF WIND GRID IS EQUAL TO MODEL GRID.
-    
+INTEGER, SAVE :: input_filetype
+CHARACTER(LEN = 10), SAVE :: wind_input_file_identifier
 CHARACTER (LEN= 14) :: CD_READ =' '!! DATE OF LAST DATA READ FROM INPUT.
    
 REAL, ALLOCATABLE, DIMENSION(:,:)  :: U_IN  !! W-E WIND COMPONENT.
@@ -137,10 +137,17 @@ interface set_ready_file_directory       !! sets full path of ready file directo
 end interface
 public set_ready_file_directory
 
-INTERFACE WAM_WIND       !! READS AND TRANSFORMS INPUT WINDS TO WAM POINTS.
-   MODULE PROCEDURE WAM_WIND
-END INTERFACE
 PUBLIC WAM_WIND
+INTERFACE WAM_WIND       !! READS AND TRANSFORMS INPUT WINDS TO WAM POINTS.
+  MODULE SUBROUTINE WAM_WIND(us, ds, cd_start, input_filetype, wind_input_file_identifier)
+    real, intent(out) :: us(:)
+    real, intent(out) :: ds(:)
+    character(len=14), intent(in) :: cd_start
+    integer, intent(in) :: input_filetype
+    character(len=10), intent(in) :: wind_input_file_identifier
+  END SUBROUTINE
+END INTERFACE
+
 
 INTERFACE
    SUBROUTINE READ_WIND_INPUT            !! READS A WIND FIELD
@@ -262,7 +269,7 @@ END SUBROUTINE GET_WIND
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
-SUBROUTINE PREPARE_WIND
+SUBROUTINE PREPARE_WIND(INPUT_FILE_TYPE, WIND_INPUT_FILE_IDENTIFIER_ORIG)
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -311,9 +318,12 @@ SUBROUTINE PREPARE_WIND
 !                                                                              !
 !     LOCAL VARIABLES.                                                         !
 !     ----------------                                                         !
-
+INTEGER, INTENT(IN) :: INPUT_FILE_TYPE
+CHARACTER(LEN=10), INTENT(IN) :: WIND_INPUT_FILE_IDENTIFIER_ORIG
 CHARACTER (LEN=14) :: CD_START, CD_END 
 
+input_filetype = INPUT_FILE_TYPE
+wind_input_file_identifier = WIND_INPUT_FILE_IDENTIFIER_ORIG
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !                                                                              !
@@ -774,7 +784,7 @@ INTEGER :: N_LAT_CO   !! NUMBER OF LATITUDES.
 ! 
 !    1. RE-FORMAT INPUT PARAMETERS.
 !       --------------------------
-
+WRITE(IU06,*) "Entering degree interface"
 WEST_CO  =  DEG_TO_M_SEC(WEST)
 SOUTH_CO =  DEG_TO_M_SEC(SOUTH)
 IF (PRESENT(EAST)) THEN
@@ -809,7 +819,6 @@ IF (PRESENT(N_LAT)) THEN
 ELSE
    N_LAT_CO = -1
 END IF
-
 ! ---------------------------------------------------------------------------- !
 ! 
 !    2. TRANSFER INPUT PARAMETERS.
@@ -899,7 +908,6 @@ EQUAL_GRID = .FALSE.    !! INPUT GRID IS NOT EQUAL TO MODEL GRID.
 !                                                                              !
 !     2. COPY GRID DEFINITION.                                                 !
 !        ---------------------                                                 !
-
 WEST_IN  = WEST
 SOUTH_IN = SOUTH
 IF (PRESENT(EAST )) EAST_IN  = EAST
@@ -910,6 +918,7 @@ IF (PRESENT(N_LON)) NX_IN    = N_LON
 IF (PRESENT(N_LAT)) NY_IN    = N_LAT
 IF (PRESENT(CODE))  CODE_IN = CODE
 
+WRITE(IU06,*) "DY_IN, SOUTH_IN, WEST, EAST, NORTH: " , DY_IN, SOUTH_IN, WEST_IN, EAST_IN, NORTH_IN
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     3. CHECK GRID.                                                           !
@@ -1056,164 +1065,8 @@ IF (MOD(IDELWI,IDELWO).NE.0) THEN
    WRITE(IU06,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 END IF
 
+write(IU06,*) "Wind_timesteps: ", IDELWO, IDELWI
 END SUBROUTINE SET_WIND_TIMESTEPS
-
-! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
-
-SUBROUTINE WAM_WIND (US, DS, CD_START)
-
-! ---------------------------------------------------------------------------- !
-!                                                                              !
-!   WAM_WIND - ROUTINE TO READ AND PROCESS ONE WINDFIELD.                      !
-!                                                                              !
-!     H. GUNTHER      ECMWF   MAY 1990     MODIFIED FOR SUB VERSION.           !
-!     H. GUNTHER      ECMWF   DECEMBER 90  MODIFIED FOR CYCLE_4.               !
-!     H. GUNTHER      GKSS    SEPTEMBER 2000   FT90.                           !
-!     H. GUNTHER      GKSS    DECEMBER 2009   RE-ORGANIZED.                    !
-!                                                                              !
-!     PURPOSE.                                                                 !
-!     --------                                                                 !
-!                                                                              !
-!       READ, INTERPOLATE AND CONVERT INPUT WINDS TO WAM WINDS.                !
-!                                                                              !
-!     METHOD.                                                                  !
-!     -------                                                                  !
-!                                                                              !
-!       READ A WINDFIELD FROM THE WINDFILE (SEARCH FOR IT) AND                 !
-!       INTERPOLATED IT TO THE WAVE MODEL SEA POINTS.                          !
-!       THE INTERPOLATED VALUES ARE TRANSFORMED TO MAGNITUDE AND DIRECTION.    !
-!       INPUT MAY BE WIND IN 10M HEIGHT, SURFACE WINDS OR FRICTION VELOCETIES. !
-!       THE INPUT GRID MUST BE ON A LATITUDE/LONGITUDE GRID EITHER PERIODIC    !
-!       OR NON PERIODIC.                                                       !
-!                                                                              !
-!     REFERENCE.                                                               !
-!     ----------                                                               !
-!                                                                              !
-!       NONE.                                                                  !
-!                                                                              !
-! ---------------------------------------------------------------------------- !
-!                                                                              !
-!     INTERFACE VARIABLES.                                                     !
-!     --------------------                                                     !
-
-REAL,          INTENT(OUT)    :: US(NIJS:NIJL)    !! WIND SPEED (U10).
-REAL,          INTENT(OUT)    :: DS(NIJS:NIJL)    !! DIRECTION.
-CHARACTER (LEN=14),INTENT(IN) :: CD_START !! DATE OF FIELD TO BE LOOKED FOR.
-
-! ---------------------------------------------------------------------------- !
-!                                                                              !
-!     LOCAL VARIABLES.                                                         !
-!     ----------------                                                         !
-
-REAL, PARAMETER :: ALPHACH = 0.0185
-
-INTEGER :: IJ
-REAL    :: UU, VV, USTAR, Z0, CD
-
-! ---------------------------------------------------------------------------- !
-!                                                                              !
-!     1. READ WIND DATA AND CHECK DATE.                                        !
-!        ------------------------------                                        !
-
-DO
-   CALL READ_WIND_INPUT
-
-   IF (CD_READ.EQ.CD_START) EXIT
-   IF (CD_READ.GT.CD_START) THEN
-         WRITE (IU06,*) ' ******************************************'
-         WRITE (IU06,*) ' *                                        *'
-         WRITE (IU06,*) ' *      FATAL ERROR SUB. WAM_WIND         *'
-         WRITE (IU06,*) ' *      =========================         *'
-         WRITE (IU06,*) ' * WIND DATE READ IS LATER THAN EXPECTED  *'
-         WRITE (IU06,*) ' * DATE READ IS      CD_READ = ', CD_READ
-         WRITE (IU06,*) ' * DATE EXPECTED IS CD_START = ', CD_START
-         WRITE (IU06,*) ' *                                        *'
-         WRITE (IU06,*) ' *   PROGRAM ABORTS  PROGRAM ABORTS       *'
-         WRITE (IU06,*) ' *                                        *'
-         WRITE (IU06,*) ' ******************************************'
-         CALL ABORT1
-   END IF
-END DO
-
-! ---------------------------------------------------------------------------- !
-!                                                                              !
-!     2. INTERPOLATE AND BLOCK WINDFIELD                                       !
-!        -------------------------------                                       !
-
-IF (EQUAL_GRID) THEN
-   DO IJ = NIJS, NIJL
-      US(IJ)= U_IN(IFROMIJ(IJ),KFROMIJ(IJ))
-      DS(IJ)= V_IN(IFROMIJ(IJ),KFROMIJ(IJ))
-   END DO
-ELSE
-   CALL INTERPOLATION_TO_GRID (US, DS)
-END IF
-
-! ---------------------------------------------------------------------------- !
-!                                                                              !
-!     3. TRANSFORM TO MAGNITUDE AND DIRECTION.                                 !
-!         -------------------------------------                                !
-
-DO IJ = NIJS, NIJL
-   UU = US(IJ)
-   VV = DS(IJ)
-   US(IJ) = SQRT(UU**2 + VV**2)
-   IF (US(IJ).NE.0.) THEN
-      DS(IJ) = ATAN2(UU,VV)
-   ELSE
-      DS(IJ) = 0.
-   ENDIF
-   IF (DS(IJ).LT.0.) DS(IJ) = DS(IJ) + ZPI
-END DO
-
-! ---------------------------------------------------------------------------- !
-!                                                                              !
-!     3. PROCESS WINDS ACCORDING TO TYPE                                       !
-!        NOTHING TO DO FOR WIND SPEED U10 (CODE_IN = 3).                       !
-!        ---------------------------------------------                         !
-
-IF (CODE_IN.EQ.1) THEN
-
-!     3.2  INPUT IS FRICTION VELOCITY.                                         !
-!          ---------------------------                                         !
-
-   DO IJ = NIJS, NIJL
-         USTAR = MAX(0.01,US(IJ))
-         Z0  = ALPHACH/G*USTAR**2
-         CD  = XKAPPA/ALOG(10./Z0)
-         US(IJ) = USTAR/CD
-   END DO
-
-ELSE IF (CODE_IN.EQ.2) THEN
-
-!     3.3 INPUT WINDS ARE SURFACE STRESSES.                                    !
-!         ---------------------------------                                    !
-!                                                                              !
-   DO IJ = NIJS, NIJL
-         USTAR = MAX (0.01, SQRT(US(IJ)/ROAIR))
-         Z0  = ALPHACH/G*USTAR**2
-         CD  = XKAPPA/ALOG(10./Z0)
-         US(IJ) = USTAR/CD
-   END DO
-END IF
-
-US(NIJS:NIJL)  = MAX(US(NIJS:NIJL), 2.0)
-
-! ---------------------------------------------------------------------------- !
-!                                                                              !
-!     4. TEST OUTPUT OF WAVE MODEL BLOCKS                                      !
-!        ---------------------------------                                     !
-
-IF (ITEST.GE.3) THEN
-   IJ = MIN(NIJS+10,NIJL)
-   WRITE (IU06,*) ' '
-   WRITE (IU06,*) '      SUB. WAM_WIND: WINDFIELDS CONVERTED TO MODEL GRID'
-   WRITE (IU06,*) ' '
-   WRITE (IU06,*) ' US(NIJS:NIJS+10) = ', US(NIJS:IJ)
-   WRITE (IU06,*) ' DS(NIJS:NIJS+10) = ', DS(NIJS:IJ)
-END IF
-
-END SUBROUTINE WAM_WIND
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
@@ -1296,6 +1149,8 @@ END DO
 CONTAINS
 
 SUBROUTINE INITIALIZE
+
+WRITE(IU06,*) "NIJS, NIJL" , NIJS , NIJL
 
 ALLOCATE (I1(NIJS:NIJL))
 ALLOCATE (I2(NIJS:NIJL))
@@ -1435,7 +1290,7 @@ DO WHILE (CDTWIH.LE.CD_END)
 !     1.1 READ ONE WIND FIELD AND TRANSFORM TO GRID.                           !
 !         ------------------------------------------                           !
 
-   CALL WAM_WIND (US, DS, CDTWIH)
+   CALL WAM_WIND (US, DS, CDTWIH, input_filetype, wind_input_file_identifier)
    MP = MP + 1
 
 !     1.2 SAVE IN MODULE WAM_WIND.                                             !
@@ -1552,7 +1407,7 @@ DO
 
    CDT2 = CDT1
    CALL INCDATE(CDT2,IDELWI)
-   CALL WAM_WIND (US2, DS2, CDT2)
+   CALL WAM_WIND (US2, DS2, CDT2, input_filetype, wind_input_file_identifier)
 
 !     2.2 INTERPOLATE AND SAVE BLOCKED WIND FIELDS.                            !
 !         -----------------------------------------                            !
@@ -1593,3 +1448,4 @@ END SUBROUTINE TIMIN
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
 END MODULE WAM_WIND_MODULE
+
