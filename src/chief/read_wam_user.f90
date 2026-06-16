@@ -501,6 +501,10 @@ IF ( LINE(2:17).NE.' ') THEN
   READ(LINE( 2:2),'(I2)',IOSTAT=IOS) INPUT_FILE_TYPE
   IF (IOS.NE.0) CALL ERROR_MESSAGE('INPUT_FILE_TYPE')
 END IF
+
+CALL F_NEW_DATA
+IF ( LINE(2:17).NE.' ') WIND_INPUT_FILE_IDENTIFIER = LINE(2:4)
+
 ! ---------------------------------------------------------------------------- !! End ModR05
 !                                                                              !
 !    14. MODEL FILES.                                                          !
@@ -654,6 +658,7 @@ IF (SCAN(LINE(2:18),'1').GT.0) THEN
 ELSE
    assimilation_flag_altimeter = 0        
 END IF    
+
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !    16. TRANSFER USER PARAMETER INTO MODULES.                                 !
