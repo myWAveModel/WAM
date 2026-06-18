@@ -110,8 +110,8 @@ CHARACTER(LEN=15), DIMENSION(NOUT_P) :: UNITS_P = (/ &
 & 'm/s '  , & !! 1
 & 'degree '  , & !! 2
 & 'm/s '  , & !! 3
-& ' '  , & !! 4
-& ' '  , & !! 5
+& '1 '  , & !! 4
+& '1 '  , & !! 5
 & 'm '  , & !! 6
 & 'm/s '  , & !! 7
 & 'degree '  , & !! 8
@@ -122,7 +122,7 @@ CHARACTER(LEN=15), DIMENSION(NOUT_P) :: UNITS_P = (/ &
 & 's '  , & !! 13
 & 'degree '  , & !! 14
 & 'degree '  , & !! 15
-& ' '  , & !! 16
+& '1 '  , & !! 16
 & 'm '  , & !! 17
 & 's '  , & !! 18
 & 's '  , & !! 19
@@ -130,7 +130,7 @@ CHARACTER(LEN=15), DIMENSION(NOUT_P) :: UNITS_P = (/ &
 & 's '  , & !! 21
 & 'degree '  , & !! 22
 & 'degree '  , & !! 23
-& ' ' , & !! 24
+& ' ' , & !! 24 dummy
 & 'm '  , & !! 25
 & 's '  , & !! 26
 & 's '  , & !! 27
@@ -139,14 +139,14 @@ CHARACTER(LEN=15), DIMENSION(NOUT_P) :: UNITS_P = (/ &
 & 'degree '  , & !! 30
 & 'degree '  , & !! 31
 & 'm '  , & !! 32
-& ' '  , & !! 33
-& ' '  , & !! 34
-& ' '  , & !! 35
+& '1 '  , & !! 33
+& '1 '  , & !! 34
+& '1 '  , & !! 35
 & 'm '  , & !! 36
 & 's '  , & !! 37
 & '1/s '  , & !! 38
 & 'degree '  , & !! 39
-& ' '  , & !! 40
+& '1 '  , & !! 40
 & 'm '  , & !! 41
 & 'm/s '  , & !! 42
 & 'degree '  , & !! 43
@@ -156,11 +156,11 @@ CHARACTER(LEN=15), DIMENSION(NOUT_P) :: UNITS_P = (/ &
 & 'm '  , & !! 47
 & 'm/s '  , & !! 48
 & 'degree '  , & !! 49
-& ' ' , & !! 50
+& ' ' , & !! 50 dummy
 & 'kg/s/s '  , & !! 51
 & 'kg/s/s '  , & !! 52
 & 'kg/s/s '  , & !! 53
-& ' ' , & !! 54
+& ' ' , & !! 54 dummy
 & 'n/m/m '  , & !! 55
 & 'n/m/m '  , & !! 56
 & 'm/s '  , & !! 57
@@ -172,7 +172,7 @@ CHARACTER(LEN=15), DIMENSION(NOUT_P) :: UNITS_P = (/ &
 & 'kg/s/s/s '  , & !! 63
 & 'kg/m/s/s '  , & !! 64
 & 'kg/m/s/s '  , & !! 65
-& ' ' , & !! 66
+& ' ' , & !! 66 dummy
 & 'm '  , & !! 67
 & 'm '  , & !! 68
 & 'm '  , & !! 69
@@ -186,7 +186,7 @@ CHARACTER(LEN=100), DIMENSION(NOUT_P) :: STANDARD_NAME_P = (/ &
 & 'surface_drag_coefficient_in_air ' , & !!4
 & 'charnock_coefficient_for_surface_roughness_length_for_momentum_in_air ' , & !!5
 & 'sea_floor_depth_below_sea_surface ' , & !!6
-& 'sea_water_speed' , & !!7
+& 'sea_water_speed ' , & !!7
 & 'sea_water_velocity_to_direction ' , & !!8
 & 'sea_surface_wave_significant_height ' , & !!9
 & 'sea_surface_wave_period_at_variance_spectral_density_maximum ' , & !!10
