@@ -63,7 +63,7 @@ CHARACTER(LEN=60), DIMENSION(NOUT_P) :: NAME_IP = (/ &
 & 'SWELL_MEAN_PERIOD                            ' , & !!27
 & 'SWELL_TM1_PERIOD                             ' , & !!28
 & 'SWELL_TM2_PERIOD                             ' , & !!29
-& 'SWELLDIRECTION                               ' , & !!30
+& 'SWELL_DIRECTION                              ' , & !!30
 & 'SWELL_DIRECTIONAL_SPREAD                     ' , & !!31
 & 'ROUGHNESS_LENGTH_Z0                          ' , & !!32
 & 'GODA_PEAKEDNESS_PARAMETER                    ' , & !!33
@@ -148,13 +148,13 @@ CHARACTER(LEN=15), DIMENSION(NOUT_P) :: UNITS_P = (/ &
 & 'degree '  , & !! 39
 & '1 '  , & !! 40
 & 'm '  , & !! 41
-& 'm/s '  , & !! 42
+& 's '  , & !! 42
 & 'degree '  , & !! 43
 & 'm '  , & !! 44
-& 'm/s '  , & !! 45
+& 's '  , & !! 45
 & 'degree '  , & !! 46
 & 'm '  , & !! 47
-& 'm/s '  , & !! 48
+& 's '  , & !! 48
 & 'degree '  , & !! 49
 & ' ' , & !! 50 dummy
 & 'kg/s/s '  , & !! 51
