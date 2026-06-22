@@ -896,7 +896,7 @@ IF (irank==i_out_par) THEN
    GRID = ZMISS
 END IF
 DO IP = 1,NOUT_P
-   IF (.NOT. FFLAG_P(IP) .AND. .NOT. PFLAG_P(IP) ) CYCLE
+   IF (.NOT. FFLAG_P(IP) .AND. .NOT. PFLAG_P(IP) .AND. .NOT. NFLAG_P(IP) ) CYCLE
 
 !     2.1 GATHER PARAMETER BLOCKS ON ONE PROCESSOR FOR EACH BLOCK.             !
 !         --------------------------------------------------------             !
