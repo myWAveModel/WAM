@@ -483,10 +483,11 @@ IF (ONE_POINT) THEN
 END IF
 
 
-CFLAG_P(:) = FFLAG_P(:).OR.PFLAG_P(:).OR.NFLAG_P
+CFLAG_P(:) = FFLAG_P(:).OR.PFLAG_P(:).OR.NFLAG_P(:)
 FFLAG20 = ANY(FFLAG_P(:))
 PFLAG20 = ANY(PFLAG_P(:))
-CFLAG20 = FFLAG20.OR.PFLAG20
+NFLAG20 = ANY(NFLAG_P(:))
+CFLAG20 = FFLAG20.OR.PFLAG20.OR.NFLAG20
 LCFLX = ANY(CFLAG_P (59:66))
 
 ! ---------------------------------------------------------------------------- !
