@@ -161,9 +161,11 @@ subroutine get_time_attributes(START_DATE)
   
   ! Reading time units and converting to timestring from input file
 
-  READ(time_units_string(INDEX(time_units_string,'-')-4:INDEX(time_units_string,'-')+5),'(A4,1X,A2,1X,A2)') time_units_year, time_units_month, time_units_day
+  READ(time_units_string(INDEX(time_units_string,'-')-4:INDEX(time_units_string,'-')+5), &
+      '(A4,1X,A2,1X,A2)') time_units_year, time_units_month, time_units_day
   
-  READ(time_units_string(INDEX(time_units_string,':')-2:INDEX(time_units_string,':')+5),'(A2,1X,A2,1X,A2)') time_units_hour, time_units_min, time_units_sec
+  READ(time_units_string(INDEX(time_units_string,':')-2:INDEX(time_units_string,':')+5), &
+      '(A2,1X,A2,1X,A2)') time_units_hour, time_units_min, time_units_sec
 
   time_units_cdate(1:4) = time_units_year
   time_units_cdate(5:6) = time_units_month
@@ -284,8 +286,8 @@ subroutine read_wind_fields(CD_WIND_READ, WIND_INPUT_FILE_IDENTIFIER)
   
     write(iu06,*) "idx, start, count:" , idx, start, count
   
-    wind_variable_names_x_component = (/"u10", "U10M", "var165", "U10"/)
-    wind_variable_names_y_component = (/"v10", "V10M", "var166", "V10"/)
+    wind_variable_names_x_component = (/"u10   ", "U10M  ", "var165", "U10   "/)
+    wind_variable_names_y_component = (/"v10   ", "V10M  ", "var166", "V10   "/)
   
     len_wind_x = SIZE(wind_variable_names_x_component)
     len_wind_y = SIZE(wind_variable_names_y_component)
@@ -448,7 +450,8 @@ subroutine read_wind_header_data()
     WRITE(IU06,*) "dlon, dlat, nlon, nlat: " , delta_lon, delta_lat, N_LON, N_LAT
     WRITE(IU06,*) 'types check: ', KIND(west), KIND(south), KIND(east), KIND(north), KIND(delta_lon), KIND(delta_lat)
     
-    call SET_WIND_HEADER(WEST=west, SOUTH=south, EAST = east, NORTH=north, D_LON=delta_lon, D_LAT=delta_lat, N_LON=N_LON, N_LAT=N_LAT)
+    call SET_WIND_HEADER(WEST=west, SOUTH=south, EAST = east, NORTH=north, &
+              D_LON=delta_lon, D_LAT=delta_lat, N_LON=N_LON, N_LAT=N_LAT)
 
 end subroutine
 
