@@ -204,7 +204,7 @@ INTEGER            :: TOPO_OUTPUT_TIMESTEP
 CHARACTER (LEN=1)  :: TOPO_OUTPUT_TIMESTEP_UNIT
 INTEGER            :: TOPO_INPUT_FILE_UNIT
 CHARACTER (LEN=80) :: TOPO_INPUT_FILE_NAME
-
+CHARACTER (LEN=10)  :: TOPO_INPUT_FILE_IDENTIFIER
 ! ---------------------------------------------------------------------------- !
 
 INTEGER            :: CURRENT_INPUT_TIMESTEP
@@ -213,14 +213,14 @@ INTEGER            :: CURRENT_OUTPUT_TIMESTEP
 CHARACTER (LEN=1)  :: CURRENT_OUTPUT_TIMESTEP_UNIT
 INTEGER            :: CURRENT_INPUT_FILE_UNIT
 CHARACTER (LEN=80) :: CURRENT_INPUT_FILE_NAME
-
+CHARACTER (LEN=10)  :: CURRENT_INPUT_FILE_IDENTIFIER
 ! ---------------------------------------------------------------------------- !
 
 INTEGER            :: ICE_INPUT_TIMESTEP
 CHARACTER (LEN=1)  :: ICE_INPUT_TIMESTEP_UNIT
 INTEGER            :: ICE_INPUT_FILE_UNIT
 CHARACTER (LEN=80) :: ICE_INPUT_FILE_NAME
-
+CHARACTER (LEN=10)  :: ICE_INPUT_FILE_IDENTIFIER
 ! ---------------------------------------------------------------------------- !
 
 INTEGER            :: PARAMETER_OUTPUT_TIMESTEP
