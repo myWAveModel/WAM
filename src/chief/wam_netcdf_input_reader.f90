@@ -22,10 +22,10 @@ module wam_netcdf_input_reader
 !     C. MODULE VARIABLES.                                                     !
 !                                                                              !
 ! ---------------------------------------------------------------------------- !
-
+USE mpi_f08
 use netcdf
 use wam_general_module, only: ABORT1
-use wam_mpi_module, only: irank, petotal, i_out_par
+use wam_mpi_module, only: irank, petotal, i_out_par, localcomm
 use wam_file_module, only: IU06
 use wam_grid_module, only: NX, NY, XDELLA, XDELLO, AMOWEP, AMOSOP
 use wam_wind_module, only: SET_WIND_FIELD, SET_WIND_HEADER, SET_WIND_TIMESTEPS
@@ -44,8 +44,8 @@ INTEGER, PARAMETER :: KIND_D = 8
 INTEGER, SAVE         :: ICODE = 3  !! WIND CODE: 1= USTAR; 2= USTRESS; 3= U10
 INTEGER, SAVE         :: N_LON      !! NUMBER OF LONGITUDES IN GRID.
 INTEGER, SAVE         :: N_LAT      !! NUMBER OF LATITUDES IN GRID.
-REAL,    ALLOCATABLE  :: U_MAP(:,:), u_buffer(:,:) !! 1. COMPONENT OF WIND MAP [M/S].
-REAL,    ALLOCATABLE  :: V_MAP(:,:), v_buffer(:,:) !! 2. COMPONENT OF WIND MAP [M/S].
+REAL,    ALLOCATABLE  :: U_MAP(:,:) !! 1. COMPONENT OF WIND MAP [M/S].
+REAL,    ALLOCATABLE  :: V_MAP(:,:) !! 2. COMPONENT OF WIND MAP [M/S].
 CHARACTER (LEN=14)    :: CDTWIR     !! DATE/TIME OF WIND FIELD
 
 integer :: TIME_DIMID, LAT_DIMID, LON_DIMID, NETCDF_FILE_ID
@@ -93,9 +93,6 @@ integer, dimension(3)::dimids
 
 !! ---------------------------------!!!
 
-
-
-
 contains
 
 subroutine check_status(status)
@@ -110,18 +107,28 @@ end subroutine check_status
 subroutine get_time_attributes(START_DATE)
   
   CHARACTER(len=14), INTENT(IN), optional :: START_DATE
-  integer :: idx
+  integer :: idx, ierr
   
   xmin = 60
   xhour = 3600
   xday = 86400
-
+  
+  if (irank ==1) then
   ! Get time dimension id and size
   call check_status(nf90_inq_dimid(NETCDF_FILE_ID, "time", TIME_DIMID))
   call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, TIME_DIMID, len=ntime))
- 
-  allocate(time(ntime), new_time_array(ntime))
+  end if ! irank
+
+  !! Broadcast ntime immediately — before any allocation
+  CALL MPI_Bcast(ntime, 1, MPI_INTEGER, 0, localcomm, ierr)
+
+  if (allocated(new_time_array) .and. size(new_time_array) /= ntime) deallocate(new_time_array)
+  if (.not. allocated(new_time_array)) allocate(new_time_array(ntime))
   
+  if (irank ==1) then
+  if (allocated(time)) deallocate(time)
+  allocate(time(ntime))
+
   ! Get time variable id and variable data
   call check_status(nf90_inq_varid(NETCDF_FILE_ID, "time", var_ids(3)))
   call check_status(nf90_get_var(NETCDF_FILE_ID, var_ids(3), time))
@@ -134,16 +141,23 @@ subroutine get_time_attributes(START_DATE)
   ! Get frequency of data available
   input_frequency = time(2) - time(1)
   WRITE(IU06,*) "delta t:" , input_frequency
+  WRITE(IU06,*) "shape of time_units:" , SHAPE(time_units)
  
   if(time_units == 'minutes'.OR. time_units == 'MINUTES') then
     input_frequency_sec = input_frequency * xmin
+    time(:) = time(:) * xmin
   else if(time_units == 'hours' .OR. time_units == 'HOURS') then
+    WRITE(IU06,*) "Entered hours"
     input_frequency_sec = input_frequency * xhour
+    time(:) = time(:) * xhour
   else if(time_units == 'days'.OR. time_units == 'DAYS') then
     input_frequency_sec = input_frequency * xday
+    time(:) = time(:) * xday
+  else
+    input_frequency_sec = input_frequency
   end if
-  input_frequency_sec = input_frequency
-  WRITE(IU06,*) "input_frequency_sec: " , input_frequency_sec 
+  WRITE(IU06,*) "input_frequency_sec: " , input_frequency_sec
+  WRITE(IU06,*) "time_vector: ", time 
   
   ! Reading time units and converting to timestring from input file
 
@@ -163,23 +177,37 @@ subroutine get_time_attributes(START_DATE)
   call time_conversion(time_units_reference, time_units_cdate)
   WRITE(IU06, *) "time_units_reference:" , time_units_reference
 
+
   DO i = 1, ntime
     new_time_array(i) = time(i) + time_units_reference
   END DO
   WRITE(IU06,*) "new_time_array:" , new_time_array
+
+  deallocate(time)
+  end if !irank
   
+  WRITE(IU06,*) "rank:", irank, "about to bcast new_time_array, ntime=", ntime
+  WRITE(IU06,*) "rank:", irank, "new_time_array allocated:", allocated(new_time_array)
+  WRITE(IU06,*) "rank:", irank, "size of new_time_array:", SIZE(new_time_array) 
+
+  !!! Broadcast data to all ranks
+  CALL MPI_Bcast(input_frequency_sec, 1, MPI_INTEGER, 0, localcomm, ierr)
+  CALL MPI_Bcast(time_units_reference,1, MPI_DOUBLE_PRECISION, 0, localcomm, ierr)
+  CALL MPI_Bcast(new_time_array, ntime, MPI_DOUBLE_PRECISION, 0, localcomm, ierr)
+
+
   if (first_time) then
+    WRITE(IU06,*) "Entered first time if condition"
     first_time =.false.
     CALL SET_WIND_TIMESTEPS(IN=input_frequency_sec, OUT=input_frequency_sec)
-
+    if (irank ==1) then
     idx = get_index_matching_timestamp(START_DATE)
     IF (idx == 0) THEN
       WRITE(IU06,*) "Starting timestamp does not exist in the first input file. Check input file"
       CALL ABORT1
     END IF
-  end if 
-
-  deallocate(time)
+    end if !irank 
+  end if !firsttime
 
 end subroutine
 
@@ -187,10 +215,20 @@ integer function get_index_matching_timestamp(CD_WIND_READ) result(idx)
   implicit none
   character(len=14) , intent(in) :: CD_WIND_READ
   integer :: i
+  real(kind=KIND_D), parameter :: TOLERANCE = 0.5D0 !half a second
   idx =0
+  if (.not. allocated(new_time_array)) then
+    WRITE(IU06,*) "ERROR: get_index_matching_timestamp called but new_time_array not allocated!"
+    CALL ABORT1
+  end if
   call time_conversion(wind_read_time, CD_WIND_READ)
+  WRITE(IU06,*) "time passed: ", CD_WIND_READ
+  WRITE(IU06,*) "time converted: ", wind_read_time
+  WRITE(IU06,'(A,F20.6)') "wind_read_time (full): ", wind_read_time
+  WRITE(IU06,'(A,F20.6)') "new_time_array(1) (full): ", new_time_array(1)
+  WRITE(IU06,'(A,F20.6)') "difference: ", ABS(wind_read_time - new_time_array(1))
   do i = 1, ntime
-    if(wind_read_time == new_time_array(i)) then
+    if(ABS(wind_read_time - new_time_array(i)) < TOLERANCE) then
       idx =i
       EXIT
     end if
@@ -203,66 +241,101 @@ subroutine read_wind_fields(CD_WIND_READ, WIND_INPUT_FILE_IDENTIFIER)
   character(LEN=10), intent(in) :: WIND_INPUT_FILE_IDENTIFIER
 
   integer, dimension(3) :: start, count
-  integer :: idx
+  integer :: idx, len_wind_x, len_wind_y, ierr
+  integer :: need_new_file
+  need_new_file = 0
+  
+  WRITE(IU06,*) "rank:", irank, "entering read_wind_fields, N_LON=", N_LON, "N_LAT=", N_LAT
+  writE(iu06,*) "!!!!!!!!!!!!!!!!!!!!"
+  writE(iu06,*) "!!!! IRANK : ", irank , " !!!!!!"
+  writE(iu06,*) "!!!!!!!!!!!!!!!!!!!!"
   WRITE(IU06,*) "entering read_wind_fields"
-  idx = get_index_matching_timestamp(CD_WIND_READ)
-
-  if (idx == 0) then
-    call close_netcdf_file()
-    call open_netcdf_file(CD_WIND_READ, WIND_INPUT_FILE_IDENTIFIER)
-    call get_time_attributes()
-    idx = get_index_matching_timestamp(CD_WIND_READ)   
-  end if
-
-  start = (/1,1,idx/)  
-  count = (/N_LON, N_LAT,1/)
   
-  write(iu06,*) "idx, start, count:" , idx, start, count
+  if (irank == 1) then
+   idx = get_index_matching_timestamp(CD_WIND_READ)
+   WRITE(IU06,*) "First hit index: ", idx
+   if (idx == 0) need_new_file = 1
+  end if !irank
 
+  CALL MPI_Bcast(need_new_file, 1, MPI_INTEGER, 0, localcomm , ierr)
+  
+  if (need_new_file == 1) then
+    if (irank == 1) then
+      call close_netcdf_file()
+      call open_netcdf_file(CD_WIND_READ, WIND_INPUT_FILE_IDENTIFIER)
+  end if !irank  
+  call get_time_attributes()
+    if (irank ==1) then 
+      idx = get_index_matching_timestamp(CD_WIND_READ)
+      if (idx == 0) then
+        WRITE (IU06,*)"WAM could not find the required timestep in the new file as well. Aborting!!"
+        CALL ABORT1 
+      end if !idx
+    end if !irank  
+  end if !need new file
+
+  if (allocated(U_MAP)) deallocate(U_MAP)
+  if (allocated(V_MAP)) deallocate(V_MAP)
   allocate(U_MAP(N_LON,N_LAT), V_MAP(N_LON,N_LAT))
-  allocate(u_buffer(N_LAT,N_LON), v_buffer(N_LAT,N_LON))
-  wind_variable_names_x_component = (/"u10", "U10M", "var165", "U10"/)
-  wind_variable_names_y_component = (/"v10", "V10M", "var166", "V10"/)
-  
-  
-  DO k =1,4
-    status = nf90_inq_varid(NETCDF_FILE_ID, wind_variable_names_x_component(k),wind_x_var_id)
-    call check_status(nf90_inquire_variable(NETCDF_FILE_ID, wind_x_var_id, ndims=ndims, dimids=dimids))
-    call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(1), len=nt))
-    call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(2), len=nlat_var))
-    call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(3), len=nlon_var))
 
-    if (status == NF90_NOERR) then
-      call check_status(nf90_get_var(NETCDF_FILE_ID, wind_x_var_id, U_MAP, start=start, count=count))
-      WRITE(IU06,*) "Shape of wind var:", SHAPE(U_MAP)
-      exit
+  if (irank == 1) then
+    start = (/1,1,idx/)  
+    count = (/N_LON, N_LAT,1/)
+  
+    write(iu06,*) "idx, start, count:" , idx, start, count
+  
+    wind_variable_names_x_component = (/"u10", "U10M", "var165", "U10"/)
+    wind_variable_names_y_component = (/"v10", "V10M", "var166", "V10"/)
+  
+    len_wind_x = SIZE(wind_variable_names_x_component)
+    len_wind_y = SIZE(wind_variable_names_y_component)
+  
+    DO k =1, len_wind_x
+      status = nf90_inq_varid(NETCDF_FILE_ID, TRIM(wind_variable_names_x_component(k)),wind_x_var_id)
+      if (status == NF90_NOERR) then
+        call check_status(nf90_inquire_variable(NETCDF_FILE_ID, wind_x_var_id, ndims=ndims, dimids=dimids))
+        call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(1), len=nt))
+        call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(2), len=nlat_var))
+        call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(3), len=nlon_var))
+        write(iu06,*) "wind_x_var_id(1,2,3): nt, nlat_var, nlon_var:" , nt, nlat_var, nlon_var
+        write(iu06,*) "n_lon, n_lat, ntime: ", N_LON, N_LAT, ntime
+        call check_status(nf90_get_var(NETCDF_FILE_ID, wind_x_var_id, U_MAP, start=start, count=count))
+        WRITE(IU06,*) "wind var(U_MAP):", U_MAP
+        exit
+      end if
+    END DO
+
+    DO j =1,len_wind_y
+      status = nf90_inq_varid(NETCDF_FILE_ID, TRIM(wind_variable_names_y_component(j)),wind_y_var_id)
+      if (status == NF90_NOERR) then
+        call check_status(nf90_inquire_variable(NETCDF_FILE_ID, wind_y_var_id, ndims=ndims, dimids=dimids))
+        call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(1), len=nlon_var))
+        call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(2), len=nlat_var))
+        call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(3), len=nt))
+        write(iu06,*) "wind_y_var_id: nt, nlat_var, nlon_var:" , nt, nlat_var, nlon_var
+        WRITE(IU06,*) "wind_variable:" , wind_variable_names_y_component(j)
+        call check_status(nf90_get_var(NETCDF_FILE_ID, wind_y_var_id, V_MAP, start=start, count=count))
+        WRITE(IU06,*) "wind var(V_MAP):", V_MAP
+        exit
+      end if
+    END DO
+
+    if (lat_descending) then
+      U_MAP = U_MAP(:, N_LAT:1:-1)
+      V_MAP = V_MAP(:, N_LAT:1:-1)
     end if
-  END DO
-
-  DO j =1,4
-    status = nf90_inq_varid(NETCDF_FILE_ID, wind_variable_names_y_component(j),wind_y_var_id)
-    call check_status(nf90_inquire_variable(NETCDF_FILE_ID, wind_y_var_id, ndims=ndims, dimids=dimids))
-    call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(1), len=nt))
-    call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(2), len=nlat_var))
-    call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(3), len=nlon_var))
-
-    write(iu06,*) "wind_y_var_id: nt, nlat_var, nlon_var:" , nt, nlat_var, nlon_var
-
-    if (status == NF90_NOERR) then
-      WRITE(IU06,*) "wind_variable:" , wind_variable_names_y_component(j)
-      call check_status(nf90_get_var(NETCDF_FILE_ID, wind_y_var_id, V_MAP, start=start, count=count))
-      !WRITE(IU06,*) "wind_data (V_MAP):", V_MAP
-      exit
-    end if
-  END DO
-
-  if (lat_descending) then
-    U_MAP = U_MAP(:, N_LAT:1:-1)
-    V_MAP = V_MAP(:, N_LAT:1:-1)
-  end if
+  end if !irank
   
+  WRITE(IU06,*) "rank:", irank, "about to bcast U_MAP, N_LON=", N_LON, "N_LAT=", N_LAT
+  WRITE(IU06,*) "rank:", irank, "U_MAP allocated:", allocated(U_MAP), "size:", SIZE(U_MAP)
+  WRITE(IU06,*) "rank:", irank, "N_LON*N_LAT=", N_LON*N_LAT 
+  
+  !! Broadcast wind data from rank 1 to all other ranks
+  CALL MPI_Bcast(U_MAP, N_LON*N_LAT, MPI_REAL, 0, localcomm, ierr)  !! ADD
+  CALL MPI_Bcast(V_MAP, N_LON*N_LAT, MPI_REAL, 0, localcomm, ierr)  !! ADD
+
   CALL SET_WIND_FIELD(CD_WIND_READ, U_MAP, V_MAP)
-  deallocate(U_MAP, V_MAP, u_buffer, v_buffer)
+  deallocate(U_MAP, V_MAP)
 end subroutine
 
 subroutine read_wind_init(START_DATE, WIND_INPUT_FILE_IDENTIFIER)
@@ -270,11 +343,14 @@ subroutine read_wind_init(START_DATE, WIND_INPUT_FILE_IDENTIFIER)
     ! gets wind timestep
     character(len=14), intent(in) :: START_DATE
     character(len=10), intent(in) :: WIND_INPUT_FILE_IDENTIFIER
+    integer :: ierr    
     first_time = .true.
-
-    CALL open_netcdf_file(START_DATE, WIND_INPUT_FILE_IDENTIFIER)
+    if (irank == 1) then
+      CALL open_netcdf_file(START_DATE, WIND_INPUT_FILE_IDENTIFIER)  
+    end if !irank
     call get_time_attributes(START_DATE)
     call read_wind_header_data()
+
 end subroutine
 
 subroutine open_netcdf_file(WIND_CDATE, WIND_INPUT_FILE_IDENTIFIER )  
@@ -283,8 +359,12 @@ subroutine open_netcdf_file(WIND_CDATE, WIND_INPUT_FILE_IDENTIFIER )
   character(len=10), intent(in) :: WIND_INPUT_FILE_IDENTIFIER
   integer :: status_fileopen
   
+  if (irank /= 1) return
+
   yyyymmdd = WIND_CDATE(1:8)
-  file_name = TRIM(WIND_INPUT_FILE_IDENTIFIER)//'_'//yyyymmdd//'.nc'
+  WRITE(IU06,*) "yyyymmdd: ", yyyymmdd  
+  
+  file_name = TRIM(ADJUSTL(WIND_INPUT_FILE_IDENTIFIER))//'_'//yyyymmdd//'.nc'
   write(IU06,*) "File name created:" , file_name
 
   status_fileopen = nf90_open(path=file_name, mode=NF90_NOWRITE, ncid=NETCDF_FILE_ID)
@@ -296,14 +376,17 @@ subroutine open_netcdf_file(WIND_CDATE, WIND_INPUT_FILE_IDENTIFIER )
 end subroutine
 
 subroutine close_netcdf_file()
-
+    
+    if (irank /= 1) return
     call check_status(nf90_close(NETCDF_FILE_ID))
 
 end subroutine
 
 
 subroutine read_wind_header_data()
-    
+    integer :: ierr
+    if (irank == 1) then
+
     ! Get dimension ids
     call check_status(nf90_inq_dimid(NETCDF_FILE_ID, "lon", LON_DIMID))
     call check_status(nf90_inq_dimid(NETCDF_FILE_ID, "lat", LAT_DIMID))
@@ -342,16 +425,30 @@ subroutine read_wind_header_data()
       north = lat(N_LAT)
       delta_lat = lat(2) - lat(1)
     end if
+    WRITE(IU06,*) "lon(1)=", lon(1), "lon(N_LON)=", lon(N_LON)
+    deallocate(lon, lat)
+    end if !irank
+
+    
+    CALL MPI_Bcast(N_LON,         1, MPI_INTEGER, 0, localcomm, ierr)
+    CALL MPI_Bcast(N_LAT,         1, MPI_INTEGER, 0, localcomm, ierr)
+    CALL MPI_Bcast(west,          1, MPI_DOUBLE_PRECISION, 0, localcomm, ierr)
+    CALL MPI_Bcast(east,          1, MPI_DOUBLE_PRECISION, 0, localcomm, ierr)
+    CALL MPI_Bcast(south,         1, MPI_DOUBLE_PRECISION, 0, localcomm, ierr)
+    CALL MPI_Bcast(north,         1, MPI_DOUBLE_PRECISION, 0, localcomm, ierr)
+    CALL MPI_Bcast(delta_lon,     1, MPI_DOUBLE_PRECISION, 0, localcomm, ierr)
+    CALL MPI_Bcast(delta_lat,     1, MPI_DOUBLE_PRECISION, 0, localcomm, ierr)
+    CALL MPI_Bcast(lat_descending,1, MPI_LOGICAL,          0, localcomm, ierr)
+ 
+    WRITE(IU06,*) "rank:", irank, "N_LON=", N_LON, "N_LAT=", N_LAT
+    WRITE(IU06,*) "rank:", irank, "west=", west, "south=", south, "east=", east, "north=", north
+    WRITE(IU06,*) "rank:", irank, "delta_lon=", delta_lon, "delta_lat=", delta_lat   
     
     WRITE(IU06,*) "west, south, east, north: ", west, south, east, north 
     WRITE(IU06,*) "dlon, dlat, nlon, nlat: " , delta_lon, delta_lat, N_LON, N_LAT
     WRITE(IU06,*) 'types check: ', KIND(west), KIND(south), KIND(east), KIND(north), KIND(delta_lon), KIND(delta_lat)
     
     call SET_WIND_HEADER(WEST=west, SOUTH=south, EAST = east, NORTH=north, D_LON=delta_lon, D_LAT=delta_lat, N_LON=N_LON, N_LAT=N_LAT)
-
-    !call check_status(nf90_close(NETCDF_FILE_ID))
-    deallocate(lon,lat)
-    !end if 
 
 end subroutine
 
