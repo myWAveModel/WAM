@@ -94,6 +94,11 @@ jobs:
         with:
           name: wam-binary-intel
           path: bin/
+      - name: Upload NetCDF-Intel library
+        uses: actions/upload-artifact@v4
+        with:
+          name: netcdf-intel-lib
+          path: /opt/netcdf-intel/
   run-gcc:
     runs-on: ubuntu-latest
     needs: build-gcc
@@ -155,15 +160,21 @@ jobs:
         with:
           name: wam-binary-intel
           path: bin/
+      - name: Download NetCDF-Intel library
+        uses: actions/download-artifact@v4
+        with:
+          name: netcdf-intel-lib
+          path: /opt/netcdf-intel/
       - name: Setup runtime dependencies
         shell: bash
         run: |
           apt-get update -y
-          apt-get install -y libnetcdf-dev libnetcdff-dev
+          apt-get install -y libnetcdf-dev #removed libnetcdff-dev
       - name: Run test
         shell: bash
         run: |
           source /opt/intel/oneapi/setvars.sh --force
+          export LD_LIBRARY_PATH=/opt/netcdf-intel/lib:$LD_LIBRARY_PATH
           cd SWAMPtest/
           cp ../bin/preproc ./preproc.exe
           cp ../bin/wam ./wam.exe
