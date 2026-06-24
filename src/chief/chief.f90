@@ -90,6 +90,7 @@ use wam_mpi_module,    only: pelocal, petotal, nprevious, nnext,               &
 &                            irank, extime, comtime, localcomm                  !! ModR04: Include OASIS
 USE WAM_GENERAL_MODULE,ONLY: ABORTCASE  !! ALSO TERMINATE MPI(1) OR OASIS(2)    !! ModR04: Include OASIS
 use wam_netcdf_input_reader, only: close_netcdf_file
+USE WAM_USER_MODULE,   ONLY: INPUT_FILE_TYPE
 
 IMPLICIT NONE 
 !INCLUDE 'mpif.h' !! ModR08
@@ -160,7 +161,7 @@ DO WHILE (CDTPRO<CDATEE)
    CALL WAVEMDL
 END DO
 
-CALL close_netcdf_file()
+IF (INPUT_FILE_TYPE == 2) CALL close_netcdf_file()
 
 TIME = MPI_WTIME()-TIME0
 IF(use_oasis)THEN                !! ModR04: Include OASIS
