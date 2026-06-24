@@ -159,7 +159,7 @@ jobs:
         shell: bash
         run: |
           apt-get update -y
-          apt-get install -y libnetcdf-dev libnetcdff-dev
+          apt-get install -y libnetcdf-dev
       - name: Run test
         shell: bash
         run: |
