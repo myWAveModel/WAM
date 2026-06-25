@@ -52,7 +52,7 @@ USE WAM_GENERAL_MODULE,   ONLY:    &
 USE WAM_FILE_MODULE,  ONLY: IU05, FILE05, IU06
 
 USE WAM_USER_MODULE
-
+USE WAM_OUTPUT_PARAMETER_MODULE, ONLY: CMEMS_OUTPUT_FLAG
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !     LOCAL VARIABLES.                                                         !
@@ -485,6 +485,12 @@ DO I = 1,NOUT_SCR,2
    FFLAG_SOURCE(I+1) = .NOT. (LINE(42:42).EQ.'F' .OR. LINE(42:42).EQ.'f')
 END DO
 
+!------------------------------------------------------------------------------!
+!
+!    13.a CMEMS OUTPUT FLAG
+
+CALL F_NEW_DATA
+CMEMS_OUTPUT_FLAG = LINE( 2: 2).EQ.'T' .OR. LINE( 2: 2).EQ.'t'
 ! ---------------------------------------------------------------------------- !! End ModR05
 !                                                                              !
 !    14. MODEL FILES.                                                          !
