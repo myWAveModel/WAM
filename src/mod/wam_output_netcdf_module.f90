@@ -143,11 +143,16 @@ subroutine create_dimensions()
     call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+3), "axis", "T"))
 
     IF (CMEMS_OUTPUT_FLAG) THEN
-      call check_status(nf90_def_var(NETCDF_FILE_ID,'processing_status', NF90_INT, TIME_DIM_ID, VARIABLE_IDS(total_int_parameters+4)))
-      call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+4), "standard_name", "status_flag"))
-      call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+4), "long_name", "Data processing status flag"))
-      call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+4), "flag_meanings", "consolidated intermediate"))
-      call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+4), "flag_values", (/0, 1/) ))
+      call check_status(nf90_def_var(NETCDF_FILE_ID,'processing_status', NF90_INT,    &
+                                     TIME_DIM_ID, VARIABLE_IDS(total_int_parameters+4)))
+      call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+4), &
+                                     "standard_name", "status_flag"))
+      call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+4), &
+                                     "long_name", "Data processing status flag"))
+      call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+4), &
+                                     "flag_meanings", "consolidated intermediate"))
+      call check_status(nf90_put_att(NETCDF_FILE_ID, VARIABLE_IDS(total_int_parameters+4), &
+                                     "flag_values", (/0, 1/) ))
     END IF
     
     call check_status(nf90_put_att(NETCDF_FILE_ID,0,"source", "WAM Cycle 7.1"))
@@ -157,11 +162,16 @@ subroutine create_dimensions()
       call check_status(nf90_put_att(NETCDF_FILE_ID,0,"institution", "Helmholtz-Zentrum Hereon, Germany"))
       call check_status(nf90_put_att(NETCDF_FILE_ID,0,"bulletin_type", "reanalysis"))
       call check_status(nf90_put_att(NETCDF_FILE_ID,0,"contact", "servicedesk.cmems@mercator-ocean.eu"))
-      call check_status(nf90_put_att(NETCDF_FILE_ID,0,"references", "Please check in CMEMS catalogue the INFO section for product NWSHELF_MULTIYEAR_WAV_004_015 - http://marine.copernicus.eu"))
-      call check_status(nf90_put_att(NETCDF_FILE_ID,0,"comment", "Please check in CMEMS catalogue the INFO section for product NWSHELF_MULTIYEAR_WAV_004_015 - http://marine.copernicus.eu"))
+      call check_status(nf90_put_att(NETCDF_FILE_ID,0,"references", & 
+           "Please check in CMEMS catalogue the INFO section for product & 
+           NWSHELF_MULTIYEAR_WAV_004_015 - http://marine.copernicus.eu"))
+      call check_status(nf90_put_att(NETCDF_FILE_ID,0,"comment", & 
+          "Please check in CMEMS catalogue the INFO section for product & 
+          NWSHELF_MULTIYEAR_WAV_004_015 - http://marine.copernicus.eu"))
       call check_status(nf90_put_att(NETCDF_FILE_ID,0,"field_type", "hourly_instantaneous_at_time_field"))
       call check_status(nf90_put_att(NETCDF_FILE_ID,0,"title", "Wave Products (2D) - Instantaneous Field"))
-      call check_status(nf90_put_att(NETCDF_FILE_ID,0,"license", "https://marine.copernicus.eu/user-corner/service-commitments-and-licence"))
+      call check_status(nf90_put_att(NETCDF_FILE_ID,0,"license",  &
+          "https://marine.copernicus.eu/user-corner/service-commitments-and-licence"))
     END IF 
 
     call check_status(nf90_put_att(NETCDF_FILE_ID,0,"title", "Wave Model Data (2D) - Instantaneous Field"))
