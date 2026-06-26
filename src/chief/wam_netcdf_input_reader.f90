@@ -56,7 +56,7 @@ real (kind=KIND_D) :: time_units_reference, wind_read_time, start_date_seconds
 integer :: ntime, status, wind_x_var_id, wind_y_var_id
 integer, dimension(5) :: var_ids
 character(len=16) :: file_path !! ../../input/wam/
-character(len=16)   :: file_name !! WIND_YYYYMMDD.nc 
+character(len=91)   :: file_name !! WIND_YYYYMMDD.nc 
 logical, save     :: first_time
 logical           :: lat_descending
 integer :: status_fileopen
@@ -226,9 +226,6 @@ integer function get_index_matching_timestamp(CD_WIND_READ) result(idx)
   call time_conversion(wind_read_time, CD_WIND_READ)
   WRITE(IU06,*) "time passed: ", CD_WIND_READ
   WRITE(IU06,*) "time converted: ", wind_read_time
-  WRITE(IU06,'(A,F20.6)') "wind_read_time (full): ", wind_read_time
-  WRITE(IU06,'(A,F20.6)') "new_time_array(1) (full): ", new_time_array(1)
-  WRITE(IU06,'(A,F20.6)') "difference: ", ABS(wind_read_time - new_time_array(1))
   do i = 1, ntime
     if(ABS(wind_read_time - new_time_array(i)) < TOLERANCE) then
       idx =i
@@ -237,10 +234,10 @@ integer function get_index_matching_timestamp(CD_WIND_READ) result(idx)
   end do
 end function
 
-subroutine read_wind_fields(CD_WIND_READ, WIND_INPUT_FILE_IDENTIFIER)
+subroutine read_wind_fields(CD_WIND_READ, WIND_INPUT_FILE_NAME)
   
   character(len=14) , intent(in) :: CD_WIND_READ
-  character(LEN=10), intent(in) :: WIND_INPUT_FILE_IDENTIFIER
+  character(LEN=80), intent(in) :: WIND_INPUT_FILE_NAME
 
   integer, dimension(3) :: start, count
   integer :: idx, len_wind_x, len_wind_y, ierr
@@ -264,7 +261,7 @@ subroutine read_wind_fields(CD_WIND_READ, WIND_INPUT_FILE_IDENTIFIER)
   if (need_new_file == 1) then
     if (irank == 1) then
       call close_netcdf_file()
-      call open_netcdf_file(CD_WIND_READ, WIND_INPUT_FILE_IDENTIFIER)
+      call open_netcdf_file(CD_WIND_READ, WIND_INPUT_FILE_NAME)
   end if !irank  
   call get_time_attributes()
     if (irank ==1) then 
@@ -340,25 +337,25 @@ subroutine read_wind_fields(CD_WIND_READ, WIND_INPUT_FILE_IDENTIFIER)
   deallocate(U_MAP, V_MAP)
 end subroutine
 
-subroutine read_wind_init(START_DATE, WIND_INPUT_FILE_IDENTIFIER)
+subroutine read_wind_init(START_DATE, WIND_INPUT_FILE_NAME)
     ! reads the first file 
     ! gets wind timestep
     character(len=14), intent(in) :: START_DATE
-    character(len=10), intent(in) :: WIND_INPUT_FILE_IDENTIFIER
+    character(len=80), intent(in) :: WIND_INPUT_FILE_NAME
     integer :: ierr    
     first_time = .true.
     if (irank == 1) then
-      CALL open_netcdf_file(START_DATE, WIND_INPUT_FILE_IDENTIFIER)  
+      CALL open_netcdf_file(START_DATE, WIND_INPUT_FILE_NAME)  
     end if !irank
     call get_time_attributes(START_DATE)
     call read_wind_header_data()
 
 end subroutine
 
-subroutine open_netcdf_file(WIND_CDATE, WIND_INPUT_FILE_IDENTIFIER )  
+subroutine open_netcdf_file(WIND_CDATE, WIND_INPUT_FILE_NAME )  
   
   character(len=14),intent(in) :: WIND_CDATE
-  character(len=10), intent(in) :: WIND_INPUT_FILE_IDENTIFIER
+  character(len=80), intent(in) :: WIND_INPUT_FILE_NAME
   integer :: status_fileopen
   
   if (irank /= 1) return
@@ -366,7 +363,7 @@ subroutine open_netcdf_file(WIND_CDATE, WIND_INPUT_FILE_IDENTIFIER )
   yyyymmdd = WIND_CDATE(1:8)
   WRITE(IU06,*) "yyyymmdd: ", yyyymmdd  
   
-  file_name = TRIM(ADJUSTL(WIND_INPUT_FILE_IDENTIFIER))//'_'//yyyymmdd//'.nc'
+  file_name = TRIM(ADJUSTL(WIND_INPUT_FILE_NAME))//'_'//yyyymmdd//'.nc'
   write(IU06,*) "File name created:" , file_name
 
   status_fileopen = nf90_open(path=file_name, mode=NF90_NOWRITE, ncid=NETCDF_FILE_ID)
