@@ -97,8 +97,8 @@ USE WAM_SOURCE_OUTPUT_MODULE, ONLY: & !! ModR05: Include SRC-OUT
 
 USE WAM_FILE_MODULE,             ONLY: IU05, FILE05, IU06
 USE WAM_OASIS_MODULE,            ONLY: USE_OASIS_ELEV_IN,USE_OASIS_CURR_IN     !! ModR04: Include OASIS
-USE WAM_OUTPUT_PARAMETER_MODULE, ONLY: NOUT_P,NOUT_S,NOUT_SCR                  !! ModR05: Include SRC-OUT
-
+USE WAM_OUTPUT_PARAMETER_MODULE, ONLY: NOUT_P,NOUT_S,NOUT_SCR,              &  !! ModR05: Include SRC-OUT
+&                                      CMEMS_OUTPUT_FLAG 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
 !     C. MODULE VARIABLES.                                                     !

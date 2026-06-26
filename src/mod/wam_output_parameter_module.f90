@@ -31,6 +31,7 @@ public:: initialize_integrated_parameters
 
 INTEGER, PARAMETER :: NOUT_P = 70
 logical            :: dir_true = .true. , dir_false = .false.
+LOGICAL            :: CMEMS_OUTPUT_FLAG
 
 CHARACTER(LEN=60), DIMENSION(NOUT_P) :: NAME_IP = (/ &
 & CHARACTER(LEN=60) :: &
@@ -177,6 +178,7 @@ CHARACTER(LEN=15), DIMENSION(NOUT_P) :: UNITS_P = (/ &
 & 'm '  , & !! 68
 & 'm '  , & !! 69
 & 'm '  /) !! 70
+
 
 CHARACTER(LEN=100), DIMENSION(NOUT_P) :: STANDARD_NAME_P = (/ &
 & CHARACTER(LEN=100) :: &
@@ -636,6 +638,7 @@ type t_integrated_parameters
   character(len=60)   :: name_ip(NOUT_P)
   character(len=100)   :: long_name(NOUT_P)
   character(len=100)   :: standard_name(NOUT_P)
+  character(len=100)  :: Coordinates(NOUT_P)
   character(len=15)   :: units(NOUT_P)
   real                :: scaling_factor(NOUT_P)
   logical             :: direction_flag(NOUT_P)
@@ -662,6 +665,7 @@ type, extends(t_integrated_parameters) :: t_integrated_parameters_init
     procedure, pass(this) :: get_standard_name
     procedure, pass(this) :: get_vl_min
     procedure, pass(this) :: get_vl_max
+    procedure, pass(this) :: get_Coordinates
 end type
 
 type(t_integrated_parameters_init), public :: params
@@ -704,14 +708,18 @@ contains
     !---- Fill vlmin and max
     this%variable_min = VARIABLE_MIN
     this%variable_max = VARIABLE_MAX
+
+    !---- Fill coordinates
+    this%Coordinates = "time latitude longitude"
     
   end subroutine init
 
   subroutine set_name_ip(this, name_ip, id)
     class(t_integrated_parameters_init), intent(inout) :: this
 
-    character(len=60), intent(in) :: name_ip
+    character(len=*), intent(in) :: name_ip
     integer, intent(in) :: id
+    this%name_ip(id) = " "
     this%name_ip(id) = name_ip
   end subroutine set_name_ip
 
@@ -729,6 +737,7 @@ contains
 
     character(len=*), intent(in) :: standard_name
     integer, intent(in) :: id
+    this%standard_name(id) = " "
     this%standard_name(id) = standard_name
   end subroutine set_standard_name
 
@@ -810,11 +819,63 @@ contains
     vl_max = this%variable_max(id)
   end function
 
+  function get_Coordinates(this, id) result(Coordinates)
+    class(t_integrated_parameters_init), intent(in) :: this
+    integer, intent(in) :: id
+    character(len=100) :: Coordinates
+    Coordinates = this%Coordinates(id)
+  end function
+
   subroutine  initialize_integrated_parameters
   
     !set default parameter metadata values
     call params%init()
+    
+    IF (CMEMS_OUTPUT_FLAG) THEN
+      !set variable names
+      call params%set_name_ip("WSPD", id=1)
+      call params%set_name_ip("WDIR", id=2)
+      call params%set_name_ip("FRICV", id=3)
+      
+      call params%set_name_ip("CHNK", id=5)
 
+      call params%set_name_ip("VHM0", id=9)
+      call params%set_name_ip("VTPK", id=10)
+      call params%set_name_ip("VTM10", id=11)
+      call params%set_name_ip("VTM01", id=12)
+      call params%set_name_ip("VTM02", id=13)
+      call params%set_name_ip("VMDR", id=14)
+
+      call params%set_name_ip("VHM0_WW", id=17)
+
+      call params%set_name_ip("VTM01_WW", id=20)
+
+      call params%set_name_ip("VDMR_WW", id=22)
+
+      call params%set_name_ip("Z0", id=32)
+
+      call params%set_name_ip("VPED", id=39)
+
+      call params%set_name_ip("VHM0_SW1", id=41)
+      call params%set_name_ip("VTM01_SW1", id=42)
+      call params%set_name_ip("VMDR_SW1", id=43)
+      call params%set_name_ip("VHM0_SW2", id=44)
+      call params%set_name_ip("VTM01_SW2", id=45)
+      call params%set_name_ip("VMDR_SW2", id=46)
+
+      call params%set_name_ip("VSDY", id=57)
+      call params%set_name_ip("VSDX", id=58)
+      call params%set_name_ip("EFLX", id=59)
+
+      call params%set_name_ip("MFLXU", id=61)
+      call params%set_name_ip("MFLXV", id=62)
+
+      call params%set_name_ip("VMXL", id=67)
+      call params%set_name_ip("VCMX", id=68)
+
+      !set standard names
+      call params%set_standard_name("sea_surface_wind_wave_mean_period", id=20)
+    END IF
     !set parameter metadata - direction flags
     call params%set_direction_flag(dir_true,id=2)
     call params%set_direction_flag(dir_true,id=8)

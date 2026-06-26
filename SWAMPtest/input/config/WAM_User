@@ -21,7 +21,7 @@ C
 C    START DATE        END DATE
 C--------------  --------------
 C 19780906060000  19780909060000   
- 20200101060000  20200104060000                                    
+ 20200101060000  20200104060000
 C
 C ------------------------------------------------------------------------------
 C
@@ -342,6 +342,9 @@ C    ALL THE FOLLOWING FILES CAN TO BE DEFINED BELOW. IF A LINE OF
 C    BLANKS IS GIVEN THE PROGRAM WILL USE STANDARD NAMES WHICH ARE
 C    DEFINED IN "WAM_USER_MODULE.f90".
 C
+C =>  CMEMS OUTPUT FLAG (T: CMEMS OUTPUT ; DEFAULT F: NO CMEMS OUTPUT)
+C-
+ T
 C =>  WIND DATA FILE NAME (UNIT=1 FORM. INPUT DEFAULT: NONE)
 C---------+---------+---------+---------+---------+---------+---------+---------
  ./input/wam/WIND_INPUT_2020.DAT
