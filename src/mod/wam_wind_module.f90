@@ -60,7 +60,7 @@ INTEGER :: WEST_IN =-1     !! WEST LONGITUDE OF GRID [M_SEC].
 INTEGER :: EAST_IN =-1     !! EAST LONGITUDE OF GRID [M_SEC].
 LOGICAL :: EQUAL_GRID =.FALSE. !! .TRUE. IF WIND GRID IS EQUAL TO MODEL GRID.
 INTEGER, SAVE :: input_filetype
-CHARACTER(LEN = 10), SAVE :: wind_input_file_identifier
+CHARACTER(LEN = 80), SAVE :: wind_input_file_name
 CHARACTER (LEN= 14) :: CD_READ =' '!! DATE OF LAST DATA READ FROM INPUT.
    
 REAL, ALLOCATABLE, DIMENSION(:,:)  :: U_IN  !! W-E WIND COMPONENT.
@@ -139,12 +139,12 @@ public set_ready_file_directory
 
 PUBLIC WAM_WIND
 INTERFACE WAM_WIND       !! READS AND TRANSFORMS INPUT WINDS TO WAM POINTS.
-  MODULE SUBROUTINE WAM_WIND(us, ds, cd_start, input_filetype, wind_input_file_identifier)
-    real, intent(out) :: us(:)
-    real, intent(out) :: ds(:)
+  MODULE SUBROUTINE WAM_WIND(us, ds, cd_start, input_filetype, wind_input_file_name)
+    real, intent(out) :: us(nijs:nijl)
+    real, intent(out) :: ds(nijs:nijl)
     character(len=14), intent(in) :: cd_start
     integer, intent(in) :: input_filetype
-    character(len=10), intent(in) :: wind_input_file_identifier
+    character(len=80), intent(in) :: wind_input_file_name
   END SUBROUTINE
 END INTERFACE
 
@@ -160,10 +160,10 @@ END INTERFACE
 !                                                                              !
 ! ---------------------------------------------------------------------------- !
 
-INTERFACE INTERPOLATION_TO_GRID       !! INTERPOLATES TO MODEL GRID POINTS. 
-   MODULE  PROCEDURE INTERPOLATION_TO_GRID
-END INTERFACE
-PRIVATE INTERPOLATION_TO_GRID
+!INTERFACE INTERPOLATION_TO_GRID       !! INTERPOLATES TO MODEL GRID POINTS. 
+!   MODULE  PROCEDURE INTERPOLATION_TO_GRID
+!END INTERFACE
+!PRIVATE INTERPOLATION_TO_GRID
 
 INTERFACE NOTIM           !! STEERING SUB IF TIME INTERPOLATION IS NOT WANTED.
    MODULE PROCEDURE NOTIM
@@ -269,7 +269,7 @@ END SUBROUTINE GET_WIND
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
-SUBROUTINE PREPARE_WIND(INPUT_FILE_TYPE, WIND_INPUT_FILE_IDENTIFIER_ORIG)
+SUBROUTINE PREPARE_WIND(INPUT_FILE_TYPE, WIND_INPUT_FILE_NAME_ORIG)
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -319,11 +319,11 @@ SUBROUTINE PREPARE_WIND(INPUT_FILE_TYPE, WIND_INPUT_FILE_IDENTIFIER_ORIG)
 !     LOCAL VARIABLES.                                                         !
 !     ----------------                                                         !
 INTEGER, INTENT(IN) :: INPUT_FILE_TYPE
-CHARACTER(LEN=10), INTENT(IN) :: WIND_INPUT_FILE_IDENTIFIER_ORIG
+CHARACTER(LEN=80), INTENT(IN) :: WIND_INPUT_FILE_NAME_ORIG
 CHARACTER (LEN=14) :: CD_START, CD_END 
 
 input_filetype = INPUT_FILE_TYPE
-wind_input_file_identifier = WIND_INPUT_FILE_IDENTIFIER_ORIG
+wind_input_file_name = WIND_INPUT_FILE_NAME_ORIG
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !                                                                              !
@@ -1290,7 +1290,7 @@ DO WHILE (CDTWIH.LE.CD_END)
 !     1.1 READ ONE WIND FIELD AND TRANSFORM TO GRID.                           !
 !         ------------------------------------------                           !
 
-   CALL WAM_WIND (US, DS, CDTWIH, input_filetype, wind_input_file_identifier)
+   CALL WAM_WIND (US, DS, CDTWIH, input_filetype, wind_input_file_name)
    MP = MP + 1
 
 !     1.2 SAVE IN MODULE WAM_WIND.                                             !
@@ -1407,7 +1407,7 @@ DO
 
    CDT2 = CDT1
    CALL INCDATE(CDT2,IDELWI)
-   CALL WAM_WIND (US2, DS2, CDT2, input_filetype, wind_input_file_identifier)
+   CALL WAM_WIND (US2, DS2, CDT2, input_filetype, wind_input_file_name)
 
 !     2.2 INTERPOLATE AND SAVE BLOCKED WIND FIELDS.                            !
 !         -----------------------------------------                            !

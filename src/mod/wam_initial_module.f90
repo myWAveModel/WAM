@@ -40,7 +40,7 @@ USE WAM_SOURCE_MODULE,     ONLY:  &
 use wam_special_module,    only:  &
 &       chready                      !! wait for wind/ice files 
 
-USE WAM_USER_MODULE,        ONLY: INPUT_FILE_TYPE, WIND_INPUT_FILE_IDENTIFIER
+USE WAM_USER_MODULE,        ONLY: INPUT_FILE_TYPE, WIND_INPUT_FILE_NAME
     
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
@@ -189,8 +189,8 @@ ALLOCATE (WSTAR(NIJS:NIJL))
 
 ALLOCATE(DEPTH(NINF:NSUP))
 ALLOCATE(INDEP(NINF:NSUP))
-ALLOCATE(U    (NINF:NSUP))
-ALLOCATE(V    (NINF:NSUP))
+ALLOCATE(U    (NINF-1:NSUP))
+ALLOCATE(V    (NINF-1:NSUP))
 
 USTAR = 0.
 TAUW  = 0.
@@ -228,7 +228,7 @@ END IF
 !IF(USE_OASIS_CURR_IN)CALL WAM_OASIS_REC_CURRENT(cdatea,gotfield)  !! ModR04, ModR07
 
 IF (COLDSTART) THEN
-   CALL PREPARE_COLDSTART(INPUT_FILE_TYPE, WIND_INPUT_FILE_IDENTIFIER)
+   CALL PREPARE_COLDSTART(INPUT_FILE_TYPE, WIND_INPUT_FILE_NAME)
    IF (ITEST.GE.2) WRITE(IU06,*) '    SUB. PREPARE_START: PREPARE_COLDSTART DONE'
 ELSE
    CALL CONNECT_RESTART
