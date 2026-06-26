@@ -173,8 +173,8 @@ subroutine create_dimensions()
       call check_status(nf90_put_att(NETCDF_FILE_ID,0,"license",  &
           "https://marine.copernicus.eu/user-corner/service-commitments-and-licence"))
     END IF 
-
-    call check_status(nf90_put_att(NETCDF_FILE_ID,0,"title", "Wave Model Data (2D) - Instantaneous Field"))
+    
+    call check_status(nf90_put_att(NETCDF_FILE_ID,0,"bulletin_date", dateb ))
     call check_status(nf90_put_att(NETCDF_FILE_ID,0,"history", " "))
 
     DO i=1,total_int_parameters
