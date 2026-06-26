@@ -22,7 +22,7 @@ REAL    :: UU, VV, USTAR, Z0, CD
 !        ------------------------------                                        !
 if (input_filetype == 2) then
    WRITE(iu06,*) "ENTERING NETCDF READER" 
-    CALL read_wind_fields(CD_START, wind_input_file_identifier)
+    CALL read_wind_fields(CD_START, wind_input_file_name)
 else
 DO
   WRITE(IU06,*) "Entering ASCII reader"
@@ -50,8 +50,8 @@ end if
 
 IF (EQUAL_GRID) THEN
    DO IJ = NIJS, NIJL
-      US(IJ-NIJS+1)= U_IN(IFROMIJ(IJ),KFROMIJ(IJ))
-      DS(IJ-NIJS+1)= V_IN(IFROMIJ(IJ),KFROMIJ(IJ))
+      US(IJ)= U_IN(IFROMIJ(IJ),KFROMIJ(IJ))
+      DS(IJ)= V_IN(IFROMIJ(IJ),KFROMIJ(IJ))
    END DO
 ELSE
    CALL INTERPOLATION_TO_GRID (US, DS)
@@ -62,15 +62,15 @@ END IF
 !         -------------------------------------                                !
 
 DO IJ = NIJS, NIJL
-   UU = US(IJ-NIJS+1)
-   VV = DS(IJ-NIJS+1)
-   US(IJ-NIJS+1) = SQRT(UU**2 + VV**2)
-   IF (US(IJ-NIJS+1).NE.0.) THEN
-      DS(IJ-NIJS+1) = ATAN2(UU,VV)
+   UU = US(IJ)
+   VV = DS(IJ)
+   US(IJ) = SQRT(UU**2 + VV**2)
+   IF (US(IJ).NE.0.) THEN
+      DS(IJ) = ATAN2(UU,VV)
    ELSE
-      DS(IJ-NIJS+1) = 0.
+      DS(IJ) = 0.
    ENDIF
-   IF (DS(IJ-NIJS+1).LT.0.) DS(IJ-NIJS+1) = DS(IJ-NIJS+1) + ZPI
+   IF (DS(IJ).LT.0.) DS(IJ) = DS(IJ) + ZPI
 END DO
 
 ! ---------------------------------------------------------------------------- !
@@ -85,10 +85,10 @@ IF (CODE_IN.EQ.1) THEN
 !          ---------------------------                                         !
 
    DO IJ = NIJS, NIJL
-         USTAR = MAX(0.01,US(IJ-NIJS+1))
+         USTAR = MAX(0.01,US(IJ))
          Z0  = ALPHACH/G*USTAR**2
          CD  = XKAPPA/ALOG(10./Z0)
-         US(IJ-NIJS+1) = USTAR/CD
+         US(IJ) = USTAR/CD
    END DO
 
 ELSE IF (CODE_IN.EQ.2) THEN
@@ -97,14 +97,14 @@ ELSE IF (CODE_IN.EQ.2) THEN
 !         ---------------------------------                                    !
 !                                                                              !
    DO IJ = NIJS, NIJL
-         USTAR = MAX (0.01, SQRT(US(IJ-NIJS+1)/ROAIR))
+         USTAR = MAX (0.01, SQRT(US(IJ)/ROAIR))
          Z0  = ALPHACH/G*USTAR**2
          CD  = XKAPPA/ALOG(10./Z0)
-         US(IJ-NIJS+1) = USTAR/CD
+         US(IJ) = USTAR/CD
    END DO
 END IF
 
-US(:)  = MAX(US(:), 2.0)
+US  = MAX(US, 2.0)
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -116,8 +116,8 @@ IF (ITEST.GE.3) THEN
    WRITE (IU06,*) ' '
    WRITE (IU06,*) '      SUB. WAM_WIND: WINDFIELDS CONVERTED TO MODEL GRID'
    WRITE (IU06,*) ' '
-   WRITE (IU06,*) ' US(NIJS:NIJS+10) = ', US(1:IJ-NIJS+1)
-   WRITE (IU06,*) ' DS(NIJS:NIJS+10) = ', DS(1:IJ-NIJS+1)
+   WRITE (IU06,*) ' US(NIJS:NIJS+10) = ', US(NIJS:IJ)
+   WRITE (IU06,*) ' DS(NIJS:NIJS+10) = ', DS(NIJS:IJ)
 END IF
 
 end procedure wam_wind
