@@ -113,20 +113,19 @@
           END DO
         END DO
 
-! ALL DF WAS DFIM BELOW, SPEC IN WAM HAS m**2/Hz unit
 
         DO IPART = 1,MPART
           DO ISPEC = 1,NSPEC
             MEANE(ISPEC,IPART) = MEANE(ISPEC,IPART)
-     &          + DF(IFRE) * SUM0(ISPEC,IPART)
+     &          + DFIM(IFRE) * SUM0(ISPEC,IPART)
             SUMX(ISPEC,IPART) = SUMX(ISPEC,IPART)
-     &          + DF(IFRE) * SUMX0(ISPEC,IPART)
+     &          + DFIM(IFRE) * SUMX0(ISPEC,IPART)
             SUMY(ISPEC,IPART) = SUMY(ISPEC,IPART)
-     &          + DF(IFRE) * SUMY0(ISPEC,IPART)
+     &          + DFIM(IFRE) * SUMY0(ISPEC,IPART)
             SUMXX(ISPEC,IPART) = SUMXX(ISPEC,IPART)
-     &          + DF(IFRE) * SUMXX0(ISPEC,IPART)
+     &          + DFIM(IFRE) * SUMXX0(ISPEC,IPART)
             SUMYY(ISPEC,IPART) = SUMYY(ISPEC,IPART)
-     &          + DF(IFRE) * SUMYY0(ISPEC,IPART)
+     &          + DFIM(IFRE) * SUMYY0(ISPEC,IPART)
           END DO
         END DO
       END DO
