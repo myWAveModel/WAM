@@ -87,7 +87,7 @@
           DO ISPEC=1,NSPEC
             SUM0(ISPEC,PART(ISPEC,IANG,IFRE))
      &          = SUM0(ISPEC,PART(ISPEC,IANG,IFRE))
-     &          + SPEC(ISPEC,IANG,IFRE) * DF(IFRE) 
+     &          + SPEC(ISPEC,IANG,IFRE) * DFIM(IFRE) 
           END DO
         END DO
         DO IPART = 1,MPART
