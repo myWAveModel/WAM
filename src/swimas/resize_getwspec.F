@@ -69,6 +69,8 @@
         IF(NEWNSPECW.GT.NIBLO) THEN
           WRITE(IU06,*)' *******************************************'
           WRITE(IU06,*)' IN RESIZE_GETWSPEC : ' 
+          WRITE(IU06,*)' NEWNSPECW :', NEWNSPECW
+          WRITE(IU06,*)' NIBLO    :', NIBLO
           WRITE(IU06,*)' NEWNSPECW IS TOO BIG. PROGRAM WILL ABORT '
           WRITE(IU06,*)' *******************************************'
           CALL ABORT
