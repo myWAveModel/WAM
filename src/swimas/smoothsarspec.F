@@ -47,8 +47,7 @@
           ENDDO
         ENDDO
         DO ISPEC = LSPEC,NSPEC 
-          EM(ISPEC) = EM(ISPEC)+DF(M)*TEMP(ISPEC) 
-!                                                 DFIM --> DF
+          EM(ISPEC) = EM(ISPEC)+DFIM(M)*TEMP(ISPEC) 
         ENDDO
       ENDDO
 
@@ -107,8 +106,7 @@
           ENDDO
         ENDDO
         DO ISPEC = LSPEC,NSPEC 
-          EW(ISPEC) = EW(ISPEC)+DF(M)*TEMP(ISPEC)
-!                                                 DFIM-->DF
+          EW(ISPEC) = EW(ISPEC)+DFIM(M)*TEMP(ISPEC)
         ENDDO
       ENDDO
 
