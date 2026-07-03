@@ -315,7 +315,7 @@
 !      ENDIF
 !        DO JBL=1,IGL
 !         ODD BLOCKS
-            IF(IRANK.NE.IGL) THEN
+!            IF(IRANK.NE.IGL) THEN
               DO JFRE=1,NFRE
                 DO JANG=1,NANG
                   DO JP = IJS(IRANK),IJL(IRANK)                  
@@ -325,7 +325,7 @@
                   ENDDO
                 ENDDO
               ENDDO
-            ENDIF
+!            ENDIF
 !        ENDDO
 
 !      write(iu06,*) 'MIN MAX SPECW', MINVAL(SPECW), MAXVAL(SPECW)       
