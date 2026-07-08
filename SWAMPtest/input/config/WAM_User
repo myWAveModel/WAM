@@ -255,8 +255,8 @@ C
  F T F  CRMAX (TIME, FORRISTAL)         F T F  HMAX (TIME, NAESS)
  F T F  CRMAX (SPACE-TIME (STQD))       F T F  HMAX (SPACE-TIME (STQD))
 C
- F T F  SPECTRA OF TOTAL SEA            F F F  SEA SPECTRA
- F F F  SWELL SPECTRA                   F F F  DUMMY
+ F T -  SPECTRA OF TOTAL SEA            F F -  SEA SPECTRA
+ F F -  SWELL SPECTRA                   F F -  DUMMY
 C
 C-------------------------------------------------------------------------------
 C
