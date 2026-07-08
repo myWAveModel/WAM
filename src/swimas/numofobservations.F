@@ -62,7 +62,7 @@
      
         if(ifail.ne.0) then
            write(iu06,*) 'NO SPECTRAL FILE FOR ', CDATES
-           call incdate (cdates,3600)                   ! 1 hour increment
+           call incdate (cdates,1800)                   ! 0.5 hour increment
            cycle file_loop
 !          call abort1
         endif
@@ -89,7 +89,7 @@
         write(iu06,*) 'SPECTRA IN FILE ', ispecx
         
         close(iu90)
-        call incdate (cdates,3600)                      ! 1 hour increment
+        call incdate (cdates,1800)                      ! 0.5 hour increment
 
       end do file_loop
 
