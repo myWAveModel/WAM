@@ -114,7 +114,7 @@
         rewind(iu90)
 !        write(*,*)'ifail', ifail
         IF (IFAIL.NE.0) THEN
-	   CALL INCDATE (CDATESS, 3600)
+	   CALL INCDATE (CDATESS, 1800)     ! 0.5 hour increment
 	   CYCLE
 !          CALL ABORT1
         ENDIF
@@ -131,7 +131,7 @@
         goto 10
    20 continue
 	close(iu90)
-	call incdate(cdatess, 3600)
+	call incdate(cdatess, 1800)        ! 0.5 hour increment
       ENDDO
 
 
