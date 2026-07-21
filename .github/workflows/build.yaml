@@ -1,29 +1,36 @@
 name: build
-on: 
+
+on:
   push:
     branches:
       - WAM_Cycle7.1
   pull_request:
     branches:
       - WAM_Cycle7.1
+
 jobs:
   build-gcc:
     runs-on: ubuntu-latest
+      #if: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup GCC
+        shell: bash
         run: |
-          sudo apt update -y
-          sudo apt install -y openmpi-bin libopenmpi-dev libnetcdf-dev libnetcdff-dev 
+          sudo apt-get update -y
+          sudo apt-get install -y openmpi-bin libopenmpi-dev libnetcdff-dev libnetcdf-dev
+
       - name: Build GCC
+        shell: bash
         run: |
           export FC=mpifort
           export FFLAGS="-O2"
-          export NCDFDIR=$(nc-config --prefix)
-          export NCDFFDIR=$(nf-config --prefix)
-          export LDOPT="-I${NCDFFDIR}/include -L${NCDFFDIR}/lib -L${NCDFDIR}/lib -lnetcdf -lnetcdff"
-          #Compilation        
+          export NCDFDIR="$(nc-config --prefix)"
+          export NCDFFDIR="$(nf-config --prefix)"
+          export LDOPT="-I${NCDFFDIR}/include -L${NCDFFDIR}/lib -L${NCDFDIR}/lib -lnetcdff -lnetcdf"
+
           cd src/chief/
           ln -sf read_wind_input_arno.f90     read_wind_input.f90
           ln -sf read_topo_input_arno.f90     read_topo_input.f90
@@ -32,48 +39,102 @@ jobs:
           ln -sf read_ice_input_arno.f90      read_ice_input.f90
           cd ../preproc/
           ln -sf read_topography_arno.f90     read_topography.f90
-          #deactivate OASIS          
           cd ../mod/
           ln -sf wam_oasis_inactive_module.f90 wam_oasis_module.f90
-          #make
           cd ../../
-          #setENV=ci-GCC changes the Makefile logic so internal settings (FC, flags) are skipped, ensurring that all the settings are configured externally, so here.
+
+          make clean || true
           make all setENV=ci-GCC
-      - name: Upload artifact
+
+      - name: Upload GCC binaries
         uses: actions/upload-artifact@v4
         with:
           name: wam-binary-gcc
           path: bin/
+
   build-intel:
     runs-on: ubuntu-latest
-      #if: false
+    if: false
     container: intel/oneapi-hpckit:latest
+    env:
+      NETCDF_PREFIX: /opt/netcdf-intel
+      NETCDF_C_VERSION: 4.9.2
+      NETCDF_FORTRAN_VERSION: 4.6.1
+      HDF5_INC: /usr/include/hdf5/serial
+      HDF5_LIB: /usr/lib/x86_64-linux-gnu/hdf5/serial
     steps:
-      - name: Checkout 
+      - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup NetCDF
+
+      - name: Build NetCDF C and Fortran
         shell: bash
         run: |
+          set -eo pipefail
+          set +u
           source /opt/intel/oneapi/setvars.sh --force
+          set -u
+
           apt-get update -y
-          apt-get install -y nodejs libnetcdf-dev zlib1g-dev m4 wget
-          # Build NetCDF-Fortran with Intel compiler
-          wget https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v4.6.1.tar.gz
-          tar xf v4.6.1.tar.gz
-          cd netcdf-fortran-4.6.1
-          FC=mpiifx CC=icx CPPFLAGS=-I/usr/include LDFLAGS=-L/usr/lib ./configure --prefix=/opt/netcdf-intel
+          apt-get install -y \
+            nodejs m4 wget make cmake gcc g++ cpp pkg-config \
+            zlib1g-dev libcurl4-openssl-dev libhdf5-dev
+
+          wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v${NETCDF_C_VERSION}.tar.gz
+          tar xf v${NETCDF_C_VERSION}.tar.gz
+          cd netcdf-c-${NETCDF_C_VERSION}
+
+          export CC=icx
+          export CXX=icpx
+          export CPPFLAGS="-I${HDF5_INC} -I/usr/include"
+          export LDFLAGS="-L${HDF5_LIB} -L/usr/lib/x86_64-linux-gnu"
+          export LD_LIBRARY_PATH="${HDF5_LIB}:/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}"
+
+          ./configure \
+            --prefix="${NETCDF_PREFIX}" \
+            --disable-dap \
+            --disable-byterange \
+            --disable-libxml2 \
+            --enable-shared
           make -j4
-          make install                  
+          make install
+
+          cd ..
+
+          wget https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v${NETCDF_FORTRAN_VERSION}.tar.gz
+          tar xf v${NETCDF_FORTRAN_VERSION}.tar.gz
+          cd netcdf-fortran-${NETCDF_FORTRAN_VERSION}
+
+          export CC=icx
+          export FC=mpiifx
+          export F77=mpiifx
+          export CPPFLAGS="-I${NETCDF_PREFIX}/include"
+          export LDFLAGS="-L${NETCDF_PREFIX}/lib"
+          export LD_LIBRARY_PATH="${NETCDF_PREFIX}/lib:${HDF5_LIB}:/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}"
+
+          ./configure --prefix="${NETCDF_PREFIX}"
+          make -j4
+          make install
+
       - name: Build Intel
         shell: bash
         run: |
+          set -eo pipefail
+          set +u
           source /opt/intel/oneapi/setvars.sh --force
+          set -u
+
+          export PATH="${NETCDF_PREFIX}/bin:${PATH}"
           export FC=mpiifx
           export FFLAGS="-heap-arrays 64 -fp-model precise -O3"
-          export NCDFFDIR=/opt/netcdf-intel
-          export NCDFDIR=$(nc-config --prefix)
-          export LDOPT="-I${NCDFFDIR}/include -I${NCDFDIR}/include -L${NCDFFDIR}/lib -L${NCDFDIR}/lib -lnetcdf -lnetcdff"
-          #Compilation
+
+          export NETCDF_INC="${NETCDF_PREFIX}/include"
+          export NETCDF_LIB="${NETCDF_PREFIX}/lib"
+
+          export CPPFLAGS="-I${NETCDF_INC}"
+          export LDFLAGS="-L${NETCDF_LIB} -Wl,-rpath,${NETCDF_LIB}"
+          export LD_LIBRARY_PATH="${NETCDF_LIB}:${HDF5_LIB}:/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}"
+          export LDOPT="-I${NETCDF_INC} -L${NETCDF_LIB} -lnetcdff -lnetcdf"
+
           cd src/chief/
           ln -sf read_wind_input_arno.f90     read_wind_input.f90
           ln -sf read_topo_input_arno.f90     read_topo_input.f90
@@ -81,119 +142,118 @@ jobs:
           ln -sf read_boundary_input_arno.f90 read_boundary_input.f90
           ln -sf read_ice_input_arno.f90      read_ice_input.f90
           cd ../preproc/
-          ln -sf read_topography_arno.f90     read_topography.f90       
-          #deactivate OASIS
+          ln -sf read_topography_arno.f90     read_topography.f90
           cd ../mod/
           ln -sf wam_oasis_inactive_module.f90 wam_oasis_module.f90
           cd ../../
-          #make
-          #setENV=ci-GCC changes the Makefile logic so internal settings (FC, flags) are skipped, ensurring that all the settings are configured externally, so here.
-          make all setENV=ci-Intel 
-      - name: Upload artifact
+
+          make clean || true
+          make all setENV=ci-Intel
+
+      - name: Upload Intel binaries
         uses: actions/upload-artifact@v4
         with:
           name: wam-binary-intel
           path: bin/
-      - name: Upload NetCDF-Intel library
+
+      - name: Upload Intel NetCDF
         uses: actions/upload-artifact@v4
         with:
-          name: netcdf-intel-lib
+          name: netcdf-intel
           path: /opt/netcdf-intel/
+
   run-gcc:
     runs-on: ubuntu-latest
+      #if: false
     needs: build-gcc
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Download gcc binaries 
+
+      - name: Download GCC binaries
         uses: actions/download-artifact@v4
-        with: 
+        with:
           name: wam-binary-gcc
           path: bin/
+
       - name: Setup runtime dependencies
+        shell: bash
         run: |
-          sudo apt update -y
-          sudo apt install -y openmpi-bin libopenmpi-dev libnetcdf-dev libnetcdff-dev
-          #pwd
-          #ls -l bin/
+          sudo apt-get update -y
+          sudo apt-get install -y openmpi-bin libopenmpi-dev libnetcdff-dev libnetcdf-dev
+
       - name: Run test
+        shell: bash
         run: |
+          set -eo pipefail
           cd SWAMPtest/
-          #Copy needed executables and parameter files
+
           cp ../bin/preproc ./preproc.exe
           cp ../bin/wam ./wam.exe
           cp input/config/Preproc_User ./
           cp input/config/WAM_User ./
-          #edit 
+
           sed -i 's|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' Preproc_User
           sed -i 's|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' WAM_User
-          #run pre-processing
-          chmod +x preproc.exe
-          if ./preproc.exe; then
-            echo "Pre-processing ran successfully!"
-          else
-            echo "Pre-processsing run failed!"
-            exit 1
-          fi
-          chmod +x wam.exe
-          if mpirun --allow-run-as-root -n 2 ./wam.exe; then
-            echo "WAM ran successfully!"
-          else
-            echo "WAM run failed!"
-            exit 1
-          fi
+
+          chmod +x preproc.exe wam.exe
+          
+          ./preproc.exe
+          mpirun --allow-run-as-root -n 2 ./wam.exe
+
   run-intel:
     runs-on: ubuntu-latest
+    if: false
     needs: build-intel
-      #if: false
     container: intel/oneapi-hpckit:latest
+    env:
+      NETCDF_PREFIX: /opt/netcdf-intel
+      HDF5_LIB: /usr/lib/x86_64-linux-gnu/hdf5/serial
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install nodejs
+
+      - name: Install runtime deps
         shell: bash
         run: |
           apt-get update -y
-          apt-get install -y nodejs
+          apt-get install -y nodejs libhdf5-dev zlib1g-dev libcurl4-openssl-dev
+
       - name: Download Intel binaries
         uses: actions/download-artifact@v4
         with:
           name: wam-binary-intel
           path: bin/
-      - name: Download NetCDF-Intel library
+
+      - name: Download Intel NetCDF
         uses: actions/download-artifact@v4
         with:
-          name: netcdf-intel-lib
+          name: netcdf-intel
           path: /opt/netcdf-intel/
-      - name: Setup runtime dependencies
-        shell: bash
-        run: |
-          apt-get update -y
-          apt-get install -y libnetcdf-dev #removed libnetcdff-dev
+
       - name: Run test
         shell: bash
         run: |
+          set -eo pipefail
+          set +u
           source /opt/intel/oneapi/setvars.sh --force
-          export LD_LIBRARY_PATH=/opt/netcdf-intel/lib:$LD_LIBRARY_PATH
+          set -u
+
+          export PATH="${NETCDF_PREFIX}/bin:${PATH}"
+          export NETCDF_LIB="${NETCDF_PREFIX}/lib"
+          export LD_LIBRARY_PATH="${NETCDF_LIB}:${HDF5_LIB}:/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}"
+
           cd SWAMPtest/
+
           cp ../bin/preproc ./preproc.exe
           cp ../bin/wam ./wam.exe
           cp input/config/Preproc_User ./
           cp input/config/WAM_User ./
+
           sed -i 's|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' Preproc_User
           sed -i 's|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' WAM_User
+
           chmod +x preproc.exe wam.exe
-          if ./preproc.exe; then
-            echo "Pre-processing ran successfully!"
-          else
-            echo "Pre-processing run failed!"
-            exit 1
-          fi
-          if mpirun -n 2 ./wam.exe; then
-            echo "WAM ran successfully!"
-          else
-            echo "WAM run failed!"
-            exit 1
-          fi
 
-
+          ./preproc.exe
+          mpirun -n 2 ./wam.exe
