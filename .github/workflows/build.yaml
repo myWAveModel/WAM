@@ -54,7 +54,7 @@ jobs:
 
   build-intel:
     runs-on: ubuntu-latest
-    if: false
+      # if: false
     container: intel/oneapi-hpckit:latest
     env:
       NETCDF_PREFIX: /opt/netcdf-intel
@@ -215,7 +215,7 @@ jobs:
 
   run-intel:
     runs-on: ubuntu-latest
-    if: false
+      # if: false
     needs: build-intel
     container: intel/oneapi-hpckit:latest
     env:
