@@ -195,11 +195,23 @@ jobs:
 
           sed -i 's|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' Preproc_User
           sed -i 's|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' WAM_User
-
-          chmod +x preproc.exe wam.exe
           
-          ./preproc.exe
-          mpirun --allow-run-as-root -n 2 ./wam.exe
+          #run pre-processing
+          chmod +x preproc.exe
+          if ./preproc.exe; then
+            echo "Pre-processing ran successfully!"
+          else
+            echo "Pre-processsing run failed!"
+            exit 1
+          fi
+          
+          chmod +x wam.exe
+          if mpirun --allow-run-as-root -n 2 ./wam.exe; then
+            echo "WAM ran successfully!"
+          else
+            echo "WAM run failed!"
+            exit 1
+          fi
 
   run-intel:
     runs-on: ubuntu-latest
@@ -252,8 +264,17 @@ jobs:
 
           sed -i 's|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' Preproc_User
           sed -i 's|./grid/Grid_info_COARSE_GRID|./Grid_info_COARSE_GRID|g' WAM_User
-
+          
           chmod +x preproc.exe wam.exe
-
-          ./preproc.exe
-          mpirun -n 2 ./wam.exe
+          if ./preproc.exe; then
+            echo "Pre-processing ran successfully!"
+          else
+            echo "Pre-processing run failed!"
+            exit 1
+          fi
+          if mpirun -n 2 ./wam.exe; then
+            echo "WAM ran successfully!"
+          else
+            echo "WAM run failed!"
+            exit 1
+          fi
