@@ -348,7 +348,7 @@ C-
 C => SELECTION OF INPUT FILE TYPE(1 = ASCII, 2 = NETCDF)
 C INPUT_FILE_TYPE
 C----------------
- 2
+ 1
 C => WIND INPUT-FILE IDENTIFIER [Enter the first letters of your input file (case sensitive)]
 C----------
         dwd
