@@ -167,7 +167,7 @@ C     U        CHARACTER  TIME UNIT: M OR m MINUTE; H OR h HOUR; DEFAULT SECOND 
 C
 C IDELWO U   IDELWI U   IDELTO U   IDELTI U   IDELCO U   IDELCI U   IDELII U
 C------- -  ------- -  ------- -  ------- -  ------- -  ------- -  ------- -
-       6 H        6 H        0 H        0 H        0 H        0 H        0 H
+       6 H        6 H        6 H        6 H        6 H        6 H        0 H
 C
 C ------------------------------------------------------------------------------
 C
@@ -211,17 +211,17 @@ C     N  NETCDF OUTPUT:  T : SERIAL NETCDF OUTPUT;  DEFAULT F : NO OUTPUT
 C
 CP F N                                  P F N
 C- - -                                  - - -
- F T F  WIND SPEED U10                  F T F  WIND DIRECTION
+ F T T  WIND SPEED U10                  F T T  WIND DIRECTION
  F T F  FRICTION VELOCITY               F T F  DRAG COEFFICIENT
  F T F  CHARNOCK PARAMETER              F T F  WATER DEPTH
  F T F  CURRENT SPEED                   F T F  CURRENT DIRECTION
 C
- F T F  SIGNIFICANT WAVE HEIGHT         F T F  WAVE PEAK PERIOD
+ F T T  SIGNIFICANT WAVE HEIGHT         F T T  WAVE PEAK PERIOD
  F T F  WAVE MEAN PERIOD                F T F  WAVE TM1 PERIOD
  F T F  WAVE TM2 PERIOD                 F T F  WAVE DIRECTION
  F T F  DIRECTIONAL SPREAD              F T F  NORMALISED WAVE STRESS
 C
- F T F  SEA SIGNIFICANT WAVE HEIGHT     F T F  SEA PEAK PERIOD
+ F T T  SEA SIGNIFICANT WAVE HEIGHT     F T T  SEA PEAK PERIOD
  F T F  SEA MEAN PERIOD                 F T F  SEA TM1 PERIOD
  F T F  SEA TM2 PERIOD                  F T F  SEA DIRECTION
  F T F  SEA DIRECTIONAL SPREAD          F F F  DUMMY
@@ -349,9 +349,6 @@ C => SELECTION OF INPUT FILE TYPE(1 = ASCII, 2 = NETCDF)
 C INPUT_FILE_TYPE
 C----------------
  1
-C => WIND INPUT-FILE IDENTIFIER [Enter the first letters of your input file (case sensitive)]
-C----------
-        dwd
 C =>  WIND DATA FILE NAME (UNIT=1 FORM. INPUT DEFAULT: NONE)
 C---------+---------+---------+---------+---------+---------+---------+---------
 C./input/wam/dwd
@@ -363,9 +360,6 @@ C (UNIT=2 UNFORM. INPUT DEFAULT: CBO) ONLY USED IF FINE = T
 C---------+---------+---------+---------+---------+---------+---------+---------
 
 C
-C => ICE INPUT-FILE IDENTIFIER [Enter the first letters of your input file (case sensitive)]
-C----------------
-							xxx
 C ICE FIELD DATA (UNIT=3 FORM. INPUT DEFAULT: -BLANK-)
 C IF A -BLANK- LINE IS GIVEN: ICE IS NOT PROCESSED
 C---------+---------+---------+---------+---------+---------+---------+---------
@@ -376,18 +370,12 @@ C GRID DATA FILE (UNIT=7 UNFORM. INPUT DEFAULT: Grid_info)
 C---------+---------+---------+---------+---------+---------+---------+---------
  ./grid/Grid_info_COARSE_GRID
 C
-C => DEPTH INPUT-FILE IDENTIFIER [Enter the first letters of your input file (case sensitive)]
-C----------------
-							xxx
 C DEPTH DATA FILE NAME (UNIT=8 FORM. INPUT DEFAULT: -BLANK-)
 C IF A -BLANK- LINE IS GIVEN BASIC DEPTH FROM PREPROC ARE USED.
 C---------+---------+---------+---------+---------+---------+---------+---------
  ./input/wam/TOPO_INPUT_2020.DAT
 C ./input/wam/TOPO_INPUT.DAT
 C
-C => CURRENT INPUT-FILE IDENTIFIER [Enter the first letters of your input file (case sensitive)]
-C----------------
-							xxx
 C CURRENT DATA FILE NAME (UNIT=9 FORM. INPUT DEFAULT: -BLANK-)
 C IF A -BLANK- LINE IS GIVEN CURRENTS ARE NOT PROCESSED.
 C---------+---------+---------+---------+---------+---------+---------+---------
