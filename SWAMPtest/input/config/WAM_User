@@ -354,6 +354,7 @@ C----------
         dwd
 C =>  WIND DATA FILE NAME (UNIT=1 FORM. INPUT DEFAULT: NONE)
 C---------+---------+---------+---------+---------+---------+---------+---------
+C./input/wam/dwd
  ./input/wam/WIND_INPUT_2020.DAT
 C ./input/wam/WIND_INPUT.DAT
 C

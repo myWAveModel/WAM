@@ -502,9 +502,6 @@ IF ( LINE(2:17).NE.' ') THEN
   IF (IOS.NE.0) CALL ERROR_MESSAGE('INPUT_FILE_TYPE')
 END IF
 
-CALL F_NEW_DATA
-IF ( LINE(2:17).NE.' ') WIND_INPUT_FILE_IDENTIFIER = LINE(2:11)
-
 ! ---------------------------------------------------------------------------- !! End ModR05
 !                                                                              !
 !    14. MODEL FILES.                                                          !
@@ -517,22 +514,13 @@ CALL F_NEW_DATA
 IF ( LINE(2:80).NE.' ') FINE_INPUT_FILE_NAME = LINE(2:80)
 
 CALL F_NEW_DATA
-IF ( LINE(2:17).NE.' ') ICE_INPUT_FILE_IDENTIFIER = LINE(2:11)
-
-CALL F_NEW_DATA
 IF ( LINE(2:80).NE.' ') ICE_INPUT_FILE_NAME = LINE(2:80)
 
 CALL F_NEW_DATA
 IF ( LINE(2:80).NE.' ') PREPROC_OUTPUT_FILE_NAME = LINE(2:80)
 
 CALL F_NEW_DATA
-IF ( LINE(2:17).NE.' ') TOPO_INPUT_FILE_IDENTIFIER = LINE(2:11)
-
-CALL F_NEW_DATA
 IF ( LINE(2:80).NE.' ') TOPO_INPUT_FILE_NAME = LINE(2:80)
-
-CALL F_NEW_DATA
-IF ( LINE(2:17).NE.' ') CURRENT_INPUT_FILE_IDENTIFIER = LINE(2:11)
 
 CALL F_NEW_DATA
 IF ( LINE(2:80).NE.' ') CURRENT_INPUT_FILE_NAME = LINE(2:80)
