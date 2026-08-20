@@ -110,7 +110,7 @@ ELSE
    WRITE (IU06,*) ' +                                                  +'
    WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
-   CALL READ_WAM_NAMELIST (1, IOS) !! FIXME(Aparna): should be READ_WAM_NAMELIST (0, IOS) 
+   CALL READ_WAM_NAMELIST (0, IOS) !! Fixed by Aparna dlaparna7@github.com 
    IF (IOS.NE.0) THEN
       WRITE (IU06,*) ' ****************************************************'
       WRITE (IU06,*) ' *                                                  *'

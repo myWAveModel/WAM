@@ -822,7 +822,7 @@ SUBROUTINE WRITE_INT_PAR_OUTPUT (IU20)
 !     H.GUNTHER   GKSS           FEBRUARY 2002                                 !
 !     A.Behrens   MSC            November 2003   (Message passing)             !
 !     E. Myklebust               November 2004   MPI parallelization           !
-!                                                                              !
+!     L. A. Devulapalli DKRZ     August   2026   NETCDF Output                                                                    !
 !     PURPOSE.                                                                 !
 !     --------                                                                 !
 !                                                                              !

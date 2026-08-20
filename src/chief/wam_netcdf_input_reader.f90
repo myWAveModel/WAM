@@ -132,7 +132,6 @@ subroutine get_time_attributes(START_DATE)
   ! Get time variable id and variable data
   call check_status(nf90_inq_varid(NETCDF_FILE_ID, "time", var_ids(3)))
   call check_status(nf90_get_var(NETCDF_FILE_ID, var_ids(3), time))
-  WRITE(IU06,*) "Time dimension: " , ntime
   
   !Get time attributes - units 
   call check_status(nf90_get_att(NETCDF_FILE_ID, var_ids(3),"units", time_units_string)) 
@@ -140,14 +139,11 @@ subroutine get_time_attributes(START_DATE)
   
   ! Get frequency of data available
   input_frequency = time(2) - time(1)
-  WRITE(IU06,*) "delta t:" , input_frequency
-  WRITE(IU06,*) "shape of time_units:" , SHAPE(time_units)
  
   if(time_units == 'minutes'.OR. time_units == 'MINUTES') then
     input_frequency_sec = input_frequency * xmin
     time(:) = time(:) * xmin
   else if(time_units == 'hours' .OR. time_units == 'HOURS') then
-    WRITE(IU06,*) "Entered hours"
     input_frequency_sec = input_frequency * xhour
     time(:) = time(:) * xhour
   else if(time_units == 'days'.OR. time_units == 'DAYS') then
@@ -156,8 +152,6 @@ subroutine get_time_attributes(START_DATE)
   else
     input_frequency_sec = input_frequency
   end if
-  WRITE(IU06,*) "input_frequency_sec: " , input_frequency_sec
-  WRITE(IU06,*) "time_vector: ", time 
   
   ! Reading time units and converting to timestring from input file
 
@@ -199,7 +193,6 @@ subroutine get_time_attributes(START_DATE)
 
 
   if (first_time) then
-    WRITE(IU06,*) "Entered first time if condition"
     first_time =.false.
     CALL SET_WIND_TIMESTEPS(IN=input_frequency_sec, OUT=input_frequency_sec)
     if (irank ==1) then
@@ -244,16 +237,9 @@ subroutine read_wind_fields(CD_WIND_READ, WIND_INPUT_FILE_NAME)
   integer :: need_new_file
   need_new_file = 0
   
-  WRITE(IU06,*) "rank:", irank, "entering read_wind_fields, N_LON=", N_LON, "N_LAT=", N_LAT
-  writE(iu06,*) "!!!!!!!!!!!!!!!!!!!!"
-  writE(iu06,*) "!!!! IRANK : ", irank , " !!!!!!"
-  writE(iu06,*) "!!!!!!!!!!!!!!!!!!!!"
-  WRITE(IU06,*) "entering read_wind_fields"
-  
   if (irank == 1) then
    idx = get_index_matching_timestamp(CD_WIND_READ)
    WRITE(IU06,*) "First hit index: ", idx
-   if (idx == 0) need_new_file = 1
   end if !irank
 
   CALL MPI_Bcast(need_new_file, 1, MPI_INTEGER, 0, localcomm , ierr)
@@ -296,10 +282,7 @@ subroutine read_wind_fields(CD_WIND_READ, WIND_INPUT_FILE_NAME)
         call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(1), len=nt))
         call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(2), len=nlat_var))
         call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(3), len=nlon_var))
-        write(iu06,*) "wind_x_var_id(1,2,3): nt, nlat_var, nlon_var:" , nt, nlat_var, nlon_var
-        write(iu06,*) "n_lon, n_lat, ntime: ", N_LON, N_LAT, ntime
         call check_status(nf90_get_var(NETCDF_FILE_ID, wind_x_var_id, U_MAP, start=start, count=count))
-        WRITE(IU06,*) "wind var(U_MAP):", U_MAP
         exit
       end if
     END DO
@@ -311,10 +294,7 @@ subroutine read_wind_fields(CD_WIND_READ, WIND_INPUT_FILE_NAME)
         call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(1), len=nlon_var))
         call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(2), len=nlat_var))
         call check_status(nf90_inquire_dimension(NETCDF_FILE_ID, dimids(3), len=nt))
-        write(iu06,*) "wind_y_var_id: nt, nlat_var, nlon_var:" , nt, nlat_var, nlon_var
-        WRITE(IU06,*) "wind_variable:" , wind_variable_names_y_component(j)
         call check_status(nf90_get_var(NETCDF_FILE_ID, wind_y_var_id, V_MAP, start=start, count=count))
-        WRITE(IU06,*) "wind var(V_MAP):", V_MAP
         exit
       end if
     END DO
@@ -439,13 +419,6 @@ subroutine read_wind_header_data()
     CALL MPI_Bcast(delta_lat,     1, MPI_DOUBLE_PRECISION, 0, localcomm, ierr)
     CALL MPI_Bcast(lat_descending,1, MPI_LOGICAL,          0, localcomm, ierr)
  
-    WRITE(IU06,*) "rank:", irank, "N_LON=", N_LON, "N_LAT=", N_LAT
-    WRITE(IU06,*) "rank:", irank, "west=", west, "south=", south, "east=", east, "north=", north
-    WRITE(IU06,*) "rank:", irank, "delta_lon=", delta_lon, "delta_lat=", delta_lat   
-    
-    WRITE(IU06,*) "west, south, east, north: ", west, south, east, north 
-    WRITE(IU06,*) "dlon, dlat, nlon, nlat: " , delta_lon, delta_lat, N_LON, N_LAT
-    WRITE(IU06,*) 'types check: ', KIND(west), KIND(south), KIND(east), KIND(north), KIND(delta_lon), KIND(delta_lat)
     
     call SET_WIND_HEADER(WEST=west, SOUTH=south, EAST = east, NORTH=north, &
               D_LON=delta_lon, D_LAT=delta_lat, N_LON=N_LON, N_LAT=N_LAT)
