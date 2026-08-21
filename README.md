@@ -9,6 +9,7 @@ New in Cycle 7.1:
   - assimilation of 2D wave spectra (IASSI_SPECTRA = 1)   - kindly supported by the DAWN project
   - direct NetCDF4 output of integrated parameters        - kindly supported by the natESM project
   - NetCDF4 input of wind forcing (see constraints below) - kindly supported by the natESM project
+  - Improvement of MPI communication and scalability
 
 New in Cycle 7:
   - ST6 (BYDBR) physics (IPHYS = 2)
