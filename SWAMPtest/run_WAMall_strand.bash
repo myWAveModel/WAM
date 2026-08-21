@@ -128,7 +128,7 @@ else
     cp -ra WAM_Prot ${OUTDIR}/coarse/wam_prot.log
     rm WAM_Prot
 fi
-mv BLS* MAP* OUT* C0* CB* SCR* ${OUTDIR}/coarse/data/
+mv BLS* MAP* OUT* C0* CB* SCR* WAVE* ${OUTDIR}/coarse/data/
 # Nested Grids
 if [ $nofnest != 0 ]; then
     echo '    --> coarse'
@@ -146,14 +146,16 @@ if [ $nofnest != 0 ]; then
             cp -ra WAM_Prot ${OUTDIR}/nest${i}/wam_prot.log
             rm WAM_Prot
         fi
-        mv BLS* MAP* OUT* C0* CB* SCR* ${OUTDIR}/nest${i}/data/
+        mv BLS* MAP* OUT* C0* CB* SCR* WAVE* ${OUTDIR}/nest${i}/data/
         echo '    --> nest '$i
     done
 fi
-#
-#
 rm WAM_User
+#
 echo '    --> DONE.'
+#
+ncpreproc=0
+if [ $ncpreproc != 0 ]; then
 #
 # ===================================================================
 # 3i) ==>  WAM post-processing pnetcdf
@@ -186,6 +188,8 @@ fi
 rm NETCDF_User
 #
 echo '    --> DONE.'
+#
+fi
 #
 # ===================================================================
 # 3ii) ==>  WAM post-processing ptime
@@ -268,7 +272,7 @@ rsync -au ${OUTDIR} ${STOREDIR}/
 rsync -au ${INDIR}  ${STOREDIR}/
 rsync -au ${GRDDIR} ${STOREDIR}/
 #
-#rm -rf ${OUTDIR} ${GRDDIR} *.exe
+rm -rf ${OUTDIR} ${GRDDIR} *.exe
 #
 echo '    --> DONE.'
 #
