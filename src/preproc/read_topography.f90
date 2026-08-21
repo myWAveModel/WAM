@@ -172,7 +172,7 @@ DO K = 1,N_LAT
    DO I = 1,IMAX
       IA = 12*(I-1)+1
       IE = MIN(12*I,N_LON)
-      READ (IU08,trim(IFORM)) (D_MAP(L,K),AX(L),L=IA,IE)
+      READ (IU08,trim(IFORM),IOSTAT=IOS) (D_MAP(L,K),AX(L),L=IA,IE)
       IF (IOS.NE.0) THEN
          WRITE (IU06,*) ' *****************************************************'
          WRITE (IU06,*) ' *                                                   *'
