@@ -21,7 +21,7 @@ C
 C    START DATE        END DATE
 C--------------  --------------
 C 19780906060000  19780909060000   
- 20200101060000  20200104060000                                    
+ 20200101060000  20200104060000
 C
 C ------------------------------------------------------------------------------
 C
@@ -36,7 +36,7 @@ C----------
 C
 C ------------------------------------------------------------------------------
 C
-C           **** OPTIONS AND PARAMETERS FOR INITIAL SPECTRA   ****
+C           **** OPTIONS AND PARAMETERS FOR INITIAL SPECTRA ****
 C
 C     IOPTI   0 WIND INDEPENDENT VALUES.
 C             1 FETCH LAW AND ENERGY=0 IF WINDSPEED=0  (DEFAULT)
@@ -71,7 +71,7 @@ C    SHALLOW SHALLOW WATER RUN (DEFAULT); DEEP WATER RUN: string contains F or f
 C    REFRA_D DEPTH REFRACTION  : OFF (DEFAULT);       ON: string contains T or t
 C    REFRA_C CURRENT REFRACTION: OFF (DEFAULT);       ON: string contains T or t
 C    R_FACTOR REDUCTION DUE TO SUB-GRID FEATURES: 
-C                               OFF (DEFAULT);        ON: string contains T or t
+C                                OFF (DEFAULT);       ON: string contains T or t
 C    DECOMP  MPI DECOMPOSITION IS 1D (DEFAULT);       2D: string contains F or F
 C
 C  SPHER  SHALLOW  REFRA_D  REFRA_C R_FACTOR   DECOMP 
@@ -122,7 +122,7 @@ C
 CIDEL_RE U
 C------- -
        3 H
-C
+C     24 H
 C ------------------------------------------------------------------------------
 C
 C           **** COARSE OR FINE GRID ****
@@ -167,7 +167,7 @@ C     U        CHARACTER  TIME UNIT: M OR m MINUTE; H OR h HOUR; DEFAULT SECOND 
 C
 C IDELWO U   IDELWI U   IDELTO U   IDELTI U   IDELCO U   IDELCI U   IDELII U
 C------- -  ------- -  ------- -  ------- -  ------- -  ------- -  ------- -
-       6 H        6 H        6 H        6 H        6 H        6 H        6 H                                     
+       6 H        6 H        6 H        6 H        6 H        6 H        6 H
 C
 C ------------------------------------------------------------------------------
 C
@@ -184,7 +184,7 @@ C
 CIDELINT U  IDELSPT U  OT_STEP U
 C------- -  ------- -  ------- -
        3 H        3 H        6 H                          
-C
+C                            3 H
 C ------------------------------------------------------------------------------
 C
 C           **** OUTPUT AT GIVE TIMES ****
@@ -205,57 +205,58 @@ C ------------------------------------------------------------------------------
 C
 C           **** SELECTION OF OUTPUT DATA ****
 C
-C     P  PRINTER OUTPUT: T : DATA ARE PRINTED;  DEFAULT F : NO OUTPUT
-C     F  FILE OUTPUT:    F : NO OUTPUT;         DEFAULT T : OUTPUT
+C     P  PRINTER OUTPUT: T : DATA ARE PRINTED;      DEFAULT F : NO OUTPUT
+C     F  FILE OUTPUT:    F : NO OUTPUT;             DEFAULT T : OUTPUT
+C     N  NETCDF OUTPUT:  T : SERIAL NETCDF OUTPUT;  DEFAULT F : NO OUTPUT
 C
-CP F                                   P F
-C- -                                   - -
- F T   WIND SPEED U10                  F T   WIND DIRECTION
- F T   FRICTION VELOCITY               F T   DRAG COEFFICIENT
- F T   CHARNOCK PARAMETER              F T   WATER DEPTH
- F T   CURRENT SPEED                   F T   CURRENT DIRECTION
+CP F N                                  P F N
+C- - -                                  - - -
+ F T T  WIND SPEED U10                  F T T  WIND DIRECTION
+ F T F  FRICTION VELOCITY               F T F  DRAG COEFFICIENT
+ F T F  CHARNOCK PARAMETER              F T T  WATER DEPTH
+ F T T  CURRENT SPEED                   F T T  CURRENT DIRECTION
 C
- F T   SIGNIFICANT WAVE HEIGHT         F T   WAVE PEAK PERIOD
- F T   WAVE MEAN PERIOD                F T   WAVE TM1 PERIOD
- F T   WAVE TM2 PERIOD                 F T   WAVE DIRECTION
- F T   DIRECTIONAL SPREAD              F T   NORMALISED WAVE STRESS
+ F T T  SIGNIFICANT WAVE HEIGHT         F T T  WAVE PEAK PERIOD
+ F T T  WAVE MEAN PERIOD                F T T  WAVE TM1 PERIOD
+ F T T  WAVE TM2 PERIOD                 F T T  WAVE DIRECTION
+ F T T  DIRECTIONAL SPREAD              F T F  NORMALISED WAVE STRESS
 C
- F T   SEA SIGNIFICANT WAVE HEIGHT     F T   SEA PEAK PERIOD
- F T   SEA MEAN PERIOD                 F T   SEA TM1 PERIOD
- F T   SEA TM2 PERIOD                  F T   SEA DIRECTION
- F T   SEA DIRECTIONAL SPREAD          F F   DUMMY
+ F T T  SEA SIGNIFICANT WAVE HEIGHT     F T T  SEA PEAK PERIOD
+ F T F  SEA MEAN PERIOD                 F T F  SEA TM1 PERIOD
+ F T F  SEA TM2 PERIOD                  F T F  SEA DIRECTION
+ F T F  SEA DIRECTIONAL SPREAD          F F F  DUMMY
 C
- F T   SWELL SIGNIFICANT WAVE HEIGHT   F T   SWELL PEAK PERIOD
- F T   SWELL MEAN PERIOD               F T   SWELL TM1 PERIOD
- F T   SWELL TM2 PERIOD                F T   SWELL DIRECTION
- F T   SWELL DIRECTIONAL SPREAD        F T   ROUGHNESS LENGTH Z0
+ F T T  SWELL SIGNIFICANT WAVE HEIGHT   F T T  SWELL PEAK PERIOD
+ F T F  SWELL MEAN PERIOD               F T F  SWELL TM1 PERIOD
+ F T F  SWELL TM2 PERIOD                F T F  SWELL DIRECTION
+ F T F  SWELL DIRECTIONAL SPREAD        F T F  ROUGHNESS LENGTH Z0
 C
- F T   GODA PEAKEDNESS PARAMETER       F T   KURTOSIS
- F T   BENJAMIN-FEIR INDEX             F T   NORMALIZED MAXIMUM WAVE HEIGHT
- F T   MAXIMUM WAVE PERIOD             F T   PEAK FREQUENCY (INTERPOLATED)
- F T   PEAK DIRECTION                  F T   MEAN SQUARE SLOPE
+ F T F  GODA PEAKEDNESS PARAMETER       F T F  KURTOSIS
+ F T F  BENJAMIN-FEIR INDEX             F T F  NORMALIZED MAXIMUM WAVE HEIGHT
+ F T F  MAXIMUM WAVE PERIOD             F T F  PEAK FREQUENCY (INTERPOLATED)
+ F T F  PEAK DIRECTION                  F T F  MEAN SQUARE SLOPE
 C
- F T   FIRST SWELL SIG. WAVE HEIGHT    F T   FIRST SWELL MEAN PERIOD
- F T   FIRST SWELL DIRECTION           F T   SECOND SWELL SIG. WAVE HEIGHT
- F T   SECOND SWELL MEAN PERIOD        F T   SECOND SWELL DIRECTION
- F T   THIRD SWELL SIG. WAVE HEIGHT    F T   THIRD SWELL MEAN PERIOD
- F T   THIRD SWELL DIRECTION           F F   DUMMY
+ F T F  FIRST SWELL SIG. WAVE HEIGHT    F T F  FIRST SWELL MEAN PERIOD
+ F T F  FIRST SWELL DIRECTION           F T F  SECOND SWELL SIG. WAVE HEIGHT
+ F T F  SECOND SWELL MEAN PERIOD        F T F  SECOND SWELL DIRECTION
+ F T F  THIRD SWELL SIG. WAVE HEIGHT    F T F  THIRD SWELL MEAN PERIOD
+ F T F  THIRD SWELL DIRECTION           F F F  DUMMY
 C
- F F   RADIATION STRESS TENSOR SXX     F F   RADIATION STRESS TENSOR SYY
- F F   RADIATION STRESS TENSOR SXY     F F   DUMMY
- F F   X-COMP. WAVE FORCE              F F   Y-COMP. WAVE FORCE
- F F   X-COMP. STOKES DRIFT            F F   Y-COMP. STOKES DRIFT
+ F F F  RADIATION STRESS TENSOR SXX     F F F  RADIATION STRESS TENSOR SYY
+ F F F  RADIATION STRESS TENSOR SXY     F F F  DUMMY
+ F F F  X-COMP. WAVE FORCE              F F F  Y-COMP. WAVE FORCE
+ F F T  X-COMP. STOKES DRIFT            F F T  Y-COMP. STOKES DRIFT
 C
- F T   ENERGY FLUX TO OCEAN            F T   TOTAL ENERGY FLUX FROM WIND TO WAVES
- F T   X-COMP.MOMENTUM FLUX INTO OCEAN F T   Y-COMP. MOMENTUM FLUX INTO OCEAN
- F T   ENERGY FLUX INTO BOTTOM         F T   X-COMP. MOMENTUM FLUX INTO BOT.
- F T   Y-COMP.MOMENTUM FLUX INTO BOT.  F F   DUMMY
+ F T F  ENERGY FLUX TO OCEAN            F T F  TOTAL ENERGY FLUX FROM WIND TO WAVES
+ F T F  X-COMP.MOMENTUM FLUX INTO OCEAN F T F  Y-COMP. MOMENTUM FLUX INTO OCEAN
+ F T F  ENERGY FLUX INTO BOTTOM         F T F  X-COMP. MOMENTUM FLUX INTO BOT.
+ F T F  Y-COMP.MOMENTUM FLUX INTO BOT.  F F F  DUMMY
 C
- F T   CRMAX (TIME, FORRISTAL)         F T   HMAX (TIME, NAESS)
- F T   CRMAX (SPACE-TIME (STQD))       F T   HMAX (SPACE-TIME (STQD))
+ F T F  CRMAX (TIME, FORRISTAL)         F T F  HMAX (TIME, NAESS)
+ F T F  CRMAX (SPACE-TIME (STQD))       F T F  HMAX (SPACE-TIME (STQD))
 C
- F T   SPECTRA OF TOTAL SEA            F F   SEA SPECTRA
- F F   SWELL SPECTRA                   F F   DUMMY
+ F T -  SPECTRA OF TOTAL SEA            F F -  SEA SPECTRA
+ F F -  SWELL SPECTRA                   F F -  DUMMY
 C
 C-------------------------------------------------------------------------------
 C
@@ -277,17 +278,17 @@ C                          TEXTSTRING -DDD:MM:SS.SS OR +DDD:MM:SS.SS
 C
 C   XLONG         XLAT       NAME
 C------------- ------------- ---------+---------+
-    10.00         -9.50      Station 1 
-    10.00         -9.00      Station 2 
-    10.00         -8.50      Station 3 
-    10.00         -8.00      Station 4 
-    10.00         -7.50      Station 5 
-    10.00         -7.00      Station 6 
-    10.00         -5.50      Station 7
-    10.00         -5.00      Station 8
-    10.00         -4.50      Station 9 
-    10.00           .00      Station 10 
-    10.00          1.00      Station 11
+C    10.00         -9.50      Station 1 
+C    10.00         -9.00      Station 2 
+C    10.00         -8.50      Station 3 
+C    10.00         -8.00      Station 4 
+C    10.00         -7.50      Station 5 
+C    10.00         -7.00      Station 6 
+C    10.00         -5.50      Station 7
+C    10.00         -5.00      Station 8
+C    10.00         -4.50      Station 9 
+C    10.00           .00      Station 10 
+C    10.00          1.00      Station 11
     10.00          2.00      Station 12
     10.00          3.00      Station 13
      4.50          5.50      Station 14
@@ -308,7 +309,7 @@ C                         = 0  : OUTPUT EVERY IDELT STEPS
 C                         < 0  : NO OUTPUT  (DEFAULT)
 C     IDELFSC  INTEGER    > 0  : FILE SAVE TIME STEP OF RADIATION STRESS.
 C                         <= 0 : SAVE FILE EVERY OT_STEP STEPS (DEFAULT)
-C     U        CHARACTER  TIME UNIT: M OR m MINUTE; H OR h HOUR; DEFAULT SECOND.
+C     U        CHARACTER  TIME UNIT: M OR m MINUTE; H OR h HOUR; DEFAULT SECOND S.
 C
 CIDELSCR U  IDELFSC U
 C------- -  ------- -
@@ -317,7 +318,7 @@ C
 C           **** SELECTION OF SOURCE OUTPUT OUTPUT DATA ****
 C
 C     P  PRINTER OUTPUT: T : DATA ARE PRINTED;  DEFAULT F : NO OUTPUT
-C     F  FILE OUTPUT:    F : NO OUTPUT ,        DEFAULT T : OUTPUT
+C     F  FILE OUTPUT:    F : NO OUTPUT;         DEFAULT T : OUTPUT
 C
 CP F                                   P F
 C- -                                   - -
@@ -341,8 +342,17 @@ C    ALL THE FOLLOWING FILES CAN TO BE DEFINED BELOW. IF A LINE OF
 C    BLANKS IS GIVEN THE PROGRAM WILL USE STANDARD NAMES WHICH ARE
 C    DEFINED IN "WAM_USER_MODULE.f90".
 C
+C => NETCDF FILE IN CMEMS FORMAT (T: CMEMS FORMAT; DEFAULT F: NO CMEMS FORMAT)
+C-
+ T
+C => SELECTION OF INPUT FILE TYPE (DEFAULT 1 = ASCII; 2 = NETCDF)
+C    SEE THE GITHUB README FOR THE CONSTRAINTS REGARDING THE NETCDF INPUT FILE
+C INPUT_FILE_TYPE
+C----------------
+ 1
 C =>  WIND DATA FILE NAME (UNIT=1 FORM. INPUT DEFAULT: NONE)
 C---------+---------+---------+---------+---------+---------+---------+---------
+C./input/wam/dwd
  ./input/wam/WIND_INPUT_2020.DAT
 C ./input/wam/WIND_INPUT.DAT
 C
@@ -382,7 +392,8 @@ C (UNIT=70 UNFORM. OUT. DEFAULT CBO) ONLY USED IF COARSE = T
 C IF MORE THAN ONE NEST IS PROCESSED UNITS ARE 69+NESTNUMBER AND IN
 C THE IDENTIFIER THE 2 LAST CHARACTERS ARE REPLACED BY THE NESTNUMBER
 C---------+---------+---------+---------+---------+---------+---------+---------
-  
+
+C
 C
 C INTEGRATED PARAMETER FILE IDENTIFIER (UNIT=20 UNFORM. OUTPUT DEFAULT: MAP)
 C---------+---------+---------+---------+---------+---------+---------+---------
@@ -394,7 +405,6 @@ C---------+---------+---------+---------+---------+---------+---------+---------
 C
 C SOURCE FILE IDENTIFIER (UNIT=28 UNFORM. OUTPUT DEFAULT:SCR)
 C---------+---------+---------+---------+---------+---------+---------+---------
-C
  SCR
 C
 C DWD : AREA AND PATH FOR READYFILES
@@ -434,7 +444,7 @@ C------- --------
 C
 C ----------------------------------------------------------------------
 C
-C           **** WAM-MAX  OPTIONS  ****
+C           **** WAM-MAX  OPTIONS ****
 C
 C     WMDUR      Time window in seconds
 C     WMDX       xwidth in <UNITS?>
@@ -446,22 +456,22 @@ C-------  -------  -------
 C
 C ----------------------------------------------------------------------
 C
-C                   **** ASSIMILATION  OPTIONS  ****
+C                   **** ASSIMILATION  OPTIONS ****
 C
 C
-C	ALTIMETER AND SPECTRAL ASSIMILATION CAN BE SWITCHED ON TOGETHER AND
+C	ALTIMETER AND SPECTRA ASSIMILATION CAN BE SWITCHED ON TOGETHER AND
 C       INDVIDUALLY. IF THE USER WANTS TO ASSIMILATE BOTH ALTIMETER AND SPECTRA 
 C       TOGETHER IN THE SIMULATIONS, FIRST ALTIMETER DATA IS ASSIMILATED WITH 
 C       WAMASSI AND THEN SPECTRAL ASSIMILATION IS PERFORMED WITH SWIMAS. 
 C           
 C
 C
-C ++++++++++++++++++++++ SPECTRAL ASSIMILATION ++++++++++++++++++++++++++ !! SA2025
+C ++++++++++++++++++++++ SPECTRA ASSIMILATION ++++++++++++++++++++++++++ !! SA2025
 C
-C     IASSI_SPECTRA      1 FOR SPECTRAL ASSIMILATION,
+C     IASSI_SPECTRA      1 FOR SPECTRA ASSIMILATION,
 C                          OTHERWISE NO SPECTRA ASSIMILATION
 C
-C     SARCORDIA  MAXIMUM CORRELATION DISTANCE IN M FOR SPECTRAL ASSIMILATION
+C     SARCORDIA  MAXIMUM CORRELATION DISTANCE IN M FOR SPECTRA ASSIMILATION
 C     PPSARCF    PPSARCF*SARCORDIA IS THE MAXIMUM INFLUENCE DISTANCE 
 C     COEFPHI    COEFFICIENT FOR PHI IN OPTINT_SWIM
 C     MPARTSW    MAXIMUM NUMBER OF PARTITIONINGS (for arrays)
@@ -478,13 +488,13 @@ C-----------------  ----------  --------  --------
 C
 C          MPARTSW      LOWEST    ALEVEL      FCUT      
 C-----------------  ----------  --------  --------  
-                60       0.300       0.5     0.400
+                20       0.300       0.5     0.400
 C
 C        CDATSA          CDATSE  IDELSPE U
 C--------------  --------------  ------- -
  20200101120000  20200102000000        6 H  
 C
-C           **** SPECTRAL DATA INPUT FILE NAME ****
+C           **** SPECTRA DATA INPUT FILE NAME ****
 C
 C    ALL THE FOLLOWING FILES CAN TO BE DEFINED BELOW. IF A LINE OF
 C    BLANKS IS GIVEN THE PROGRAM WILL USE STANDARD NAMES WHICH ARE
@@ -513,19 +523,18 @@ C-----------------  -------  -------  -------
 C
 C           **** ASSIMILATION PERIOD AND TIME STEP ****
 C
-C     CDATAA   CHARACTER   START DATE  (YYYYMMDDHHMMSS)
+C     CDATAA   CHARACTER   START DATE (YYYYMMDDHHMMSS)
 C     CDATAE   CHARACTER   END   DATE (YYYYMMDDHHMMSS)
 C     IDELASS  INTERGER    ASSIMILATION TIMESTEP
 C
 C      --------   -----------------------------------------------
 C      DEMAND :   ASSIMILATION TIMES MUST BE AT THE END OF 
 C                 PROPAGATION TIMESTEP
-C      --------   -----------------------------------------------
 C
 C        CDATAA          CDATAE  IDELASS U
 C--------------  --------------  ------- -
 C 19780906090000  19780906120000        3 H
- 20200101060000  20200101120000        6 H  
+ 20200101090000  20200101120000        3 H  
 C
 C
 C    FG_OUTPUT   FIRST GUESS OUTPUT: string contains T or t
