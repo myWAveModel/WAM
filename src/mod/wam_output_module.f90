@@ -788,7 +788,7 @@ IF (CDTINTT.EQ.CDTPRO) THEN
 !
 !==> write ready file for output of integrated parameters
 !
-   if (ready_outf) then
+   if (ready_outf .and. irank==i_out_par) then
       call difdate (cdatea, cdtintt, ishift)
       ishift = ishift/3600
       if (ishift<0) ishift = ishift+12
