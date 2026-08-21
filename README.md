@@ -243,10 +243,10 @@ The content of the ref_output/ folder can accessed here:
 2. The maximum character length of the name of the input file including the path where it is stored can be 80 characters in the configuration file WAM_User. Input files can be specified as /path/to/file/ABC. 
 3. The temporal coverage of an input file should follow the common definition of a day. For example, 00:00 h timestamp should be included in the file of the same day.
 4. Currently, the algorithm only searches for valid variable names. 
-5. Valid variables  for the wind are listed below. This list can be extended in the future: 
-   5.1 x-component: u10, U10M, var165, U10
+5. Valid variables  for the wind are listed below. This list can be extended in the future:  
+   5.1 x-component: u10, U10M, var165, U10  
    5.2 y-component: v10, V10M, var166, V10  
-6. In WAM_User: 
+7. In WAM_User:  
    Select “2” under “SELECTION OF INPUT FILE TYPE (1 = ASCII; 2 = NETCDF)” to read the wind from a NetCDF input file.
 
 ################################################################################  
