@@ -110,7 +110,7 @@ ELSE
    WRITE (IU06,*) ' +                                                  +'
    WRITE (IU06,*) ' ++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
-   CALL READ_WAM_NAMELIST (1, IOS) !! FIXME(Aparna): should be READ_WAM_NAMELIST (0, IOS) 
+   CALL READ_WAM_NAMELIST (0, IOS) !! Fixed by Aparna dlaparna7@github.com 
    IF (IOS.NE.0) THEN
       WRITE (IU06,*) ' ****************************************************'
       WRITE (IU06,*) ' *                                                  *'
@@ -491,6 +491,17 @@ END DO
 
 CALL F_NEW_DATA
 CMEMS_OUTPUT_FLAG = LINE( 2: 2).EQ.'T' .OR. LINE( 2: 2).EQ.'t'
+
+! ----------------------------------
+!   13.5 INPUT FILE TYPE SELECTION
+! ----------------------------------
+
+CALL F_NEW_DATA
+IF ( LINE(2:17).NE.' ') THEN
+  READ(LINE( 2:2),'(I2)',IOSTAT=IOS) INPUT_FILE_TYPE
+  IF (IOS.NE.0) CALL ERROR_MESSAGE('INPUT_FILE_TYPE')
+END IF
+
 ! ---------------------------------------------------------------------------- !! End ModR05
 !                                                                              !
 !    14. MODEL FILES.                                                          !
@@ -644,6 +655,7 @@ IF (SCAN(LINE(2:18),'1').GT.0) THEN
 ELSE
    assimilation_flag_altimeter = 0        
 END IF    
+
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
 !    16. TRANSFER USER PARAMETER INTO MODULES.                                 !

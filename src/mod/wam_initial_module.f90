@@ -39,6 +39,8 @@ USE WAM_SOURCE_MODULE,     ONLY:  &
                                      !! COEFFICIENTS FOR SHALLOW WATER.
 use wam_special_module,    only:  &
 &       chready                      !! wait for wind/ice files 
+
+USE WAM_USER_MODULE,        ONLY: INPUT_FILE_TYPE, WIND_INPUT_FILE_NAME
     
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
@@ -162,7 +164,6 @@ LOGICAL :: ERROR,gotfield  !! ModR04: new gotfield
 !                                                                              !
 !     1. ALLOCATE ARRAYS.                                                      !
 !        ----------------                                                      !
-
 IF (ALLOCATED(U10   )) DEALLOCATE(U10  )
 IF (ALLOCATED(UDIR  )) DEALLOCATE(UDIR )
 IF (ALLOCATED(USTAR )) DEALLOCATE(USTAR)
@@ -227,7 +228,7 @@ END IF
 !IF(USE_OASIS_CURR_IN)CALL WAM_OASIS_REC_CURRENT(cdatea,gotfield)  !! ModR04, ModR07
 
 IF (COLDSTART) THEN
-   CALL PREPARE_COLDSTART
+   CALL PREPARE_COLDSTART(INPUT_FILE_TYPE, WIND_INPUT_FILE_NAME)
    IF (ITEST.GE.2) WRITE(IU06,*) '    SUB. PREPARE_START: PREPARE_COLDSTART DONE'
 ELSE
    CALL CONNECT_RESTART
@@ -440,7 +441,7 @@ END IF
 IF (ITEST.GE.3) THEN
    WRITE (IU06,*) '        NEXT CURRENT DATE IS CD_CURR_NEW = ', CD_CURR_NEW
 END IF
-
+WRITE(IU06,*) "Exiting prepare_start with IDELWO, IDELWI: " , IDELWO, IDELWI
 END SUBROUTINE PREPARE_START
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !

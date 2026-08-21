@@ -89,6 +89,8 @@ USE WAM_FILE_MODULE,   ONLY: IU06, FILE06
 use wam_mpi_module,    only: pelocal, petotal, nprevious, nnext,               &
 &                            irank, extime, comtime, localcomm                  !! ModR04: Include OASIS
 USE WAM_GENERAL_MODULE,ONLY: ABORTCASE  !! ALSO TERMINATE MPI(1) OR OASIS(2)    !! ModR04: Include OASIS
+use wam_netcdf_input_reader, only: close_netcdf_file
+USE WAM_USER_MODULE,   ONLY: INPUT_FILE_TYPE
 
 IMPLICIT NONE 
 !INCLUDE 'mpif.h' !! ModR08
@@ -158,7 +160,9 @@ write (iu06,*)
 DO WHILE (CDTPRO<CDATEE)
    CALL WAVEMDL
 END DO
-     
+
+IF (INPUT_FILE_TYPE == 2) CALL close_netcdf_file()
+
 TIME = MPI_WTIME()-TIME0
 IF(use_oasis)THEN                !! ModR04: Include OASIS
   CALL Wam_oasis_terminate(ierr)
@@ -172,7 +176,7 @@ if (ierr==0) then
 else
    write (iu06,*) ' +++ error : finalize MPI ! '
 endif
- 
+
 ! ---------------------------------------------------------------------------- !
 !
 !*    3.  TERMINATE PROTOCOL.

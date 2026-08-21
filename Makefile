@@ -152,9 +152,12 @@ $(OBJDIR)/preproc_module.o \
 $(OBJDIR)/wam_output_module.o \
 $(OBJDIR)/wam_coldstart_module.o \
 $(OBJDIR)/wam_restart_module.o \
-$(OBJDIR)/wam_initial_module.o \
+$(OBJDIR)/wam_netcdf_input_reader.o \
 $(OBJDIR)/wam_user_module.o \
+$(OBJDIR)/wam_initial_module.o \
 $(OBJDIR)/wam_assi_module.o \
+\
+$(OBJDIR)/wam_wind_implementation_submodule.o\
 \
 $(OBJDIR)/read_topo_input.o \
 $(OBJDIR)/chief.o \

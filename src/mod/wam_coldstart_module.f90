@@ -125,7 +125,7 @@ CONTAINS
 !                                                                              !
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 
-SUBROUTINE PREPARE_COLDSTART
+SUBROUTINE PREPARE_COLDSTART(input_filetype, wind_input_file_name)
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -157,6 +157,9 @@ SUBROUTINE PREPARE_COLDSTART
 !     ----------------                                                         !
 USE WAM_OASIS_MODULE,	ONLY:	USE_OASIS_WIND_IN !! ModR04: Include OASIS
 
+integer, intent(in):: input_filetype 
+character(len=80), intent(in) :: wind_input_file_name
+
 REAL, PARAMETER :: ZDP=2./PI
 
 ! ---------------------------------------------------------------------------- !
@@ -176,7 +179,8 @@ CDCA    = ' '     !! CURRENTS
 
 IF(.not.USE_OASIS_WIND_IN)THEN !! ModR04: Include OASIS
    CDA = CDATEA
-   CALL WAM_WIND (u10, udir, CDA)
+   write(iu06,*) "WAM_WIND BEING CALLED FROM COLDSTART"
+   CALL WAM_WIND (u10, udir, CDA, input_filetype, wind_input_file_name)
 END IF
 
 IF (ITEST.GE.3) THEN

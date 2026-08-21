@@ -98,6 +98,8 @@ subroutine create_lon_lat_arrays()
   latitude_grid = latitude_grid/M_DEGREE_R
 
 end subroutine
+
+!FIXME(Aparna) : Change function name to make it more meaningful
 subroutine create_dimensions()
 
   character(len=100)   :: long_name_int_params

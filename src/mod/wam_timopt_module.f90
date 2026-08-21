@@ -393,11 +393,11 @@ subroutine time_conversion(time_vector,time_string)
 
   IMPLICIT NONE
 
-  CHARACTER(len=800) , intent(in)    :: time_string !! CDTPRO - Propagation time
-  REAL*8, intent(out) :: time_vector !! time value seconds since 1950-01-01 
+  CHARACTER(len=14) , intent(in)    :: time_string !! any 14 character time string 
+  REAL(kind=8), intent(out) :: time_vector !! time value seconds since 1950-01-01 
   CHARACTER(len=800) :: CDUMMY
   INTEGER :: MDAYS,yy,mo,RYY,RMO,RDY,EYY,EMO,EDY,RHH,RMM,RSS
-  REAL*8  :: RRC, REC, xhour, xmin
+  REAL(KIND=8)  :: RRC, REC, xhour, xmin
   xhour = 3600.
   xmin = 60
 

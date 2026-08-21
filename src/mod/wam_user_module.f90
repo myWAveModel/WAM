@@ -99,6 +99,7 @@ USE WAM_FILE_MODULE,             ONLY: IU05, FILE05, IU06
 USE WAM_OASIS_MODULE,            ONLY: USE_OASIS_ELEV_IN,USE_OASIS_CURR_IN     !! ModR04: Include OASIS
 USE WAM_OUTPUT_PARAMETER_MODULE, ONLY: NOUT_P,NOUT_S,NOUT_SCR,              &  !! ModR05: Include SRC-OUT
 &                                      CMEMS_OUTPUT_FLAG 
+USE wam_netcdf_input_reader, ONLY: read_wind_init
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
 !                                                                              !
 !     C. MODULE VARIABLES.                                                     !
@@ -163,6 +164,8 @@ CHARACTER (LEN=1)  :: PROPAGATION_TIMESTEP_UNIT
 INTEGER            :: SOURCE_TIMESTEP
 CHARACTER (LEN=1)  :: SOURCE_TIMESTEP_UNIT
 
+!----------------------------------------------------------------------------- !
+INTEGER            :: INPUT_FILE_TYPE
 ! ---------------------------------------------------------------------------- !
 
 INTEGER            :: RESTART_SAVE_TIMESTEP
@@ -192,7 +195,7 @@ INTEGER            :: WIND_OUTPUT_TIMESTEP
 CHARACTER (LEN=1)  :: WIND_OUTPUT_TIMESTEP_UNIT
 INTEGER            :: WIND_INPUT_FILE_UNIT
 CHARACTER (LEN=80) :: WIND_INPUT_FILE_NAME
-
+CHARACTER (LEN=10)  :: WIND_INPUT_FILE_IDENTIFIER
 ! ---------------------------------------------------------------------------- !
 
 INTEGER            :: TOPO_INPUT_TIMESTEP
@@ -201,7 +204,7 @@ INTEGER            :: TOPO_OUTPUT_TIMESTEP
 CHARACTER (LEN=1)  :: TOPO_OUTPUT_TIMESTEP_UNIT
 INTEGER            :: TOPO_INPUT_FILE_UNIT
 CHARACTER (LEN=80) :: TOPO_INPUT_FILE_NAME
-
+CHARACTER (LEN=10)  :: TOPO_INPUT_FILE_IDENTIFIER
 ! ---------------------------------------------------------------------------- !
 
 INTEGER            :: CURRENT_INPUT_TIMESTEP
@@ -210,14 +213,14 @@ INTEGER            :: CURRENT_OUTPUT_TIMESTEP
 CHARACTER (LEN=1)  :: CURRENT_OUTPUT_TIMESTEP_UNIT
 INTEGER            :: CURRENT_INPUT_FILE_UNIT
 CHARACTER (LEN=80) :: CURRENT_INPUT_FILE_NAME
-
+CHARACTER (LEN=10)  :: CURRENT_INPUT_FILE_IDENTIFIER
 ! ---------------------------------------------------------------------------- !
 
 INTEGER            :: ICE_INPUT_TIMESTEP
 CHARACTER (LEN=1)  :: ICE_INPUT_TIMESTEP_UNIT
 INTEGER            :: ICE_INPUT_FILE_UNIT
 CHARACTER (LEN=80) :: ICE_INPUT_FILE_NAME
-
+CHARACTER (LEN=10)  :: ICE_INPUT_FILE_IDENTIFIER
 ! ---------------------------------------------------------------------------- !
 
 INTEGER            :: PARAMETER_OUTPUT_TIMESTEP
@@ -798,14 +801,16 @@ CALL SET_B_INPUT_FILE  (NAME=FINE_INPUT_FILE_NAME,                             &
 &                       UNIT=FINE_INPUT_FILE_UNIT)
 
 ! ---------------------------------------------------------------------------- !
-
-CALL CHANGE_TO_SECONDS (WIND_INPUT_TIMESTEP, WIND_INPUT_TIMESTEP_UNIT)
-CALL CHANGE_TO_SECONDS (WIND_OUTPUT_TIMESTEP, WIND_OUTPUT_TIMESTEP_UNIT)
-CALL SET_WIND_TIMESTEPS (IN=WIND_INPUT_TIMESTEP,                               &
-&                        OUT=WIND_OUTPUT_TIMESTEP)
-CALL SET_WIND_FILE (NAME=WIND_INPUT_FILE_NAME,                                 &
-&                    UNIT=WIND_INPUT_FILE_UNIT)
-
+IF(INPUT_FILE_TYPE == 2) THEN
+  CALL read_wind_init(START_DATE, WIND_INPUT_FILE_NAME)
+ELSE
+  CALL CHANGE_TO_SECONDS (WIND_INPUT_TIMESTEP, WIND_INPUT_TIMESTEP_UNIT)
+  CALL CHANGE_TO_SECONDS (WIND_OUTPUT_TIMESTEP, WIND_OUTPUT_TIMESTEP_UNIT)
+  CALL SET_WIND_TIMESTEPS (IN=WIND_INPUT_TIMESTEP,                               &
+  &                        OUT=WIND_OUTPUT_TIMESTEP)
+  CALL SET_WIND_FILE (NAME=WIND_INPUT_FILE_NAME,                                 &
+  &                    UNIT=WIND_INPUT_FILE_UNIT)
+END IF
 ! ---------------------------------------------------------------------------- !
 
 CALL CHANGE_TO_SECONDS (TOPO_INPUT_TIMESTEP, TOPO_INPUT_TIMESTEP_UNIT)
