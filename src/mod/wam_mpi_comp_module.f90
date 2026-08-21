@@ -1526,8 +1526,8 @@ TYPE(MPI_Status),  dimension(ngbtope+ngbfrompe) :: istatus !! ModR08: Integer->T
 !integer :: istatus(MPI_STATUS_SIZE,ngbtope+ngbfrompe)     !! ModR08
 TYPE(MPI_Request), dimension(ngbtope+ngbfrompe) :: ireq    !! ModR08: Integer->TYPE(MPI_Request)
 
-real, allocatable :: zcombufs(:,:)
-real, allocatable :: zcombufr(:,:)
+real, allocatable, save :: zcombufs(:,:)
+real, allocatable, save :: zcombufr(:,:)
 
 ! ---------------------------------------------------------------------------- !
 
@@ -1537,8 +1537,8 @@ extime = MPI_WTIME()-extime
 ktag = 1
 
 nbufmax = MAX(ntopemax,nfrompemax)*kl*ml
-allocate (zcombufs(nbufmax,ngbtope))
-allocate (zcombufr(nbufmax,ngbfrompe))
+if (.not.allocated(zcombufs)) allocate (zcombufs(nbufmax,ngbtope))
+if (.not.allocated(zcombufr)) allocate (zcombufr(nbufmax,ngbfrompe))
 
 ! ---------------------------------------------------------------------------- !
 !
@@ -1626,9 +1626,6 @@ do ingb = 1, ngbfrompe
    enddo
 enddo
 
-deallocate (zcombufs)
-deallocate (zcombufr)
-
 extime = MPI_WTIME()-extime
 
 end subroutine mpi_exchng
@@ -1692,8 +1689,8 @@ TYPE(MPI_Status),  dimension(ngbtope+ngbfrompe) :: istatus !! ModR08: Integer->T
 !integer :: istatus(MPI_STATUS_SIZE,ngbtope+ngbfrompe)     !! ModR08
 TYPE(MPI_Request), dimension(ngbtope+ngbfrompe) :: ireq    !! ModR08: Integer->TYPE(MPI_Request)
 
-real, allocatable :: zcombufs(:,:)
-real, allocatable :: zcombufr(:,:)
+real, allocatable, save :: zcombufs(:,:)
+real, allocatable, save :: zcombufr(:,:)
 
 ! ---------------------------------------------------------------------------- !
 
@@ -1702,8 +1699,8 @@ IF (petotal.LE.1) RETURN
 extime = MPI_WTIME()-extime
 
 nbufmax = MAX(ntopemax,nfrompemax)
-allocate (zcombufs(nbufmax,ngbtope))
-allocate (zcombufr(nbufmax,ngbfrompe))
+if (.not.allocated(zcombufs)) allocate (zcombufs(nbufmax,ngbtope))
+if (.not.allocated(zcombufr)) allocate (zcombufr(nbufmax,ngbfrompe))
 
 ! ---------------------------------------------------------------------------- !
 !
@@ -1783,9 +1780,6 @@ do ingb = 1, ngbfrompe
       fl(ij) = zcombufr(kcount,ingb)
    enddo
 enddo
-
-deallocate (zcombufs)
-deallocate (zcombufr)
 
 extime = MPI_WTIME()-extime
 
@@ -1947,9 +1941,8 @@ real, dimension (max_nest,n_nest), intent(out) :: depthbc !! depth at
 integer :: maxlength, ngou, ij, k, m, ip, i, ij1
 integer :: kcount, ierr, ir, isc !, istatus(MPI_STATUS_SIZE) !! ModR08
 TYPE(MPI_Status)                           :: istatus        !! ModR08: Integer->TYPE(MPI_Status)
-TYPE(MPI_Request),allocatable,dimension(:) :: ireq           !! ModR08: Integer->TYPE(MPI_Request)
-real, allocatable, dimension (:)  :: zcombufs
-real, allocatable, dimension (:,:):: zcombufr
+real, allocatable, dimension (:), save :: zcombufs
+real, allocatable, dimension (:), save :: zcombufr
 
 ! ---------------------------------------------------------------------------- !
 
@@ -1975,7 +1968,7 @@ if (irecv==0.or.petotal==1) then
    enddo
 
 else if (irank/=irecv) then
-   allocate(zcombufs(maxlength))
+   if (.not.allocated(zcombufs)) allocate(zcombufs(maxlength))
 
 !*    1.1 send to the process that gathers the whole field
 !         ------------------------------------------------
@@ -2010,30 +2003,17 @@ else if (irank/=irecv) then
       endif
    endif
 
-   deallocate (zcombufs)
 else
 
-!*    1.2.1  receive contribution to the field from the other processes
+!*    1.2.1  count expected receives and allocate single receive buffer
 !            ----------------------------------------------------------
 !
-   allocate(zcombufr(maxlength,petotal))
-   allocate(ireq(petotal))
+   if (.not.allocated(zcombufr)) allocate(zcombufr(maxlength))
    isc=0
-   ireq=MPI_REQUEST_NULL
    do ip=1,petotal 
       if (ip==irecv) cycle
       if (sum(nbounc_ga(ip,:))==0) cycle
       isc=isc+1
-
-      call MPI_iRecv(zcombufr(1,ip), maxlength, MPI_REAL, ip-1, itag, &
-&                   localcomm, ireq(ip), ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
-      
-      if (ierr/=0) then
-         write (iu06,*) ' +++ error: Sub. mpi_gather_bound'
-         write (iu06,*) ' +++ error: MPI_irecv, ierr = ', ierr
-         call abort1
-      endif
-
    enddo
 
 !     1.2.2  contribution from receiving process
@@ -2052,37 +2032,36 @@ else
       enddo
    enddo
 
-!*    1.2.1  receive contribution to the field from the other processes
-!            ----------------------------------------------------------
+!*    1.2.3  receive from other processes sequentially using MPI_ANY_SOURCE
+!            --------------------------------------------------------------
 !
    do ip=1,isc
-      call MPI_Waitany(petotal, ireq, ir, istatus, ierr)
+      call MPI_Recv(zcombufr, maxlength, MPI_REAL, MPI_ANY_SOURCE, itag, &
+&                  MPI_COMM_WORLD, istatus, ierr)
       if (ierr/=0) then
          write (iu06,*) ' +++ error: Sub. mpi_gather_bound'
-         write (iu06,*) ' +++ error: MPI_waitany, ierr = '
+         write (iu06,*) ' +++ error: MPI_recv, ierr = ', ierr
          call abort1
       endif
+      ir = istatus%MPI_SOURCE + 1
 !
 !*    decode buffer
 !
       kcount = 0
       do i = 1,n_nest
-         do ngou=1,nbounc_ga(ir,I)
+         do ngou=1,nbounc_ga(ir,i)
             ij = ngouc_ga(ngou,ir,i)
             kcount = kcount+1
-            depthbc(ngou,i) = zcombufr(kcount,ir)
+            depthbc(ngou,i) = zcombufr(kcount)
             do m=1,ml
                do k=1,kl
                   kcount = kcount+1
-                  fbc(ij,k,m,i) = zcombufr(kcount,ir)
+                  fbc(ij,k,m,i) = zcombufr(kcount)
                enddo
             enddo
          enddo
       enddo
    enddo
-
-   deallocate(ireq)
-   deallocate (zcombufr)
 endif
     
 comtime = MPI_WTIME()-comtime
