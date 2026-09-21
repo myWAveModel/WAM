@@ -1,0 +1,680 @@
+      PROGRAM FILTRE_SAR
+C
+C--------------------------------------------------------------------
+C
+C*
+C
+C	L. AOUF	(AOUT 2010)		METEO FRANCE
+C
+C     PURPOSE.
+C     --------
+C
+C       COLOCALISATION DES DONNEES ASAR L2 ET PREPARTION POUR
+C       L'ASSIMILATION. LES SPECTRES EN ENTREE ONT UNE DIMENSION
+C       DE 24 DIRECTIONS ET 24 FREQUENCES. ON A ADAPTE LES SPECTRES
+C       EN SORTIE AU MODELE MFWAM (30x24)
+C
+C**   INTERFACE.
+C     ----------
+C
+C
+C     METHOD.
+C     -------
+C
+C        NONE
+C
+C      EXTERNALS.
+C      ----------
+C
+C         READSAT  - READ A MEASUREMENT.
+C
+C-----------------------------------------------------------------------
+C	*PARAMETER*  FOR ARRAY DIMENSIONS.
+C
+C
+C ----------------------  SWAMP SETUP ----------------------------------
+      PARAMETER (NDAT =zz, NGX = 41, NGY=41, nb=40000, NF=25,
+     &  ND=24)
+C
+C
+C
+      CHARACTER*10 IDTG, IDATEA, IDATEE, IDTPRO, IDTRES,
+     &             IDTINTT, IDTINTS, IDTSPT, IDTSPS
+      CHARACTER*10 DATEF(NDAT), DATESTR
+      CHARACTER*18 FICH
+      CHARACTER*20 FMT_STR
+      DATA DATESTR /'yymmddhhmm'/
+C ----------------------------------------------------------------------
+
+      PARAMETER(IDELWO=12000)
+
+C ----------------------  SWAMP SETUP -----------------------------------
+      DATA XDELLA, XDELLO,AMOSOP,AMONOP,AMOWEP,AMOEAP /0.500,0.500,
+     1     -9.500,10.500,0.000,20.000/
+
+
+      CHARACTER*10 BEGINDT,ENDDT,IDATE,IDATEO
+      CHARACTER*12 FDATE, FDATE1, HOUR
+      INTEGER IDIFF,IDIFF1,IDIFF2, INDQC
+      DIMENSION XRLAT(NGX,NGY), XRLON(NGX,NGY)
+      REAL*8 LONGG(NGX), LATG(NGY), DIFLO, DIFLA, RLATG, RLONG
+      REAL*8 XAD, XED, RLON, RLAT
+      REAL*8 US, CUT, NVI, RA, TRA, e2, f2, th2, h2
+      REAL*8 SP(NF,ND), XRLA(NB), XRLO(NB), SP2(ND,NF)
+      character(len=14)  :: CUR_HOUR, PREV_HOUR
+      logical :: first
+C
+C*     VARIABLE     TYPE     PURPOSE.
+C      --------     ----     --------
+C
+C     *BEGINDT*     INTEGER  BEGINNING DATE OF THE TIME WINDOW
+C                            DURING WHICH DATA ARE USED FOR ANALYSIS.
+C     *ENDDT*       INTEGER  END DATE OF THE TIME WINDOW
+C                            DURING WHICH DATA ARE SAVE FOR ANALYSIS.
+C
+C ----------------------------------------------------------------------
+C
+C
+      open(1,file='SWI_WV1')
+
+      first   = .true.
+      iunit = 10
+
+
+! 1. READ THE HEADER 
+
+ 3000 continue
+      read(1,1500,end=4500) FDATE, RLON, RLAT, US, CUT, NVI, RA, TRA
+ 1500 FORMAT(A12,7f10.3)
+
+      WRITE(FMT_STR, "(A,I0,A)") '(', ND, 'F8.3)'
+
+
+! 1.1. FIND THE COORDINATES INSIDE OF THE DOMAIN
+
+      if ((rlat.ge.amosop .and. rlat.le.amonop) .and.  
+     &         (rlon.ge.amowep .and. rlon.le.amoeap)) then
+        print *, "INSIDE OF DOMAIN ", 'lat ', rlat, 'lon ', rlon    	
+	goto 2000
+      else
+        DO II=1,NF
+          READ(1,FMT_STR,END=4500) (SP(II,JJ),JJ=1,ND)
+        ENDDO        
+        goto 3000
+      endif
+
+
+! 1.2. READ SPECTRA (INSIDE THE DOMAIN)
+		
+ 2000 CONTINUE
+      DO II=1,NF
+        READ(1,FMT_STR,END=4500) (SP(II,JJ),JJ=1,ND)
+      ENDDO
+
+! 1.3. OMIT DATA IF HS < 0.1
+
+      IDATE=FDATE(3:12)
+      IF (RLON.LT.0.) RLON=RLON+360
+      call mean_pars15 (sp, e2, f2, th2)
+      h2=4*sqrt(e2)
+      if (h2.le.0.1) then
+        ioo=ioo+1
+        write(*,*) 'TEST spectre nul  ', h2, FDATE, RLON, RLAT
+        goto 3000
+      endif
+
+! 1.4. ADJUST DATE AND CREATE HOURLY FILES
+
+       CUR_HOUR = FDATE(1:10) // '0000'
+       if (first .or. CUR_HOUR.NE.PREV_HOUR) then
+       	  if (.not. first) close(iunit)
+
+   	  write(fich,'("SWI",A)') CUR_HOUR
+   	  open(iunit, file=trim(fich), status='unknown')
+
+   	  PREV_HOUR = CUR_HOUR
+	  first = .false.
+       endif
+
+
+
+C
+C ----------------------------------------------------------------------
+C
+C*    2. INITIALIZE ARRAYS AND COUNTERS.
+C        -------------------------------
+C
+      ICOUNT=0
+      ICOUNTT=0
+      ICOUNTD=0
+      DO 2001 J=1,NGY
+         DO 2002 I=1,NGX
+		XRLAT(I,J)= 0.
+		XRLON(I,J)= 0.
+ 2002    CONTINUE
+ 2001 CONTINUE
+	
+C
+      DO I=1,NGX
+      	LONGG(I)=(I-1)*XDELLO
+      ENDDO
+      
+      DO I=1,NGY
+      	LATG(I)=AMONOP-(I-1)*XDELLA
+      ENDDO
+
+C ----------------------------------------------------------------------
+C
+C*    3. READ THE MEASUREMENT TAPE AND CUMULATE THE DATA ON GRID POINTS.
+C        ---------------------------------------------------------------
+C
+
+      ICOUNTD = ICOUNTD+1
+C     CHECK DATE.
+C      CALL DIFDATE(IDATE,BEGINDT,IDIFF1)
+C      CALL DIFDATE(ENDDT,IDATE,IDIFF2)
+C      IF (IDIFF1.GT.0) GOTO 3000
+C      IF (IDIFF2.LE.0) THEN
+
+C     DATE IS INSIDE THE TIME WINDOW THE INDECES ARE COMPUTED.
+
+      ICOUNTT = ICOUNTT+1
+	IF (RLON .GT. 180.) RLON = RLON - 360.
+C        XI = MOD(RLON-AMOWEP+720.,360.)  ! GLOBAL SETUP
+	XI = RLON - AMOWEP                ! REGIONAL SETUP
+        I = NINT(XI/XDELLO) + 1
+C        IF (I.EQ.NGX+1) I = 1            ! GLOBAL SETUP
+        J = NGY-NINT((RLAT-AMOSOP)/XDELLA)
+
+	IF (I.LT.1 .OR. I.GT.NGX) GOTO 12
+
+C
+C     IF THE INDECES ARE INSIDE THE GRID THE MEASUREMENT IS CUMULATED
+C
+      RLONG=0.01*ANINT(100*RLON)
+      DO IG=1,NGX
+        DIFLO=LONGG(IG)-RLONG
+        XED=XDELLO/2
+        IF (ABS(DIFLO).LE.XED) THEN
+          XRLON(I,J)=LONGG(IG)
+	  XRLO(IP)=LONGG(IG)
+          GOTO 12
+        ENDIF
+      ENDDO
+ 
+
+   12 CONTINUE
+
+      RLATG=0.01*ANINT(100*RLAT)
+      DO IG=1,NGY
+        XAD=XDELLO/2
+        DIFLA=LATG(IG)-RLATG
+        if (ABS(DIFLA).LE.XAD) then
+          XRLAT(I,J)=LATG(IG)
+          XRLA(IP)=LATG(IG)
+          GOTO 13
+        ENDIF
+      ENDDO
+   13 CONTINUE
+
+      FDATE1(1:2) = FDATE(1:2)
+      FDATE1(3:12) = CUR_HOUR(3:12)    
+	      
+      do iv=1,nf
+        do iw=1,nd
+          sp2(iw,iv)=sp(iv,iw)
+        enddo
+      enddo
+
+      call mean_pars15 (sp2, e2, f2, th2)
+      h2=4*sqrt(e2)
+      
+      if (h2.le.0.02) then
+        ioo=ioo+1
+        write(*,*) 'TEST spectre nul  ', h2
+      endif
+
+
+
+      WRITE(IUNIT,1500) FDATE1, RLON, RLAT, US, RA, CUT, NVI,
+     &			TRA
+
+        DO II=1,NF
+          WRITE(IUNIT,FMT_STR) (SP(II,JJ),JJ=1,ND)
+        ENDDO
+
+      IP=IP+1
+      GOTO 3000
+      CLOSE(IUNIT)
+
+      write(*,*) 'test nb of spectra ', ip-1
+      write(*,*) 'nb of spectra zero', ioo-1
+      CALL INCDATE(DATESTR,IDELWO)
+
+ 4500 CONTINUE
+      STOP
+      END
+	
+      SUBROUTINE INCDATE(DATE,ISHIFT)
+
+C ----------------------------------------------------------------------
+C
+C**** *INCDATE* - TO UPDATE DATE TIME GROUP
+C
+C     L. BERTOTTI, P.JANSSEN.
+C
+C     H. GUNTHER   ECMWF  NOVEMBER 1989    NEGATIVE INCREMENTS.
+C
+C*    PURPOSE.
+C     --------
+C
+C       UPDATING DATE TIME GROUP.
+C
+C**   INTERFACE.
+C     ----------
+C
+C       *CALL* *INCDATE (IDATE,ISHIFT)*
+C         *IDATE*  INTEGER - DATE TIME GROUP (YYMMDDHHMM)
+C         *ISHIFT* INTEGER - TIME INCREMENT IN SECONDS, WHERE
+C                            ABS (ISHIFT) HAS TO BE LESS THEN 1 YEAR
+C
+C     METHOD.
+C     -------
+C
+C       NONE.
+C
+C     EXTERNALS.
+C     ----------
+C
+C       NONE.
+C
+C     REFERENCES.
+C     -----------
+C
+C       NONE.
+C
+C ----------------------------------------------------------------------
+C
+      CHARACTER*10 DATE
+      DIMENSION MON(12)
+C
+      DATA MON /31,28,31,30,31,30,31,31,30,31,30,31/
+C
+C ----------------------------------------------------------------------
+C
+C*    1.0 SPLITE DATE TIME GROUP INTO MINUTE, HOUR, DAY, MONTH, YEAR.
+C         -----------------------------------------------------------
+C
+
+      READ(DATE,5) IYEAR,MONTH,IDAY,IHOUR,MINUT
+      IF(MOD(IYEAR,4).EQ.0) MON(2)=29
+C
+C ----------------------------------------------------------------------
+C
+C*    2.0 ADD SECONDS AND UPDATE DATE AND TIME.
+C         -------------------------------------
+C
+ 2000 CONTINUE
+      MINUT=MINUT+ISHIFT/60
+C
+C     2.1 POSITIVE SHIFT GREATER THAN 1 MINUTE.
+C
+      IF (MINUT.GE.60) THEN
+         IHOUR = IHOUR + MINUT/60
+         MINUT = MINUT - (MINUT/60)*60
+         IF (IHOUR.GE.24) THEN
+            IDAY = IDAY + IHOUR/24
+            IHOUR = IHOUR - (IHOUR/24)*24
+            IF (IDAY.GT.MON(MONTH)) THEN
+ 1300          CONTINUE
+               IDAY=IDAY-MON(MONTH)
+               MONTH=MONTH+1
+               IF(MONTH.EQ.13) THEN
+                  MONTH = 1
+                  IYEAR=MOD(IYEAR+1,100)
+                  IF (MOD(IYEAR,4).EQ.0) THEN
+                     MON(2)=29
+                  ELSE
+                     MON(2)=28
+                  ENDIF
+               END IF
+               IF(IDAY.GT.MON(MONTH)) GO TO 1300
+            END IF
+         END IF
+      ELSE IF (MINUT.LT.0) THEN
+C
+C     2.2 NEGATIVE SHIFT.
+C
+         IHOUR = IHOUR + (MINUT-59)/60
+         MINUT = MINUT - ((MINUT-59)/60)*60
+         IF (IHOUR.LT.0) THEN
+            IDAY = IDAY + (IHOUR-23)/24
+            IHOUR = IHOUR - ((IHOUR-23)/24)*24
+            IF (IDAY.LT.1) THEN
+ 1400          CONTINUE
+               MONTH=MONTH-1
+               IF(MONTH.EQ.0) THEN
+                  MONTH = 12
+                  IYEAR=MOD(IYEAR+99,100)
+                  IF (MOD(IYEAR,4).EQ.0) THEN
+                     MON(2)=29
+                  ELSE
+                     MON(2)=28
+                  ENDIF
+               END IF
+               IDAY=IDAY+MON(MONTH)
+               IF(IDAY.LT.1) GO TO 1400
+            END IF
+         END IF
+      END IF
+C
+C ----------------------------------------------------------------------
+C
+C*    3.0 COMPOSE NEW DATE TIME GROUP.
+C         ----------------------------
+C
+ 3000 CONTINUE
+
+      WRITE(DATE,5) IYEAR,MONTH,IDAY,IHOUR,MINUT
+C
+    5 FORMAT(5I2.2)
+C
+      RETURN
+      END
+C ----------------------------------------------------------------------
+      SUBROUTINE DIFDATE (IDATE1, IDATE2, ISHIFT)
+C ----------------------------------------------------------------------
+C
+C**** *DIFDATE* - TO COMPUTE TIME DIFFERENCE.
+C
+C     H. GUNTHER   GKSS/ECMWF  NOVEMBER 1989
+C
+C*    PURPOSE.
+C     --------
+C
+C       COMPUTE THE SECONDS BETWEEN THE INPUT DATES.
+C       DATES HAVE TO BE IN CONSECUTIVE YEARS.
+C
+C**   INTERFACE.
+C     ----------
+C
+C       *CALL* *DIFDATE (IDATE1, IDATE2, ISHIFT)*
+C
+C         *IDATE1* - DATE TIME GROUP (YYMMDDHHMM).
+C         *IDATE2* - DATE TIME GROUP (YYMMDDHHMM).
+C         *ISHIFT* - DIFFERENCE IN SECONDS (IDATE2-IDATE1).
+C
+C     METHOD.
+C     -------
+C
+C       NONE.
+C
+C     EXTERNALS.
+C     ----------
+C
+C       NONE.
+C
+C      REFERENCES.
+C      -----------
+C
+C       NONE.
+C
+C ----------------------------------------------------------------------
+C
+      DIMENSION MON(12)
+C
+      CHARACTER*10 IDATE1, IDATE2, IDT1, IDT2
+C
+      DATA MON /31,28,31,30,31,30,31,31,30,31,30,31/
+C
+C ----------------------------------------------------------------------
+C
+C*    1.0 CHANGE DATE TIME GROUPS TO ENSURE THAT THE SECOND IS LARGER.
+C         ------------------------------------------------------------
+C
+C
+C
+      IDT1=IDATE1
+      IDT2=IDATE2
+      ISI = 60
+C
+C         END OF CENTURY CORRECTION.
+C
+      READ(IDT1(1:4),'(I4)') IYM1
+      READ(IDT2(1:4),'(I4)') IYM2
+      IF (IYM1.LT. 100 .AND. IYM2.GT.9900)
+     1    IYM1 = 10000 + IYM1
+      IF (IYM2.LT. 100 .AND. IYM1.GT.9900)
+     1    IYM2 = 10000 + IYM2
+
+      IF (IDT1.GT.IDT2.OR.IYM1.GT.IYM2) THEN
+         IDT1 = IDATE2
+         IDT2 = IDATE1
+         ISI  = -60
+      ENDIF
+C
+C ----------------------------------------------------------------------
+C
+C*    2.0 SPLIT DATE TIME GROUPS INTO MINUTE, HOUR, DAY, MONTH, YEAR.
+C         -----------------------------------------------------------
+C
+      READ(IDT1,5) IYEAR1,MONTH1,IDAY1,IHOUR1,MINUT1
+      IF (IYM1.GT.10000) IYEAR1=IYEAR1+100
+C
+      READ(IDT2,5) IYEAR2,MONTH2,IDAY2,IHOUR2,MINUT2
+      IF (IYM2.GT.10000) IYEAR2=IYEAR2+100
+C
+C ----------------------------------------------------------------------
+C
+C*    3.0 CORRECT DAYS IN FEBRUARY OF FIRST YEAR FOR LEAP-YEAR.
+C         -----------------------------------------------------
+C
+      IF (MOD(IYEAR1,4).EQ.0) MON(2) = 29
+C
+C ----------------------------------------------------------------------
+C
+C*    4.0 COMPUTE TIME DIFFERENCE IN MINUTES.
+C         -----------------------------------
+C
+C     4.1 DIFFERENCE BETWEEN DAY, HOUR ,MINITE.
+C
+      ISHIFT = ((IDAY2-IDAY1)*24+IHOUR2-IHOUR1)*60+MINUT2-MINUT1
+C
+C      4.2 ADD DIFFERENCE FROM MONTH.
+C
+      IF (IYEAR2.GT.IYEAR1) THEN
+C
+C      4.2.1 START AND END MONTH ARE IN DIFFERENT YEARS.
+C
+         DO 4211 M=MONTH1,12
+            ISHIFT = ISHIFT + INT(MON(M)*24*60)
+ 4211    CONTINUE
+         IF (MONTH2.GT.1) THEN
+            IF (MOD(IYEAR2,4).EQ.0) THEN
+               MON(2) = 29
+            ELSE
+               MON(2) = 28
+            ENDIF
+            DO 4212 M=1,MONTH2-1
+               ISHIFT = ISHIFT + INT(MON(M)*24*60)
+ 4212       CONTINUE
+         ENDIF
+      ELSE
+C
+C      4.2.2 START AND END MONTH ARE IN THE SAME YEAR.
+C
+         IF (MONTH2.GT.MONTH1) THEN
+            DO 4221 M=MONTH1,MONTH2-1
+               ISHIFT = ISHIFT + INT(MON(M)*24*60)
+ 4221       CONTINUE
+         ENDIF
+      ENDIF
+C
+C ----------------------------------------------------------------------
+C
+C*    5.0 CHANGE SIGN OF DIFFERENCE IF DATES HAVE BEEN EXCHANGED
+C*        AND CONVERT TO SECONDS.
+C         ------------------------------------------------------
+C
+      ISHIFT = ISHIFT*ISI
+C
+    5 FORMAT(5I2.2)
+C
+      RETURN
+      END
+C
+      SUBROUTINE mean_pars15(F3,emean,fmean,thq)
+
+C ----------------------------------------------------------------------
+C
+C**** *calculate mean parameters for SAR spectrum
+c	for one grid_point,
+c	stand_alone with WAM default parameters
+
+
+      parameter (PI = 3.1415926535,ZPI=2.*PI,RAD=PI/180.)
+      parameter (nang=24, nfre=30, CO=1.1, fr1=0.044177)
+      real*8 f3(nang,nfre)
+      real*8 EMEAN, FMEAN,thq, fcut
+
+
+      integer k,m,iang,ifre,m10, m10p
+      real*8 FR(NFRE), DFIM(NFRE),DELTH,costh(nang),sinth(nang)
+      real*8 TEMP,temp2
+      real*8  delt25,co1,th,fd,c10,d10,sih,coh,ssi,sco,c12,c11,d11
+      real*8 delth2, fmean10, df
+C
+C ----------------------------------------------------------------------
+c	0. determine fr,dfim,delth,sinth,costh
+c	routine mfredir preproc
+        fcut=0.09
+	delth = zpi/real(nang)
+	fr(1) = fr1
+	do ifre = 2,nfre
+	  fr(ifre)=co*fr(ifre-1)
+	end do
+	co1 = 0.5*(co-1.)*delth
+	dfim(1)=co1*fr(1)
+	do ifre=2,nfre-1
+	  dfim(ifre) = co1* (fr(ifre)+fr(ifre-1))
+	end do
+	dfim(nfre) = co1*fr(nfre-1)
+	do iang=1,nang
+	  th = real(iang-1)*delth+RAD*th0
+	  costh(iang) = cos(th)
+	  sinth(iang) = sin(th)
+	end do
+C ----------------------------------------------------------------------
+C
+C*     INITIALISE 
+C      -----------
+C
+       EMEAN = 0.
+       FMEAN = 0.
+       THQ   = 0.
+C
+c      ********************************************************************
+c	ENERGY
+c      ********************************************************************
+C
+C*    1.1 INTEGRATE OVER FREQUENCIES AND DIRECTION.
+C        -----------------------------------------
+C
+      M10 = 0
+      DELTH2 = DELTH / 2.
+
+      DO M=1,NFRE
+         IF(FR(M).LT.fcut) M10=M10+1
+      ENDDO
+      
+      CO1  = CO-1
+      M10P = M10+1
+      C10  = (fcut - FR(M10))*DELTH - CO1*FR(M10)*DELTH2
+      D10  = (fcut - FR(M10))**2*DELTH2/(CO1*FR(M10))  
+
+      DO K=1,NANG
+         DO M=1,M10
+              emean=emean+DFIM(M)*F3(K,M) 
+	   enddo
+	   D11 = F3(K,M10P)-F3(K,M10)
+           emean=emean+
+     1             C10*F3(K,M10)+D10*D11
+	enddo
+
+	if (emean.eq.0.) then
+	fmean=0.
+	thq=0.
+	go to 1000
+	endif
+C
+C
+c      ********************************************************************
+c      2. MEAN FREQUENCY
+c      ********************************************************************
+C*    2.1 DEEP WATER INTEGRATION.
+C         -----------------------
+      C10  = (fcut - FR(M10))*DELTH
+      C10  = C10/fcut
+      D10  = (fcut - FR(M10))**2*DELTH2/(CO1*FR(M10))
+      D10  = D10/fcut
+      C11  = CO1*FR(M10)*DELTH2
+      C11  = C11/FR(M10)
+       FMEAN=0.
+       DO K=1,NANG
+         DO  M=1,M10
+            FD = DFIM(M)/FR(M)
+	    FMEAN = FMEAN+FD*F3(K,M)
+	 END DO
+       D11 = F3(K,M10P)-F3(K,M10)  
+       FMEAN=FMEAN+(c10-c11)*F3(K,M10)+d10*d11
+       END DO
+
+      fmean=emean/fmean
+
+C*    2.2 ADD TAIL CORRECTION TO MEAN FREQUENCY AND
+C*       NORMALIZE WITH TOTAL ENERGY.
+C        ------------------------------------------
+
+c      ********************************************************************
+c      3. MEAN DIRECTION
+c      ********************************************************************
+
+C*     3.1 INTEGRATE OVER FREQUENCIES AND DIRECTIONS.
+C        ------------------------------------------
+	 
+      M10P = M10+1
+      C10  = (fcut - FR(M10))*DELTH - (FR(M10P)-FR(M10))*DELTH2
+      D10  = (fcut - FR(M10))**2*DELTH2/(FR(M10P)-FR(M10))
+      SSI=0.
+      SCO=0.
+      DO K=1,NANG
+         SIH=SINTH(K)
+         COH=COSTH(K)
+         DO M=1,M10
+CCC
+C Originally:
+C            DF=(FR(M)+FR(M-1))*DELTH2
+C Replaced by (in view of length of array fr(nfre)):
+            IF (M.GT.1) THEN
+              IF (M.NE.NFRE) THEN
+                DF=(FR(M+1)+FR(M-1))*DELTH2
+              ELSE
+                DF=(FR(M)+FR(M-1))*DELTH2
+              ENDIF
+            ELSE
+              DF=(FR(M+1)+FR(M))*DELTH2
+            ENDIF
+CCC
+            SSI=SSI+F3(K,M)*SIH*DF
+            SCO=SCO+F3(K,M)*COH*DF
+         ENDDO
+      SSI=SSI+C10*F3(K,M10)*SIH+D10*(F3(K,M10P)-F3(K,M10))*SIH  
+      SCO=SCO+C10*F3(K,M10)*COH+D10*(F3(K,M10P)-F3(K,M10))*COH  
+      ENDDO
+      IF (SCO.EQ.0.) SCO=1.e-30 
+      thq=ATAN2(SSI,SCO)
+      IF (thq.LT.0.) thq=thq+ZPI
+
+ 1000 continue
+      RETURN
+      END
