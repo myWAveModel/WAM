@@ -1866,10 +1866,10 @@ else
       WRITE(iu06,*) ' +++ error:    root = ',irecv
       CALL abort1
     END IF
-    CALL MPI_Gatherv(sendbuf=field, sendcount=nlen(irank), sendtype=MPI_REAL, recvbuf=rfield, recvcounts=nlen, displs=displ,       &
+    CALL MPI_Gatherv(sendbuf=field(nijs), sendcount=nlen(irank), sendtype=MPI_REAL, recvbuf=rfield(1), recvcounts=nlen, displs=displ,       &
                    recvtype=MPI_REAL, root=irecv-1, comm=localcomm, ierror=ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
   else
-    CALL MPI_Gatherv(sendbuf=field, sendcount=nlen(irank), sendtype=MPI_REAL, recvbuf=rfield_dummy, recvcounts=nlen, displs=displ, &
+    CALL MPI_Gatherv(sendbuf=field(nijs), sendcount=nlen(irank), sendtype=MPI_REAL, recvbuf=rfield_dummy(1), recvcounts=nlen, displs=displ, &
                    recvtype=MPI_REAL, root=irecv-1, comm=localcomm, ierror=ierr)  !! ModR04: MPI_COMM_WORLD->localcomm
   endif !! End ModR08
   
