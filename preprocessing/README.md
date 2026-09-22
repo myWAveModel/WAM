@@ -1,5 +1,5 @@
-The scripts in this folder make the pre-processing of the satellite spectra and prepare the SWI input files for the spectra assimilation in WAM.
-Below a step-by-step is provided:
+The scripts in this folder were kindly provided by Météo-France and make the pre-processing of satellite spectra. The output are the SWI input files for the spectra assimilation in WAM.
+Below a step-by-step guide is provided:
 
 1.	read_cfo_nc.f90
 - This script reads L3 CFOSat NetCDF files and converts wave number k to frequency f vector and interpolates the spectra from CFOSat spectral resolution (frequency and direction) to model’s spectral resolution. 
