@@ -426,8 +426,8 @@ subroutine time_conversion(time_vector,time_string)
       END DO
       DO mo=MIN(RMO,EMO),MAX(RMO,EMO)-1
         IF(mo==4 .OR. mo==6 .OR.mo==9 .OR. mo==11)            THEN; MDAYS=MDAYS+SIGN(30,RMO-EMO)
-        ELSEIF(mo==2 .AND. (MOD(EYY,4)==0 .AND. (MOD(yy,100)/=0 .OR.  MOD(EYY,400)==0))) THEN; MDAYS=MDAYS+SIGN(29,RMO-EMO)
-        ELSEIF(mo==2 .AND. (MOD(EYY,4)/=0 .OR.  (MOD(yy,100)==0 .AND. MOD(EYY,400)/=0))) THEN; MDAYS=MDAYS+SIGN(28,RMO-EMO)
+        ELSEIF(mo==2 .AND. (MOD(RYY,4)==0 .AND. (MOD(RYY,100)/=0 .OR.  MOD(RYY,400)==0))) THEN; MDAYS=MDAYS+SIGN(29,RMO-EMO)
+        ELSEIF(mo==2 .AND. (MOD(RYY,4)/=0 .OR.  (MOD(RYY,100)==0 .AND. MOD(RYY,400)/=0))) THEN; MDAYS=MDAYS+SIGN(28,RMO-EMO)
         ELSE                                                          ; MDAYS=MDAYS+SIGN(31,RMO-EMO)
         END IF
       END DO
