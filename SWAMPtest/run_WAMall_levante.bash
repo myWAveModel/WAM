@@ -118,6 +118,7 @@ if [ $preproc = 'y' ]; then
     cp -ra ${INDIR}/config/Preproc_User .
     srun -n 1 ./preproc.exe
     #srun -n 1 --mpi=pmi2 ./preproc.exe
+    #mpirun -n 1 --mca pml ob1 --mca btl ^openib ./preproc.exe # TO BE USED WITH GCC !!!
     mv Preproc_Prot ${OUTDIR}/coarse/preproc_prot_coarse.log
     # Nested Grids
     if [ $nofnest != 0 ]; then
@@ -126,6 +127,7 @@ if [ $preproc = 'y' ]; then
             cp -ra ${INDIR}/config/Preproc_User_N${i} ./Preproc_User
             srun -n 1 ./preproc.exe
             #srun -n 1 --mpi=pmi2 ./preproc.exe
+            #mpirun -n 1 --mca pml ob1 --mca btl ^openib ./preproc.exe # TO BE USED WITH GCC !!!
             mv Preproc_Prot ${OUTDIR}/nest${i}/preproc_prot_nest${i}.log
             echo '    --> nest '$i
         done
@@ -150,6 +152,7 @@ cp -ra ${WAMDIR}/bin/wam wam.exe
 cp -ra ${INDIR}/config/WAM_User .
 srun -n $nproc ./wam.exe
 #srun -n $nproc --mpi=pmi2 ./wam.exe
+#mpirun -n $nproc --mca pml ob1 --mca btl ^openib ./wam.exe # TO BE USED WITH GCC !!!
 if [ -f logfile.0 ]; then
     cp -ra logfile.0 ${OUTDIR}/coarse/wam_prot.log
     rm logfile.*
@@ -168,6 +171,7 @@ if [ $nofnest != 0 ]; then
         cp -ra ${INDIR}/config/WAM_User_N${i} ./WAM_User
         srun -n $nproc ./wam.exe
         #srun -n $nproc --mpi=pmi2 ./wam.exe
+        #mpirun -n $nproc --mca pml ob1 --mca btl ^openib ./wam.exe # TO BE USED WITH GCC !!!
         if [ -f logfile.0 ]; then
             cp -ra logfile.0 ${OUTDIR}/nest${i}/wam_prot.log
             rm logfile.*
@@ -203,6 +207,7 @@ cp -ra ${WAMDIR}/bin/pnetcdf pnetcdf.exe
 cp -ra ${INDIR}/config/NETCDF_User .
 srun -n 1 ./pnetcdf.exe
 #srun -n 1 --mpi=pmi2 ./pnetcdf.exe
+#mpirun -n 1 --mca pml ob1 --mca btl ^openib ./pnetcdf.exe # TO BE USED WITH GCC !!!
 mv pnetcdf_prot ${OUTDIR}/coarse/pnetcdf_prot.log
 mv WAVE* ${OUTDIR}/coarse/data/
 # Nested Grids
@@ -212,6 +217,7 @@ if [ $nofnest != 0 ]; then
         cp -ra ${INDIR}/config/NETCDF_User_N${i} NETCDF_User
         srun -n 1 ./pnetcdf.exe
         #srun -n 1 --mpi=pmi2 ./pnetcdf.exe
+        #mpirun -n 1 --mca pml ob1 --mca btl ^openib ./pnetcdf.exe # TO BE USED WITH GCC !!!
         mv pnetcdf_prot ${OUTDIR}/nest${i}/pnetcdf_prot.log
         mv WAVE* ${OUTDIR}/nest${i}/data/
         echo '    --> nest '$i
