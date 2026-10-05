@@ -98,7 +98,7 @@ elif [ "$1" == levante-GCC ]; then
         module load netcdf-fortran/4.5.3-openmpi-4.1.2-gcc-11.2.0
 
         export FC=mpifort
-        export FFLAGS=" " #"-march=native" #"-O3"
+        export FFLAGS="-march=native -O3" #"-march=native" #"-O3"
         NCDFDIR=/sw/spack-levante/netcdf-fortran-4.5.3-jlxcfz
         NCDFIN=-I${NCDFDIR}/include
         NCDFLIB="-L${NCDFDIR}/lib -Wl,-rpath,${NCDFDIR}/lib"
