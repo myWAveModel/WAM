@@ -186,7 +186,7 @@ DO J = 1,N_LAT
       WRITE (IU06,*) ' *       ===================================        *'
       WRITE (IU06,*) ' *                                                  *'
       WRITE (IU06,*) ' * READ ERROR ON TOPO FILE.                         *'
-      WRITE (IU06,*) ' * U - COMPONENTS EXPECTED                          *'
+      WRITE (IU06,*) ' * ZETA - COMPONENTS EXPECTED                       *'
       WRITE (IU06,*) ' *    ERROR CODE IS IOSTAT = ', IOS
       WRITE (IU06,*) ' *    FILE NAME IS  FILE08 = ', TRIM(FILE08)
       WRITE (IU06,*) ' *    UNIT IS         IU08 = ', IU08
