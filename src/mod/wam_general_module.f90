@@ -16,6 +16,7 @@ MODULE WAM_GENERAL_MODULE
 !                                                                              !
 ! ---------------------------------------------------------------------------- !
 
+USE mpi_f08               !! ModR08: switch to modern MPI library
 USE WAM_COORDINATE_MODULE
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
@@ -121,7 +122,7 @@ REAL, PARAMETER :: MICHE = 1.0
 REAL, PARAMETER :: SSDSC3 = 0.0
 
 REAL, PARAMETER :: SSDSBRF1 = 0.5
-!  28.16 = 22.0 * 1.6² * 1/2 with
+!  28.16 = 22.0 * 1.6Â² * 1/2 with
 !  22.0 (Banner & al. 2000, figure 6)
 !  1.6  the coefficient that transforms  SQRT(B) to Banner et al. (2000)'s epsilon
 !  1/2  factor to correct overestimation of Banner et al. (2000)'s breaking probability due to zero-crossing analysis
@@ -278,7 +279,7 @@ SUBROUTINE ABORT1
 !     ----------------
 
 LOGICAL :: DA
-INTEGER :: I
+INTEGER :: I, IERR
 
 ! ---------------------------------------------------------------------------- !
 !                                                                              !
@@ -301,7 +302,7 @@ END DO
 
 SELECT CASE(ABORTCASE) !! ModR04: Include OASIS
    CASE(1)
-       CALL MPI_finalize (i)
+       CALL MPI_ABORT(MPI_COMM_WORLD, 1, IERR)
    CASE(2)
        CALL Wam_oasis_abort
 END SELECT
@@ -721,7 +722,7 @@ CHARACTER (LEN=*),  INTENT(IN)  :: FILEID     !! FILE IDENTIFIER
 CHARACTER (LEN=14), INTENT(IN)  :: CDATE      !! DATE (YYYYMMDDHHMMSS) OF FILE.
 CHARACTER (LEN=*),  INTENT(IN)  :: STAT       !! FILE STATUS (NEW, OLD, UNKNOWN)
 INTEGER,            INTENT(OUT) :: IFAIL      !! ERROR FLAG    = 0 NO ERROR
-                                              !!               ­ 0 OPEN ERROR
+                                              !!               Â­ 0 OPEN ERROR
 CHARACTER (LEN=*),  INTENT(IN), OPTIONAL :: FORMA !! FORMATTED OR UNFORMATED
 
 ! ---------------------------------------------------------------------------- !
