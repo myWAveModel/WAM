@@ -64,8 +64,8 @@ integer :: i,j,k, input_frequency, input_frequency_sec, xday, xhour, xmin
 character(len=8)  :: yyyymmdd
 character(len=64) :: time_units_string
 character(len=10) :: time_units
-character(len=4)  :: time_units_year 
-character(len=2)  :: time_units_month, time_units_day, time_units_hour, time_units_min, time_units_sec
+INTEGER :: time_units_year, time_units_month, time_units_day
+INTEGER :: time_units_hour, time_units_min, time_units_sec
 character(len=14) :: time_units_cdate
 character(len=10), dimension(4) :: wind_variable_names_x_component, wind_variable_names_y_component
 integer :: ndims, nt, nlat_var, nlon_var
@@ -155,24 +155,39 @@ subroutine get_time_attributes(START_DATE)
   
   ! Reading time units and converting to timestring from input file
 
-  READ(time_units_string(INDEX(time_units_string,'-')-4:INDEX(time_units_string,'-')+5), &
-      '(A4,1X,A2,1X,A2)') time_units_year, time_units_month, time_units_day
-  
-  READ(time_units_string(INDEX(time_units_string,':')-2:INDEX(time_units_string,':')+5), &
-      '(A2,1X,A2,1X,A2)') time_units_hour, time_units_min, time_units_sec
+  READ(time_units_string(INDEX(time_units_string,'-')-4: &
+      INDEX(time_units_string,'-')-1), *) time_units_year
 
-  time_units_cdate(1:4) = time_units_year
-  time_units_cdate(5:6) = time_units_month
-  time_units_cdate(7:8) = time_units_day
-  time_units_cdate(9:10) = time_units_hour
-  time_units_cdate(11:12) = time_units_min
-  time_units_cdate(13:14) = time_units_sec
+  READ(time_units_string(INDEX(time_units_string,'-')+1: &
+      INDEX(time_units_string,'-',BACK=.TRUE.)-1), *) time_units_month
+
+  READ(time_units_string(INDEX(time_units_string,'-',BACK=.TRUE.)+1: &
+      INDEX(time_units_string,' ',BACK=.TRUE.)-1), *) time_units_day
+
+  READ(time_units_string(INDEX(time_units_string,':')-2: &
+      INDEX(time_units_string,':')-1), *) time_units_hour
+
+  READ(time_units_string(INDEX(time_units_string,':')+1: &
+      INDEX(time_units_string,':',BACK=.TRUE.)-1), *) time_units_min
+
+  READ(time_units_string(INDEX(time_units_string,':',BACK=.TRUE.)+1: &
+      INDEX(time_units_string,':',BACK=.TRUE.)+2), *) time_units_sec
+
+  WRITE(IU06,*) "time_units_year :" , time_units_year
+  WRITE(IU06,*) "time_units_month:" , time_units_month
+  WRITE(IU06,*) "time_units_day  :" , time_units_day
+  WRITE(IU06,*) "time_units_hour :" , time_units_hour
+  WRITE(IU06,*) "time_units_min  :" , time_units_min
+  WRITE(IU06,*) "time_units_sec  :" , time_units_sec
+
+  WRITE(time_units_cdate,'(I4.4,I2.2,I2.2,I2.2,I2.2,I2.2)') &
+      time_units_year, time_units_month, time_units_day, &
+      time_units_hour, time_units_min, time_units_sec
 
   WRITE(IU06,*) "time_units_cdate:" , time_units_cdate 
 
   call time_conversion(time_units_reference, time_units_cdate)
   WRITE(IU06, *) "time_units_reference:" , time_units_reference
-
 
   DO i = 1, ntime
     new_time_array(i) = time(i) + time_units_reference
