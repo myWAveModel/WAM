@@ -876,6 +876,7 @@ contains
 
       !set standard names
       call params%set_standard_name("sea_surface_wind_wave_mean_period", id=20)
+      call params%set_standard_name("sea_surface_wave_directional_spread_at_variance_spectral_density_maximum", id=15)
     END IF
     !set parameter metadata - direction flags
     call params%set_direction_flag(dir_true,id=2)
