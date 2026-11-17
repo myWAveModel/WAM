@@ -269,7 +269,7 @@ CHARACTER(LEN=100), DIMENSION(NOUT_P) :: LONG_NAME_P = (/ &
 & 'Spectral moments (0,1) wave period (Tm01)', &  !! 12
 & 'Spectral moments (0,2) wave period (Tm02)', &  !! 13
 & 'Mean wave direction to (Mdir)', &  !! 14
-& 'Total directional spreed', &  !! 15
+& 'Total directional spread', &  !! 15
 & 'normalised_wave_stress', &  !! 16
 & 'Spectral significant wind wave height', &  !! 17
 & 'Sea peak period', &  !! 18
@@ -277,7 +277,7 @@ CHARACTER(LEN=100), DIMENSION(NOUT_P) :: LONG_NAME_P = (/ &
 & 'Spectral moments (0,1) wind wave period', &  !! 20
 & 'Sea m2-period', &  !! 21
 & 'Mean wind wave direction to', &  !! 22
-& 'Sea directional spreed', &  !! 23
+& 'Sea directional spread', &  !! 23
 & 'Dummy', &  !! 24
 & 'Swell significant wave height', &  !! 25
 & 'Swell peak period', &  !! 26
@@ -845,6 +845,7 @@ contains
       call params%set_name_ip("VTM01", id=12)
       call params%set_name_ip("VTM02", id=13)
       call params%set_name_ip("VMDR", id=14)
+      call params%set_name_ip("VPSP", id=15)
 
       call params%set_name_ip("VHM0_WW", id=17)
 
