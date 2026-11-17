@@ -162,7 +162,6 @@ subroutine create_dimensions()
     
     IF (CMEMS_OUTPUT_FLAG) THEN
       call check_status(nf90_put_att(NETCDF_FILE_ID,0,"institution", "Helmholtz-Zentrum Hereon, Germany"))
-      call check_status(nf90_put_att(NETCDF_FILE_ID,0,"bulletin_type", "reanalysis"))
       call check_status(nf90_put_att(NETCDF_FILE_ID,0,"contact", "servicedesk.cmems@mercator-ocean.eu"))
       call check_status(nf90_put_att(NETCDF_FILE_ID,0,"references", & 
            "Please check in CMEMS catalogue the INFO section for product & 
@@ -174,6 +173,7 @@ subroutine create_dimensions()
       call check_status(nf90_put_att(NETCDF_FILE_ID,0,"title", "Wave Products (2D) - Instantaneous Field"))
       call check_status(nf90_put_att(NETCDF_FILE_ID,0,"license",  &
           "https://marine.copernicus.eu/user-corner/service-commitments-and-licence"))
+      call check_status(nf90_put_att(NETCDF_FILE_ID,0,"bulletin_type", "reanalysis"))
     END IF 
     
     call check_status(nf90_put_att(NETCDF_FILE_ID,0,"bulletin_date", dateb ))
